@@ -18,6 +18,18 @@ export default function App() {
   const color = colorById(ritual.visibleColorId);
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateChrome = () => {
+      const dark =
+        settings.theme === "dark" ||
+        (settings.theme === "system" && media.matches);
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", dark ? "#191e1d" : "#faf9fc");
+    };
+    updateChrome();
+    media.addEventListener("change", updateChrome);
+    return () => media.removeEventListener("change", updateChrome);
   }, [settings.theme]);
   if (!ready)
     return (

@@ -122,10 +122,18 @@ Web用の登録方式: [MDN manifest icons](https://developer.mozilla.org/en-US/
 
 ## GitHub Pages
 
-公開先リポジトリ名: `picpa_app`。公開予定URL: `https://riri92o.github.io/picpa_app/`（デプロイ成功後に利用可能）。
+公開先リポジトリ名: `picpa_app`。公開URL: `https://riri92o.github.io/picpa_app/`。
 
 Settings → Pages → SourceをGitHub Actionsに設定。mainへのpushで、テスト・ビルド後に自動公開します。ローカル確認は `pnpm run build:pages`。通常の `pnpm build` は従来の相対パスでビルドします。
 
 写真・日ごとの記録は閲覧端末のIndexedDBに保存し、GitHubへ送信しません。PCのlocalhostと公開URLは別の保存領域です。
 
 [GitHub公式の公開ワークフロー説明](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
+
+## バブル表現と完成時の点数
+
+SVG/CSSの柔らかな陰影でバブルを立体的に表示。混色中のCanvasも同じ密度場に陰影を付け、流れる動きを維持します。色を引くまではグレーです。
+
+完成直後のスコアのみ0からカウントアップし、最終値を約1.2秒表示して終了します。計算待ち中は完成表示を維持（上限15秒）。ホーム・カレンダーを開き直した時は静止表示です。`prefers-reduced-motion`ではカウントアップを省略します。時間は`constants/config.ts`の`SCORE_MOTION`で調整できます。
+
+背景は画面端まで描き、操作要素にセーフエリア余白を付けます。ホーム画面追加時はiOSの透過ステータスバーを指定し、ブラウザーのテーマ色も外観設定に追従します。Safariのツールバー自体の描画はOS管理です。実機のノッチ・ステータスバーはiPhoneでの確認が必要です。

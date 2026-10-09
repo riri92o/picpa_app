@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -14,7 +14,7 @@ import {
 import { LiquidColorScene } from "../components/LiquidColorScene";
 import type { ColorRitual } from "../ui/useColorRitual";
 import { LIQUID_MOTION } from "../constants/liquidMotion";
-import { BUBBLE_MOTION } from "../constants/config";
+import { BUBBLE_MOTION, SCORE_MOTION } from "../constants/config";
 import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
@@ -49,6 +49,27 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [finished, setFinished] = useState(false);
+  const finishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const scoreRevealed = useCallback(() => {
+    clearTimeout(finishTimer.current);
+    finishTimer.current = setTimeout(
+      () => setFinished(false),
+      SCORE_MOTION.hold,
+    );
+  }, []);
+  useEffect(() => {
+    if (finished && !finishTimer.current)
+      finishTimer.current = setTimeout(
+        () => setFinished(false),
+        SCORE_MOTION.completionTimeout,
+      );
+    return () => {
+      clearTimeout(finishTimer.current);
+      finishTimer.current = undefined;
+    };
+  }, [finished]);
   const [reduceTo, setReduceTo] = useState<GridCount | null>(null);
   const [keep, setKeep] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -94,7 +115,6 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
     completeToday();
     setConfirm(false);
     setFinished(true);
-    window.setTimeout(() => setFinished(false), 1700);
   };
   return (
     <main
@@ -467,7 +487,11 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
             </motion.div>
             <p>完成</p>
             <div className="finish-score">
-              <ColorMatchBadge day={today} />
+              <ColorMatchBadge
+                day={today}
+                animateReveal
+                onRevealComplete={scoreRevealed}
+              />
             </div>
           </motion.div>
         )}

@@ -220,9 +220,16 @@ export function createFluidMix(
           value = density[index];
         if (value < 0.92) continue;
         const p = index * 4;
-        for (let c = 0; c < 3; c++)
-          pixels.data[p + c] = channels[c][index] / weights[index];
-        // Feather only the contour edge; no lighting, reflections, or drop shadows.
+        // Shade the same unified field, so connected liquid retains its depth while mixing.
+        const slopeX = density[index - 1] - density[index + 1] || 0;
+        const slopeY = density[index - width] - density[index + width] || 0;
+        const light = Math.max(-0.12, Math.min(0.22, -(slopeX + slopeY) * 1.7));
+        for (let c = 0; c < 3; c++) {
+          const base = channels[c][index] / weights[index];
+          pixels.data[p + c] =
+            light > 0 ? base + (255 - base) * light : base * (1 + light);
+        }
+        // Retain the original feathered contour and fade into the settled SVG bubble.
         pixels.data[p + 3] =
           (255 * smooth((value - 0.92) / 0.16) * fade * coverage[index]) /
           weights[index];

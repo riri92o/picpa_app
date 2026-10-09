@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { colorById } from "../constants/palette";
 import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
@@ -43,6 +43,7 @@ export function LiquidColorScene({
   screenRef: RefObject<HTMLElement | null>;
   bubbleRef: RefObject<HTMLButtonElement | null>;
 }) {
+  const materialId = useId().replace(/:/g, "");
   const [box, setBox] = useState<FluidBox>({
     width: 390,
     height: 844,
@@ -80,6 +81,8 @@ export function LiquidColorScene({
   }, [screenRef, bubbleRef]);
   const { phase, busy, reduced } = ritual;
   const result = colorById(ritual.resultId).hex;
+  const mainColor =
+    ritual.visibleColorId || phase === "settle" ? result : "#bdc1c5";
   const waveY = box.y + box.size * 0.65 + 23;
   return (
     <>
@@ -89,6 +92,55 @@ export function LiquidColorScene({
         viewBox={`0 0 ${box.width} ${box.height}`}
         aria-hidden="true"
       >
+        <defs>
+          <radialGradient id={`${materialId}-main`} cx="28%" cy="22%" r="85%">
+            <stop
+              offset="0"
+              stopColor={`color-mix(in srgb, ${mainColor} 54%, white)`}
+            />
+            <stop
+              offset=".32"
+              stopColor={`color-mix(in srgb, ${mainColor} 90%, white)`}
+            />
+            <stop offset=".66" stopColor={mainColor} />
+            <stop
+              offset="1"
+              stopColor={`color-mix(in srgb, ${mainColor} 77%, #18232f)`}
+            />
+          </radialGradient>
+          <radialGradient
+            id={`${materialId}-ambient`}
+            cx="27%"
+            cy="20%"
+            r="86%"
+          >
+            <stop
+              offset="0"
+              stopColor="color-mix(in srgb, var(--accent) 55%, white)"
+            />
+            <stop offset=".58" stopColor="var(--accent)" />
+            <stop
+              offset="1"
+              stopColor="color-mix(in srgb, var(--accent) 78%, #18232f)"
+            />
+          </radialGradient>
+          <filter
+            id={`${materialId}-shadow`}
+            x="-35%"
+            y="-35%"
+            width="170%"
+            height="175%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feDropShadow
+              dx="0"
+              dy="5"
+              stdDeviation="4"
+              floodColor={mainColor}
+              floodOpacity=".18"
+            />
+          </filter>
+        </defs>
         <g className="home-liquid-waves" fill="var(--accent)" opacity=".17">
           <path
             d={`M-20 ${waveY + 9} Q${box.width * 0.15} ${waveY - 30} ${box.width * 0.31} ${waveY} T${box.width * 0.65} ${waveY + 7} T${box.width + 20} ${waveY - 12} L${box.width + 20} ${waveY + 22} Q${box.width * 0.8} ${waveY - 4} ${box.width * 0.65} ${waveY + 26} T${box.width * 0.31} ${waveY + 17} T-20 ${waveY + 32}Z`}
@@ -129,10 +181,10 @@ export function LiquidColorScene({
                 }}
               >
                 <motion.path
+                  fill={`url(#${materialId}-ambient)`}
                   initial={false}
                   animate={{
                     d: reduced ? ROUND_BUBBLES[i % 3] : ROUND_BUBBLES,
-                    fill: "var(--accent)",
                   }}
                   transition={{
                     d: {
@@ -169,6 +221,8 @@ export function LiquidColorScene({
               }}
             >
               <motion.path
+                fill={`url(#${materialId}-main)`}
+                filter={`url(#${materialId}-shadow)`}
                 stroke={
                   ritual.visibleColorId === "white" ||
                   ritual.visibleColorId === "black" ||
@@ -181,10 +235,6 @@ export function LiquidColorScene({
                 initial={{ d: ROUND_BUBBLES[0] }}
                 animate={{
                   d: reduced ? ROUND_BUBBLES[0] : ROUND_BUBBLES,
-                  fill:
-                    ritual.visibleColorId || phase === "settle"
-                      ? result
-                      : "#bdc1c5",
                 }}
                 transition={{
                   d: {

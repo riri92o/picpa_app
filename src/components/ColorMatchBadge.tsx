@@ -1,16 +1,54 @@
 import { Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { animate, useReducedMotion } from "framer-motion";
+import { SCORE_MOTION } from "../constants/config";
 import { SCORE_MESSAGES } from "../constants/scoreMessages";
 import type { DayRecord } from "../domain/types";
 import { useColorMatch } from "../ui/useColorMatch";
+
+/** Only the completion overlay opts in; archive/home scores remain static. */
+function ScoreValue({
+  score,
+  reveal,
+  onComplete,
+}: {
+  score: number;
+  reveal: boolean;
+  onComplete?: () => void;
+}) {
+  const reduced = useReducedMotion();
+  const [value, setValue] = useState(reveal && !reduced ? 0 : score);
+  useEffect(() => {
+    if (!reveal || reduced) {
+      setValue(score);
+      if (reveal) onComplete?.();
+      return;
+    }
+    setValue(0);
+    const playback = animate(0, score, {
+      duration: SCORE_MOTION.duration,
+      delay: SCORE_MOTION.delay,
+      ease: "easeOut",
+      onUpdate: (next) => setValue(Math.round(next)),
+      onComplete,
+    });
+    return () => playback.stop();
+  }, [score, reveal, reduced, onComplete]);
+  return <>{reveal && !reduced ? value : score}</>;
+}
 
 export function ColorMatchBadge({
   day,
   compact = false,
   showComment = false,
+  animateReveal = false,
+  onRevealComplete,
 }: {
   day: DayRecord;
   compact?: boolean;
   showComment?: boolean;
+  animateReveal?: boolean;
+  onRevealComplete?: () => void;
 }) {
   const { result, error, retry } = useColorMatch(day);
   const message = result
@@ -35,7 +73,11 @@ export function ColorMatchBadge({
       {result ? (
         <div className="color-match-result">
           <strong>
-            {result.score}
+            <ScoreValue
+              score={result.score}
+              reveal={animateReveal}
+              onComplete={onRevealComplete}
+            />
             <small>点</small>
           </strong>
           {showComment && (
