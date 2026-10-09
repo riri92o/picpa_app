@@ -1,0 +1,10 @@
+@import "./styles/base.css";
+@import "./styles/home.css";
+@import "./styles/nav.css";
+@import "./styles/modal.css";
+@import "./styles/calendar.css";
+@import "./styles/settings.css";
+@import "./styles/tutorial.css";
+@import "./styles/theme.css";
+
+@import "./styles/colorMatch.css";

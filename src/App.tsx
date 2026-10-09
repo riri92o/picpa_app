@@ -1,0 +1,70 @@
+import { useEffect, useState, type CSSProperties } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BottomNav, type Tab } from "./components/BottomNav";
+import { Tutorial } from "./components/Tutorial";
+import { colorById } from "./constants/palette";
+import { Calendar } from "./screens/Calendar";
+import { Home } from "./screens/Home";
+import { Settings } from "./screens/Settings";
+import { useApp } from "./state/AppContext";
+import { LiquidBackdrop } from "./components/LiquidBackdrop";
+import { useColorRitual } from "./ui/useColorRitual";
+import { accentTokens } from "./ui/theme";
+
+export default function App() {
+  const { ready, error, clearError, today, settings, drawToday } = useApp();
+  const [tab, setTab] = useState<Tab>("home");
+  const ritual = useColorRitual(today, drawToday);
+  const color = colorById(ritual.visibleColorId);
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme;
+  }, [settings.theme]);
+  if (!ready)
+    return (
+      <div className="loading-screen">
+        <div className="loading-bubble" />
+        <span>PicPa</span>
+      </div>
+    );
+  return (
+    <div
+      className="app-shell"
+      data-color={ritual.visibleColorId}
+      style={
+        {
+          ...accentTokens(ritual.visibleColorId ? color.hex : "#bdc1c5"),
+          "--tint": ritual.visibleColorId ? color.tint : "#f4f6f5",
+        } as CSSProperties
+      }
+    >
+      {tab !== "home" && <LiquidBackdrop />}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          className="tab-content"
+          initial={{ opacity: 0, y: ritual.reduced ? 0 : 9 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: ritual.reduced ? 0 : -7 }}
+          transition={{ duration: ritual.reduced ? 0 : 0.22 }}
+        >
+          {tab === "home" ? (
+            <Home ritual={ritual} />
+          ) : tab === "calendar" ? (
+            <Calendar />
+          ) : (
+            <Settings />
+          )}
+        </motion.div>
+      </AnimatePresence>
+      <div id="modal-root" />
+      <BottomNav tab={tab} onChange={setTab} disabled={ritual.busy} />
+      {error && (
+        <div className="error-toast" role="alert">
+          {error}
+          <button onClick={clearError}>閉じる</button>
+        </div>
+      )}
+      <Tutorial />
+    </div>
+  );
+}

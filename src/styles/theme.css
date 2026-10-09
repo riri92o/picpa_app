@@ -1,0 +1,83 @@
+.loading-screen {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 18px;
+  font-size: 26px;
+  font-weight: 850;
+  background: #faf9fc;
+}
+.loading-bubble {
+  width: 73px;
+  height: 73px;
+  border-radius: 44% 56% 47% 53% / 55% 45% 55% 45%;
+  background: #bdc1c5;
+  animation: pulse 1.2s ease-in-out infinite alternate;
+}
+.error-toast {
+  position: fixed;
+  z-index: 120;
+  bottom: calc(var(--nav-space) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 36px), 425px);
+  background: #fff2ef;
+  color: #94564c;
+  border: 1px solid #eedbd8;
+  border-radius: 18px;
+  padding: 13px;
+  font-size: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.error-toast button {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 800;
+}
+@keyframes pulse {
+  to {
+    transform: scale(1.06) rotate(4deg);
+    opacity: 0.8;
+  }
+}
+[data-theme="dark"] .app-shell {
+  --surface: #202625;
+  --page: #191e1d;
+  --text: #eff4f1;
+  --muted: #a3ada8;
+  --line: color-mix(in srgb, var(--accent) 25%, var(--surface));
+  --accent-readable: var(--accent-readable-dark);
+}
+[data-theme="dark"] .tutorial-card {
+  background: var(--page);
+  color: var(--text);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] .app-shell {
+    --surface: #202625;
+    --page: #191e1d;
+    --text: #eff4f1;
+    --muted: #a3ada8;
+    --line: color-mix(in srgb, var(--accent) 25%, var(--surface));
+    --accent-readable: var(--accent-readable-dark);
+  }
+  [data-theme="system"] .tutorial-card {
+    background: var(--page);
+    color: var(--text);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

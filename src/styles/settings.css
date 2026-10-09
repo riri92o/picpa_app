@@ -1,0 +1,214 @@
+.settings-list {
+  display: grid;
+  gap: 12px;
+}
+.settings-card {
+  background: var(--surface);
+  border-radius: 24px 29px 25px 22px;
+  padding: 17px 17px;
+  border: 1px solid var(--line);
+}
+.settings-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+.settings-title svg {
+  color: var(--accent-readable);
+}
+.settings-title h3,
+.settings-row h3 {
+  font-size: 14px;
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--surface-soft);
+  border-radius: 23px 28px 24px 21px;
+  padding: 4px;
+  gap: 3px;
+}
+.theme-selector button {
+  border: 0;
+  border-radius: 21px 24px 20px 23px;
+  padding: 10px 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.theme-selector button.selected {
+  background: var(--accent);
+  color: var(--control-ink);
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.setting-icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 44% 56% 53% 47% / 55% 44% 56% 45%;
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-soft));
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  flex: none;
+}
+.settings-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.settings-row p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 5px 0 0;
+  line-height: 1.45;
+}
+.switch {
+  width: 44px;
+  height: 26px;
+  position: relative;
+  flex: none;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+}
+.switch span {
+  position: absolute;
+  inset: 0;
+  background: var(--line);
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+.switch span:before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 45% 55% 48% 52%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.switch input:checked + span {
+  background: var(--accent);
+}
+.switch input:checked + span:before {
+  transform: translateX(18px);
+}
+.switch input:focus-visible + span {
+  outline: 2px solid var(--accent-readable);
+  outline-offset: 3px;
+}
+.storage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.storage-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  border-right: 1px solid var(--line);
+}
+.storage-stats div:last-child {
+  border: 0;
+}
+.storage-stats strong {
+  font-size: 19px;
+}
+.storage-stats span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.storage-card p {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 17px 0 0;
+}
+.reset-button {
+  margin-top: 14px;
+  border: 1px solid #ead8d7;
+  border-radius: 12px;
+  background: transparent;
+  color: #af6866;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.reset-button:disabled {
+  opacity: 0.45;
+}
+.links-card {
+  padding: 4px 14px;
+}
+.links-card button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 11px;
+  min-height: 62px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.links-card button + button {
+  border-top: 1px solid var(--line);
+}
+.links-card button > svg:last-child {
+  margin-left: auto;
+  color: var(--muted);
+}
+.settings-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 26px 0;
+}
+.info-content {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.info-content h3 {
+  font-size: 14px;
+  color: var(--text);
+  margin: 22px 0 5px;
+}
+.info-content h3:first-child {
+  margin-top: 2px;
+}
+.info-content p {
+  margin: 0 0 8px;
+}
+
+.settings-screen {
+  padding-bottom: calc(var(--nav-space) + 48px);
+}
+.challenge-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--accent-readable);
+}
+.switch:has(input:disabled) {
+  opacity: 0.65;
+  cursor: default;
+}

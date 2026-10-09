@@ -1,0 +1,561 @@
+.home-screen {
+  height: 100dvh;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  padding: max(4px, env(safe-area-inset-top, 0px)) 22px
+    calc(var(--nav-space) + 24px);
+}
+.home-screen .app-header {
+  height: 46px;
+  flex: none;
+}
+.color-section {
+  height: clamp(106px, 17dvh, 146px);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  padding: 2px 0 8px;
+}
+.color-bubble {
+  width: clamp(70px, 11.6dvh, 104px);
+  height: clamp(70px, 11.6dvh, 104px);
+  flex: none;
+  border: 0;
+  border-radius: 46% 54% 48% 52%;
+  background: transparent;
+  color: var(--accent);
+  position: relative;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  transition:
+    color 0.65s,
+    transform 0.3s;
+}
+.bubble-question {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--control-ink);
+  font-size: 30px;
+  font-weight: 700;
+}
+.color-copy {
+  text-align: center;
+  padding-top: 5px;
+}
+.color-copy h2 {
+  min-height: 1.2em;
+  font-size: clamp(17px, 2.6dvh, 22px);
+  letter-spacing: -0.045em;
+  margin: 0;
+  font-weight: 850;
+}
+.work-section {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: grid;
+  grid-template-areas: "heading" "counts" "tools" "collage" "hint" "finish";
+  grid-template-rows: 25px 40px 30px minmax(0, 1fr) 14px 46px;
+  gap: 6px;
+}
+.section-line {
+  grid-area: heading;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+}
+.section-line > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-line h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.05em;
+  font-weight: 850;
+}
+.progress-pill {
+  background: var(--surface-soft);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 48% 52% 45% 55% / 45% 50% 50% 55%;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.count-selector {
+  grid-area: counts;
+  height: 40px;
+  padding: 3px;
+  background: var(--surface-soft);
+  border: 0;
+  border-radius: 32px 38px 33px 28px / 20px 17px 23px 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin: 0;
+}
+.count-selector button {
+  border: 0;
+  background: transparent;
+  border-radius: 34px 28px 33px 26px / 19px 22px 17px 20px;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 850;
+  transition:
+    background 0.3s,
+    color 0.3s;
+}
+.count-selector button span {
+  font-size: 11px;
+  margin-left: 3px;
+}
+.count-selector button.selected {
+  background: transparent;
+  color: var(--control-ink);
+}
+.count-selector button:disabled:not(.selected) {
+  opacity: 0.7;
+}
+.helper-line {
+  font-size: 9px;
+  color: var(--muted);
+  margin: 0;
+}
+.home-tools {
+  grid-area: tools;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.spacing-selector {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+}
+.spacing-selector button {
+  border: 0;
+  border-radius: 14px 18px 13px 17px;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 10px;
+  min-height: 30px;
+  font-size: 10px;
+  font-weight: 750;
+}
+.spacing-selector button.selected {
+  background: var(--surface-soft);
+  color: var(--accent-readable);
+}
+.spacing-selector button:disabled {
+  opacity: 0.65;
+}
+.sample-tools {
+  margin: 0;
+}
+.sample-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 17px 13px 18px 14px;
+  padding: 6px 9px;
+  min-height: 30px;
+  color: var(--accent-readable);
+  background: var(--surface-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+.sample-button:disabled {
+  opacity: 0.45;
+}
+.collage-stage {
+  grid-area: collage;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.collage-frame {
+  background: var(--surface);
+  border-radius: 15px;
+  padding: 4px;
+  overflow: hidden;
+  flex: none;
+  max-width: 100%;
+}
+.collage-frame.inactive {
+  opacity: 0.85;
+}
+.collage-grid {
+  display: grid;
+  gap: 4px;
+}
+.collage-grid.spacing-joined {
+  gap: 0;
+}
+.collage-grid.spacing-joined .photo-tile,
+.collage-grid.spacing-joined .empty-tile {
+  border-radius: 0;
+}
+.photo-tile,
+.empty-tile {
+  aspect-ratio: 1.25;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  touch-action: none;
+}
+.photo-tile.static {
+  touch-action: pan-y;
+}
+.crop-view {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.crop-view.editable {
+  touch-action: none;
+  cursor: grab;
+}
+.crop-view.editable:active {
+  cursor: grabbing;
+}
+.crop-view img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+}
+.collage-grid.count-4 .photo-tile,
+.collage-grid.count-4 .empty-tile {
+  aspect-ratio: 1.12;
+}
+.collage-grid.count-9 .photo-tile,
+.collage-grid.count-9 .empty-tile {
+  aspect-ratio: 1;
+}
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform;
+}
+.photo-tile.dragging {
+  z-index: 2;
+  outline: 2px solid var(--accent-readable);
+}
+.empty-tile {
+  border: 1.5px dashed var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--accent-readable);
+  background: color-mix(in srgb, var(--accent) 3%, var(--page));
+}
+.empty-tile:not(:disabled):hover {
+  border-color: var(--accent-readable);
+  background: var(--surface-soft);
+}
+.grid-hint {
+  grid-area: hint;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+  align-self: center;
+}
+.primary-button,
+.secondary-button {
+  border: 0;
+  border-radius: 28px 34px 26px 31px / 21px 19px 24px 20px;
+  min-height: 46px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.primary-button {
+  background: var(--accent);
+  color: var(--control-ink);
+}
+.primary-button:disabled {
+  background: color-mix(in srgb, var(--muted) 23%, var(--surface));
+  color: var(--muted);
+}
+.secondary-button {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+.complete-button {
+  grid-area: finish;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 35px 43px 33px 38px / 22px 18px 25px 20px;
+  position: relative;
+}
+.hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+@media (max-height: 680px) {
+  .home-screen .app-header h1 {
+    font-size: 28px;
+  }
+  .home-screen .app-header {
+    height: 42px;
+  }
+  .work-section {
+    grid-template-rows: 23px 36px 30px minmax(0, 1fr) 12px 42px;
+    gap: 4px;
+  }
+  .count-selector {
+    height: 36px;
+  }
+  .complete-button {
+    min-height: 42px;
+  }
+  .section-line h2 {
+    font-size: 15px;
+  }
+  .grid-hint {
+    font-size: 9px;
+  }
+}
+@media (max-width: 350px) {
+  .home-screen {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .header-side {
+    font-size: 9px;
+  }
+  .spacing-selector button {
+    padding: 6px 8px;
+  }
+}
+
+.challenge-count {
+  grid-area: counts;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 32px 38px 33px 28px / 20px 17px 23px 18px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.liquid-color-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 0;
+}
+.home-screen > .app-header,
+.home-screen > .color-section,
+.home-screen > .work-section {
+  z-index: 1;
+}
+.count-selector {
+  position: relative;
+  isolation: isolate;
+}
+.count-selector button {
+  position: relative;
+  z-index: 1;
+}
+.liquid-selection {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: calc((100% - 16px) / 3);
+  background: var(--accent);
+  border-radius: 53% 47% 57% 43% / 46% 58% 42% 54%;
+  animation: liquid-morph 6.7s ease-in-out infinite;
+  pointer-events: none;
+}
+.primary-button:not(:disabled):active {
+  transform: scale(0.97);
+}
+.empty-tile:not(:disabled):active {
+  border-radius: 17px 12px 18px 10px;
+}
+@keyframes liquid-morph {
+  0%,
+  100% {
+    border-radius: 53% 47% 57% 43% / 46% 58% 42% 54%;
+  }
+  50% {
+    border-radius: 45% 55% 47% 53% / 58% 43% 57% 42%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-selection {
+    animation: none;
+  }
+}
+/* A little more graphic weight, while retaining rectangular photo frames. */
+.home-screen .app-header h1 {
+  font-size: 34px;
+  letter-spacing: -1.8px;
+}
+.home-screen .app-header h1::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin: 0 0 0 -65px;
+  top: 9px;
+}
+.color-bubble {
+  width: clamp(78px, 12.2dvh, 110px);
+  height: clamp(78px, 12.2dvh, 110px);
+}
+.home-screen .empty-tile {
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--page));
+}
+.home-screen .spacing-joined .empty-tile {
+  border-radius: 0;
+}
+.home-screen .collage-frame {
+  background: var(--surface);
+}
+.home-screen .progress-pill {
+  padding: 6px 11px;
+}
+@media (max-height: 680px) {
+  .home-screen .app-header h1 {
+    font-size: 30px;
+  }
+  .home-screen .app-header h1::after {
+    margin-left: -58px;
+    top: 7px;
+  }
+}
+
+/* Code-native SVG silhouettes: broad lobes and concave liquid edges. */
+.app-shell {
+  --liquid-bar-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 64' preserveAspectRatio='none'%3E%3Cpath d='M5 31C8 13 30 4 52 6C77 9 78 15 106 10C141 3 151 13 177 10C206 5 222 3 241 9C261 15 279 7 299 13C317 18 322 32 309 42C297 51 298 61 277 59C249 55 234 62 210 58C188 54 165 56 146 61C119 67 111 52 88 53C63 52 64 67 44 61C26 55 31 46 19 46C7 50 0 44 5 31Z'/%3E%3C/svg%3E");
+  --liquid-pill-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 48' preserveAspectRatio='none'%3E%3Cpath d='M4 20C9 8 19 3 34 5C47 7 54 8 64 5C82 0 97 7 106 12C119 18 121 28 112 35C104 40 103 46 88 44C76 42 69 45 55 43C42 40 30 47 20 43C11 40 0 31 4 20Z'/%3E%3C/svg%3E");
+  --liquid-bubble-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M52 4C69 1 81 13 83 29C85 39 98 45 95 59C93 74 82 75 76 85C66 101 45 95 37 89C29 82 16 87 9 74C1 61 9 52 11 43C12 28 25 26 33 18C39 11 43 5 52 4Z'/%3E%3C/svg%3E");
+}
+.primary-button,
+.secondary-button {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border-radius: 0;
+  --liquid-fill: var(--accent);
+}
+.secondary-button {
+  --liquid-fill: var(--surface-soft);
+}
+.primary-button:disabled {
+  background: transparent;
+  --liquid-fill: color-mix(in srgb, var(--muted) 23%, var(--surface));
+}
+.primary-button::before,
+.secondary-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--liquid-fill);
+  mask-image: var(--liquid-pill-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+}
+.complete-button::before {
+  inset: -2px -3px;
+  mask-image: var(--liquid-bar-mask);
+}
+.count-selector {
+  background: transparent;
+  border-radius: 0;
+}
+.count-selector::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--surface-soft);
+  mask-image: var(--liquid-bar-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  z-index: -1;
+}
+.liquid-selection {
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  border-radius: 0;
+  mask-image: var(--liquid-pill-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  animation: none;
+}
+.challenge-count {
+  background: var(--surface-soft);
+  border-radius: 0;
+  mask-image: var(--liquid-bar-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+.home-screen .progress-pill {
+  border-radius: 0;
+  background: var(--surface-soft);
+  mask-image: var(--liquid-pill-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+
+.home-screen .sample-button,
+.home-screen .spacing-selector button {
+  position: relative;
+  isolation: isolate;
+  border-radius: 0;
+  background: transparent;
+}
+.home-screen .sample-button::before,
+.home-screen .spacing-selector button.selected::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--surface-soft);
+  mask-image: var(--liquid-pill-mask);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  z-index: -1;
+  pointer-events: none;
+}

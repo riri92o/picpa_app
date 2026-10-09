@@ -1,0 +1,103 @@
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--page);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+.tutorial-card {
+  width: min(100%, 460px);
+  height: 100dvh;
+  background: var(--page);
+  padding: 35px 27px max(34px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+}
+.tutorial-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  font-size: 23px;
+}
+.tutorial-top button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.tutorial-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.tutorial-art {
+  height: 260px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.tutorial-symbol {
+  width: 156px;
+  height: 156px;
+  border-radius: 46% 54% 43% 57% / 57% 45% 55% 43%;
+  display: grid;
+  place-items: center;
+  color: var(--control-ink);
+  background: var(--accent);
+  position: relative;
+}
+.tutorial-orbit {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--surface-soft);
+}
+.tutorial-orbit.one {
+  width: 47px;
+  height: 47px;
+  left: 15%;
+  top: 25%;
+}
+.tutorial-orbit.two {
+  width: 31px;
+  height: 31px;
+  right: 15%;
+  bottom: 20%;
+}
+.tutorial-content h1 {
+  font-size: 27px;
+  letter-spacing: -0.07em;
+  margin: 10px 0 7px;
+}
+.tutorial-content p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+.tutorial-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dots {
+  display: flex;
+  gap: 6px;
+}
+.dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.dots span.current {
+  width: 22px;
+  border-radius: 8px;
+  background: var(--accent);
+}
+.tutorial-next {
+  min-width: 130px;
+  background: var(--accent);
+}

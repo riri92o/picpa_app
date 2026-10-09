@@ -1,0 +1,65 @@
+.bottom-nav {
+  position: fixed;
+  z-index: 30;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: var(--nav-space);
+  width: min(100%, 460px);
+}
+.nav-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--surface);
+}
+.nav-bubble {
+  position: absolute;
+  top: -15px;
+  width: 60px;
+  height: 60px;
+  transform: translateX(-50%);
+  background: var(--accent);
+  border: 5px solid var(--surface);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--control-ink);
+  z-index: 2;
+}
+.nav-items {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  padding-top: 10px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.nav-item {
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  min-height: 44px;
+  border-radius: 22px;
+}
+.nav-item .nav-icon {
+  height: 24px;
+  transition: opacity 0.15s;
+}
+.nav-item.active .nav-icon {
+  opacity: 0;
+}
+.nav-item.active {
+  color: var(--text);
+}
+
+/* Keep neutral bubbles visible on both light and dark surfaces. */
+.app-shell[data-color="white"] .nav-bubble,
+.app-shell[data-color="black"] .nav-bubble {
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
