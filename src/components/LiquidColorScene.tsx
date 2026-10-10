@@ -1,4 +1,12 @@
-import { useEffect, useId, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { colorById } from "../constants/palette";
 import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
@@ -50,6 +58,11 @@ export function LiquidColorScene({
   screenRef: RefObject<HTMLElement | null>;
   bubbleRef: RefObject<HTMLButtonElement | null>;
 }) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    setHost(document.getElementById("color-scene-root"));
+  }, []);
+  const sceneRef = useRef<HTMLDivElement>(null);
   const materialId = useId().replace(/:/g, "");
   const [box, setBox] = useState<FluidBox>({
     width: 390,
@@ -60,10 +73,11 @@ export function LiquidColorScene({
   });
   useEffect(() => {
     const screen = screenRef.current,
-      bubble = bubbleRef.current;
-    if (!screen || !bubble) return;
+      bubble = bubbleRef.current,
+      scene = sceneRef.current;
+    if (!screen || !bubble || !scene) return;
     const measure = () => {
-      const a = screen.getBoundingClientRect(),
+      const a = scene.getBoundingClientRect(),
         b = bubble.getBoundingClientRect();
       const next = {
         width: a.width,
@@ -83,16 +97,35 @@ export function LiquidColorScene({
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(screen);
+    observer.observe(scene);
     observer.observe(bubble);
-    return () => observer.disconnect();
-  }, [screenRef, bubbleRef]);
+    // The screen slides during tab changes while this backdrop stays fixed.
+    // Follow those style updates so the visible surface and its tap target agree.
+    const transitionObserver = new MutationObserver(measure);
+    if (screen.parentElement)
+      transitionObserver.observe(screen.parentElement, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      transitionObserver.disconnect();
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [screenRef, bubbleRef, host]);
   const { phase, busy, reduced } = ritual;
   const result = colorById(ritual.resultId).hex;
   const mainColor =
     ritual.visibleColorId || phase === "settle" ? result : "#bdc1c5";
   const neutral = !ritual.visibleColorId && phase !== "settle";
-  return (
-    <>
+  if (!host) return null;
+  return createPortal(
+    // Draw outside the animated, safe-area-padded screen. The measured layer is
+    // also the canvas coordinate system, so mixing still lands on the button.
+    <div ref={sceneRef} className="color-scene-viewport" aria-hidden="true">
       <svg
         className="liquid-color-scene"
         data-phase={phase}
@@ -193,6 +226,7 @@ export function LiquidColorScene({
           startedAt={ritual.startedAt}
         />
       )}
-    </>
+    </div>,
+    host,
   );
 }

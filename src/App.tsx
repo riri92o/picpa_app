@@ -54,6 +54,7 @@ export default function App() {
       }
     >
       <LiquidBackdrop busy={ritual.busy} ambient={tab !== "home"} />
+      <div id="color-scene-root" aria-hidden="true" />
       <AnimatePresence mode="wait">
         <motion.div
           key={tab}

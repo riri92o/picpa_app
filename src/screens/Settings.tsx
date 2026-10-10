@@ -30,9 +30,6 @@ export function Settings() {
   );
   return (
     <main className="screen settings-screen">
-      <header className="app-header">
-        <h1>PicPa</h1>
-      </header>
       <div className="page-heading">
         <h2>設定</h2>
       </div>

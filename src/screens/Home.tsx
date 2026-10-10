@@ -30,7 +30,6 @@ import { useApp } from "../state/AppContext";
 export function Home({ ritual }: { ritual: ColorRitual }) {
   const {
     today,
-    todayKey,
     settings,
     images,
     setCount,
@@ -77,11 +76,6 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
   const randomChallenge = isRandomChallenge(today, settings);
   const color = colorById(today.colorId);
   const placement = today.photos.find((p) => p.id === editing);
-  const dateLabel = new Intl.DateTimeFormat("ja-JP", {
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  }).format(new Date(`${todayKey}T12:00:00`));
   const openSource = (id?: string) => {
     setReplaceId(id);
     setEditing(null);
@@ -127,10 +121,6 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
         screenRef={screenRef}
         bubbleRef={bubbleRef}
       />
-      <header className="app-header">
-        <span className="header-side date-text">{dateLabel}</span>
-        <h1>PicPa</h1>
-      </header>
       <section className="color-section">
         <button
           ref={bubbleRef}

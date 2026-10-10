@@ -96,9 +96,6 @@ export function Calendar() {
   };
   return (
     <main className="screen calendar-screen">
-      <header className="app-header">
-        <h1>PicPa</h1>
-      </header>
       <section
         className="calendar-card"
         aria-label="月のカレンダー"
