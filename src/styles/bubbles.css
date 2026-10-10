@@ -50,8 +50,8 @@ body {
   overflow: visible;
   background: transparent;
 }
-/* Overscan avoids a clipped decorative layer at the iOS standalone viewport edge.
-   Only content gets safe-area padding; the sky paints behind the status bar. */
+/* Extend into the web-controlled safe area. iOS may instead own an opaque native
+   status-bar region; that case uses inset-aware bubble origins, not overscan. */
 .app-shell::before {
   content: "";
   position: fixed;
@@ -629,4 +629,14 @@ body {
 .keep-grid button.kept span {
   background: var(--accent-soft);
   color: var(--control-ink);
+}
+
+.safe-area-probe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: env(safe-area-inset-top, 0px);
+  visibility: hidden;
+  pointer-events: none;
 }

@@ -27,7 +27,13 @@ import { isRandomChallenge } from "../domain/challenge";
 import type { GridCount } from "../domain/types";
 import { useApp } from "../state/AppContext";
 
-export function Home({ ritual }: { ritual: ColorRitual }) {
+export function Home({
+  ritual,
+  systemInset,
+}: {
+  ritual: ColorRitual;
+  systemInset: boolean;
+}) {
   const {
     today,
     settings,
@@ -118,6 +124,7 @@ export function Home({ ritual }: { ritual: ColorRitual }) {
     >
       <LiquidColorScene
         ritual={ritual}
+        systemInset={systemInset}
         screenRef={screenRef}
         bubbleRef={bubbleRef}
       />

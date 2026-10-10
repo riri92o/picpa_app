@@ -10,10 +10,12 @@ import { useApp } from "./state/AppContext";
 import { LiquidBackdrop } from "./components/LiquidBackdrop";
 import { useColorRitual } from "./ui/useColorRitual";
 import { SKY } from "./constants/sky";
+import { useViewportGuard } from "./ui/useViewportGuard";
 import { accentTokens } from "./ui/theme";
 
 export default function App() {
   const { ready, error, clearError, today, settings, drawToday } = useApp();
+  const { probeRef, systemInset } = useViewportGuard(ready);
   const [tab, setTab] = useState<Tab>("home");
   const ritual = useColorRitual(today, drawToday);
   const color = colorById(ritual.visibleColorId);
@@ -43,6 +45,7 @@ export default function App() {
     <div
       className="app-shell"
       data-color={ritual.visibleColorId}
+      data-statusbar-inset={systemInset ? "system" : "web"}
       style={
         {
           ...accentTokens(
@@ -53,6 +56,7 @@ export default function App() {
         } as CSSProperties
       }
     >
+      <span ref={probeRef} className="safe-area-probe" aria-hidden="true" />
       <LiquidBackdrop busy={ritual.busy} ambient={tab !== "home"} />
       <div id="color-scene-root" aria-hidden="true" />
       <AnimatePresence mode="wait">
@@ -65,7 +69,7 @@ export default function App() {
           transition={{ duration: ritual.reduced ? 0 : 0.22 }}
         >
           {tab === "home" ? (
-            <Home ritual={ritual} />
+            <Home ritual={ritual} systemInset={systemInset} />
           ) : tab === "calendar" ? (
             <Calendar />
           ) : (

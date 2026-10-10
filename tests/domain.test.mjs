@@ -199,3 +199,40 @@ assert.equal(undrawn["--film-blue"], "#bfc8d7");
 console.log(
   "38 daily colors: selected-control and night-sky text contrast, neutral undrawn film: OK",
 );
+
+const { hasSystemStatusBarInset, floatingBubblePosition } =
+  load("src/ui/viewport.ts");
+const iosViewport = {
+  iosStandalone: true,
+  safeTop: 0,
+  screenHeight: 874,
+  viewportHeight: 812,
+  portrait: true,
+  scale: 1,
+};
+assert.equal(hasSystemStatusBarInset(iosViewport), true);
+for (const change of [
+  { iosStandalone: false },
+  { safeTop: 59 },
+  { viewportHeight: 874 },
+  { portrait: false },
+  { scale: 1.2 },
+  { viewportHeight: 600 },
+])
+  assert.equal(hasSystemStatusBarInset({ ...iosViewport, ...change }), false);
+const { FLOATING_BUBBLES } = load("src/constants/liquidMotion.ts");
+for (const height of [568, 812, 844]) {
+  for (const bubble of FLOATING_BUBBLES) {
+    const original = floatingBubblePosition(bubble, 390, height);
+    assert.deepEqual(original, { x: 390 * bubble.x, y: height * bubble.y });
+    const guarded = floatingBubblePosition(bubble, 390, height, true);
+    assert.ok(
+      guarded.y - bubble.r * 1.12 - Math.abs(bubble.dy) >= 12 - 1e-8,
+      "Top contour must survive floating and deformation without being cut",
+    );
+    assert.equal(guarded.x, original.x);
+  }
+}
+console.log(
+  "iOS native status-bar detection, browser/zoom exclusions and complete bubble contours: OK",
+);

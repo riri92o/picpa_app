@@ -12,6 +12,7 @@ import { colorById } from "../constants/palette";
 import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
 import { BubbleSurface } from "./BubbleSurface";
 import { createFluidMix, type FluidBox } from "../ui/fluidMix";
+import { floatingBubblePosition } from "../ui/viewport";
 import type { ColorRitual } from "../ui/useColorRitual";
 
 function FluidLayer({
@@ -19,16 +20,24 @@ function FluidLayer({
   result,
   colorId,
   startedAt,
+  systemInset,
 }: {
   box: FluidBox;
   result: string;
   colorId: string;
   startedAt: number;
+  systemInset: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!canvas.current) return;
-    const render = createFluidMix(canvas.current, box, result, colorId);
+    const render = createFluidMix(
+      canvas.current,
+      box,
+      result,
+      colorId,
+      systemInset,
+    );
     let frame = 0;
     const tick = (now: number) => {
       render(now - startedAt);
@@ -36,7 +45,7 @@ function FluidLayer({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [box, result, colorId, startedAt]);
+  }, [box, result, colorId, startedAt, systemInset]);
   return (
     <motion.canvas
       ref={canvas}
@@ -53,8 +62,10 @@ export function LiquidColorScene({
   ritual,
   screenRef,
   bubbleRef,
+  systemInset,
 }: {
   ritual: ColorRitual;
+  systemInset: boolean;
   screenRef: RefObject<HTMLElement | null>;
   bubbleRef: RefObject<HTMLButtonElement | null>;
 }) {
@@ -133,8 +144,12 @@ export function LiquidColorScene({
         aria-hidden="true"
       >
         {FLOATING_BUBBLES.map((blob, i) => {
-          const x = box.width * blob.x,
-            y = box.height * blob.y;
+          const { x, y } = floatingBubblePosition(
+            blob,
+            box.width,
+            box.height,
+            systemInset,
+          );
           return (
             <motion.g
               key={i}
@@ -224,6 +239,7 @@ export function LiquidColorScene({
           result={result}
           colorId={colorById(ritual.resultId).id}
           startedAt={ritual.startedAt}
+          systemInset={systemInset}
         />
       )}
     </div>,

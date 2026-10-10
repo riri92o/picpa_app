@@ -1,5 +1,6 @@
 import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
 
+import { floatingBubblePosition } from "./viewport";
 import { ingredientForBubble, recipeForColor } from "../constants/mixRecipes";
 
 export interface FluidBox {
@@ -42,6 +43,7 @@ export function createFluidMix(
   box: FluidBox,
   resultHex: string,
   colorId: string,
+  systemInset = false,
 ) {
   const scale = Math.min(LIQUID_MOTION.fieldScale, 384 / box.width);
   const width = Math.ceil(box.width * scale),
@@ -69,21 +71,24 @@ export function createFluidMix(
         0,
       ) / totalWeight,
   ) as RGB;
-  const groups = FLOATING_BUBBLES.map((b, i) => ({
-    startX: box.width * b.x,
-    startY: box.height * b.y,
-    angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
-    color: rgb(ingredientForBubble(recipe, i).hex),
-    nodes: Array.from({ length: 4 }, (_, j): Node => ({
-      x: box.width * b.x,
-      y: box.height * b.y,
-      vx: 0,
-      vy: 0,
-      radius: b.r * [0.86, 0.52, 0.3, 0.13][j],
-      color: gray,
-      strength: 0,
-    })),
-  }));
+  const groups = FLOATING_BUBBLES.map((b, i) => {
+    const start = floatingBubblePosition(b, box.width, box.height, systemInset);
+    return {
+      startX: start.x,
+      startY: start.y,
+      angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
+      color: rgb(ingredientForBubble(recipe, i).hex),
+      nodes: Array.from({ length: 4 }, (_, j): Node => ({
+        x: start.x,
+        y: start.y,
+        vx: 0,
+        vy: 0,
+        radius: b.r * [0.86, 0.52, 0.3, 0.13][j],
+        color: gray,
+        strength: 0,
+      })),
+    };
+  });
   const core: Node = {
     x: box.x,
     y: box.y,
