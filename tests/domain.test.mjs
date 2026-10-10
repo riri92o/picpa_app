@@ -236,3 +236,72 @@ for (const height of [568, 812, 844]) {
 console.log(
   "iOS native status-bar detection, browser/zoom exclusions and complete bubble contours: OK",
 );
+
+const { fluidHandoff, fluidFilmOpacity } = load("src/ui/fluidSurface.ts");
+const { FLUID_SURFACE, LIQUID_MOTION } = load("src/constants/liquidMotion.ts");
+const ritualDuration =
+  LIQUID_MOTION.gather + LIQUID_MOTION.swirl + LIQUID_MOTION.settle;
+for (let elapsed = 0; elapsed <= ritualDuration + 100; elapsed += 10) {
+  const handoff = fluidHandoff(elapsed);
+  assert.ok(handoff.fluid >= 0 && handoff.fluid <= 1);
+  assert.ok(handoff.main >= 0 && handoff.main <= 1);
+  assert.ok(
+    Math.abs(handoff.main + handoff.fluid - 1) < 1e-10,
+    "SVG and fluid handoffs must neither disappear nor double their weights",
+  );
+}
+assert.deepEqual(fluidHandoff(0), { fluid: 0, main: 1 });
+assert.deepEqual(fluidHandoff(LIQUID_MOTION.gather + 500), {
+  fluid: 1,
+  main: 0,
+});
+assert.deepEqual(fluidHandoff(ritualDuration), { fluid: 0, main: 1 });
+assert.equal(fluidFilmOpacity(0.9), 0);
+assert.equal(fluidFilmOpacity(3), FLUID_SURFACE.interiorOpacity);
+assert.ok(
+  fluidFilmOpacity(1.1) > fluidFilmOpacity(3),
+  "The rim must remain legible",
+);
+
+// Inspect real rendered alpha, not only the material helper. No browser or images required.
+const { createFluidMix } = load("src/ui/fluidMix.ts");
+let fluidPixels;
+const filmCanvas = {
+  width: 0,
+  height: 0,
+  getContext: () => ({
+    createImageData: (width, height) => ({
+      data: new Uint8ClampedArray(width * height * 4),
+    }),
+    putImageData: (image) => {
+      fluidPixels = image.data;
+    },
+  }),
+};
+const drawFilm = createFluidMix(
+  filmCanvas,
+  { width: 96, height: 180, x: 48, y: 48, size: 40 },
+  "#A9D8AE",
+  "pale-green",
+);
+drawFilm(0);
+assert.ok(fluidPixels.every((value, i) => i % 4 !== 3 || value === 0));
+let visibleFilm = false;
+for (let elapsed = 50; elapsed <= ritualDuration; elapsed += 50) {
+  drawFilm(elapsed);
+  for (let i = 3; i < fluidPixels.length; i += 4) {
+    assert.ok(
+      fluidPixels[i] <= Math.ceil(255 * FLUID_SURFACE.rimOpacity),
+      "Even overlapping fluid pools must stay translucent",
+    );
+    visibleFilm ||= fluidPixels[i] > 100;
+  }
+}
+assert.ok(visibleFilm, "Translucency must not erase the flowing contour");
+assert.ok(
+  fluidPixels.every((value, i) => i % 4 !== 3 || value === 0),
+  "The canvas must fully hand back to the settled SVG",
+);
+console.log(
+  "Translucent fluid pixels, visible rims and complementary SVG/canvas handoffs: OK",
+);

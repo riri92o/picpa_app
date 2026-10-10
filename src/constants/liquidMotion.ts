@@ -35,3 +35,17 @@ export const LIQUID_MOTION = {
   backgroundStagger: 0.035,
   marksReveal: 0.6,
 };
+
+/** Material and handoff controls; the spring motion and ritual timings stay separate. */
+export const FLUID_SURFACE = {
+  interiorOpacity: 0.3,
+  rimOpacity: 0.84,
+  contourThreshold: 0.92,
+  contourFeather: 0.16,
+  rimStart: 0.98,
+  rimDepth: 0.85,
+  entrance: 320,
+  settleRevealStart: 0.06,
+  settleRevealSpan: 0.88,
+  handoffEase: [1 / 3, 0, 2 / 3, 1] as [number, number, number, number],
+};

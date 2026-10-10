@@ -1,5 +1,10 @@
-import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
+import {
+  FLOATING_BUBBLES,
+  FLUID_SURFACE,
+  LIQUID_MOTION,
+} from "../constants/liquidMotion";
 
+import { fluidFilmOpacity, fluidHandoff } from "./fluidSurface";
 import { floatingBubblePosition } from "./viewport";
 import { ingredientForBubble, recipeForColor } from "../constants/mixRecipes";
 
@@ -221,12 +226,12 @@ export function createFluidMix(
         }
       }
     }
-    const fade = 1 - smooth((settling - 0.67) / 0.33);
+    const handoff = fluidHandoff(elapsed);
     for (let y = minY; y <= maxY; y++)
       for (let x = minX; x <= maxX; x++) {
         const index = y * width + x,
           value = density[index];
-        if (value < 0.92) continue;
+        if (value < FLUID_SURFACE.contourThreshold) continue;
         const p = index * 4;
         // Shade the same unified field, so connected liquid retains its depth while mixing.
         const slopeX = density[index - 1] - density[index + 1] || 0;
@@ -250,9 +255,10 @@ export function createFluidMix(
           );
           pixels.data[p + c] = mix(lit, film, filmWeight);
         }
-        // Retain the original feathered contour and fade into the settled SVG bubble.
+        // Transparent interiors share a single alpha field. Keep the rim legible
+        // and hand off to the SVG with the very same complementary progress.
         pixels.data[p + 3] =
-          (255 * smooth((value - 0.92) / 0.16) * fade * coverage[index]) /
+          (255 * fluidFilmOpacity(value) * handoff.fluid * coverage[index]) /
           weights[index];
       }
     context.putImageData(pixels, 0, 0);

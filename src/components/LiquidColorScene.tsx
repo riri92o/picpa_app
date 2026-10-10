@@ -7,11 +7,16 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, type MotionValue } from "framer-motion";
 import { colorById } from "../constants/palette";
-import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
+import {
+  FLOATING_BUBBLES,
+  FLUID_SURFACE,
+  LIQUID_MOTION,
+} from "../constants/liquidMotion";
 import { BubbleSurface } from "./BubbleSurface";
 import { createFluidMix, type FluidBox } from "../ui/fluidMix";
+import { fluidHandoff } from "../ui/fluidSurface";
 import { floatingBubblePosition } from "../ui/viewport";
 import type { ColorRitual } from "../ui/useColorRitual";
 
@@ -21,12 +26,14 @@ function FluidLayer({
   colorId,
   startedAt,
   systemInset,
+  mainOpacity,
 }: {
   box: FluidBox;
   result: string;
   colorId: string;
   startedAt: number;
   systemInset: boolean;
+  mainOpacity: MotionValue<number>;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -40,21 +47,16 @@ function FluidLayer({
     );
     let frame = 0;
     const tick = (now: number) => {
-      render(now - startedAt);
+      const elapsed = now - startedAt;
+      render(elapsed);
+      mainOpacity.set(fluidHandoff(elapsed).main);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [box, result, colorId, startedAt, systemInset]);
+  }, [box, result, colorId, startedAt, systemInset, mainOpacity]);
   return (
-    <motion.canvas
-      ref={canvas}
-      className="liquid-color-scene"
-      aria-hidden="true"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.22 }}
-    />
+    <canvas ref={canvas} className="liquid-color-scene" aria-hidden="true" />
   );
 }
 
@@ -128,6 +130,10 @@ export function LiquidColorScene({
     };
   }, [screenRef, bubbleRef, host]);
   const { phase, busy, reduced } = ritual;
+  const mainOpacity = useMotionValue(1);
+  useLayoutEffect(() => {
+    if (!busy || reduced) mainOpacity.set(1);
+  }, [busy, reduced, mainOpacity]);
   const result = colorById(ritual.resultId).hex;
   const mainColor =
     ritual.visibleColorId || phase === "settle" ? result : "#bdc1c5";
@@ -159,13 +165,13 @@ export function LiquidColorScene({
                 duration: reduced
                   ? 0
                   : busy
-                    ? 0.22
+                    ? FLUID_SURFACE.entrance / 1000
                     : LIQUID_MOTION.backgroundReveal,
                 delay:
                   reduced || busy
                     ? 0
                     : (i % 5) * LIQUID_MOTION.backgroundStagger,
-                ease: "easeInOut",
+                ease: busy ? FLUID_SURFACE.handoffEase : "easeInOut",
               }}
             >
               <motion.g
@@ -194,20 +200,7 @@ export function LiquidColorScene({
           );
         })}
         <g transform={`translate(${box.x} ${box.y}) scale(${box.size / 100})`}>
-          <motion.g
-            initial={false}
-            animate={{ opacity: !busy || phase === "settle" ? 1 : 0 }}
-            transition={{
-              duration: reduced
-                ? 0
-                : phase === "settle"
-                  ? 0.55
-                  : busy
-                    ? 0.22
-                    : 0,
-              delay: phase === "settle" ? 0.3 : 0,
-            }}
-          >
+          <motion.g style={{ opacity: mainOpacity }}>
             <motion.g
               animate={
                 reduced
@@ -240,6 +233,7 @@ export function LiquidColorScene({
           colorId={colorById(ritual.resultId).id}
           startedAt={ritual.startedAt}
           systemInset={systemInset}
+          mainOpacity={mainOpacity}
         />
       )}
     </div>,
