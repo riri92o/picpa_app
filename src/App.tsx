@@ -9,6 +9,7 @@ import { Settings } from "./screens/Settings";
 import { useApp } from "./state/AppContext";
 import { LiquidBackdrop } from "./components/LiquidBackdrop";
 import { useColorRitual } from "./ui/useColorRitual";
+import { SKY } from "./constants/sky";
 import { accentTokens } from "./ui/theme";
 
 export default function App() {
@@ -25,7 +26,7 @@ export default function App() {
         (settings.theme === "system" && media.matches);
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", dark ? "#191e1d" : "#faf9fc");
+        ?.setAttribute("content", dark ? SKY.dark.page : SKY.light.page);
     };
     updateChrome();
     media.addEventListener("change", updateChrome);
@@ -44,12 +45,15 @@ export default function App() {
       data-color={ritual.visibleColorId}
       style={
         {
-          ...accentTokens(ritual.visibleColorId ? color.hex : "#bdc1c5"),
+          ...accentTokens(
+            ritual.visibleColorId ? color.hex : "#bdc1c5",
+            !!ritual.visibleColorId,
+          ),
           "--tint": ritual.visibleColorId ? color.tint : "#f4f6f5",
         } as CSSProperties
       }
     >
-      {tab !== "home" && <LiquidBackdrop />}
+      <LiquidBackdrop busy={ritual.busy} ambient={tab !== "home"} />
       <AnimatePresence mode="wait">
         <motion.div
           key={tab}

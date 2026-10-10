@@ -42,6 +42,7 @@ export function Settings() {
             <Palette size={19} />
             <h3>外観テーマ</h3>
           </div>
+          <p className="theme-note">夜空の明るさを選べます</p>
           <div className="theme-selector">
             {(
               [

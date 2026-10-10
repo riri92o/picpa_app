@@ -7,7 +7,8 @@
   gap: 18px;
   font-size: 26px;
   font-weight: 850;
-  background: #faf9fc;
+  background: #171e3e;
+  color: #f8f4fb;
 }
 .loading-bubble {
   width: 73px;
@@ -44,32 +45,6 @@
   to {
     transform: scale(1.06) rotate(4deg);
     opacity: 0.8;
-  }
-}
-[data-theme="dark"] .app-shell {
-  --surface: #202625;
-  --page: #191e1d;
-  --text: #eff4f1;
-  --muted: #a3ada8;
-  --line: color-mix(in srgb, var(--accent) 25%, var(--surface));
-  --accent-readable: var(--accent-readable-dark);
-}
-[data-theme="dark"] .tutorial-card {
-  background: var(--page);
-  color: var(--text);
-}
-@media (prefers-color-scheme: dark) {
-  [data-theme="system"] .app-shell {
-    --surface: #202625;
-    --page: #191e1d;
-    --text: #eff4f1;
-    --muted: #a3ada8;
-    --line: color-mix(in srgb, var(--accent) 25%, var(--surface));
-    --accent-readable: var(--accent-readable-dark);
-  }
-  [data-theme="system"] .tutorial-card {
-    background: var(--page);
-    color: var(--text);
   }
 }
 @media (prefers-reduced-motion: reduce) {

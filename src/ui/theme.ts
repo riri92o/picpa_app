@@ -30,16 +30,17 @@ function readableAccent(accent: string, surface: string, target: string) {
   return target;
 }
 // Presentation only: the stored daily palette color never changes.
-export function accentTokens(accent: string) {
-  const dark = "#172821",
+export function accentTokens(accent: string, revealed = false) {
+  const dark = "#142039",
     white = "#ffffff";
   return {
     "--accent": accent,
-    "--control-ink":
-      contrastRatio(accent, dark) >= contrastRatio(accent, white)
-        ? dark
-        : white,
+    "--accent-soft": mix(accent, white, 0.5),
+    "--control-ink": dark,
+    "--film-pink": revealed ? "#f9cde2" : "#e0e5ed",
+    "--film-blue": revealed ? "#b9ecf2" : "#bfc8d7",
+    "--film-gold": revealed ? "#fff0c7" : "#eff1f5",
     "--accent-readable-light": readableAccent(accent, "#faf9fc", dark),
-    "--accent-readable-dark": readableAccent(accent, "#202625", white),
+    "--accent-readable-dark": readableAccent(accent, "#252d4c", white),
   };
 }

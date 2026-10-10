@@ -180,3 +180,22 @@ for (const id of ["white", "black"]) {
 console.log(
   "Completed challenge lock, preserved OFF state, midnight unlock, white/black scoring: OK",
 );
+
+const { accentTokens, contrastRatio } = load("src/ui/theme.ts");
+for (const color of PALETTE) {
+  const tokens = accentTokens(color.hex, true);
+  assert.ok(
+    contrastRatio(tokens["--accent-soft"], tokens["--control-ink"]) >= 4.5,
+    `Unreadable selected control: ${color.id}`,
+  );
+  assert.ok(
+    contrastRatio(tokens["--accent-readable-dark"], "#252d4c") >= 5.2,
+    `Unreadable accent on night sky: ${color.id}`,
+  );
+}
+const undrawn = accentTokens("#bdc1c5");
+assert.equal(undrawn["--film-pink"], "#e0e5ed");
+assert.equal(undrawn["--film-blue"], "#bfc8d7");
+console.log(
+  "38 daily colors: selected-control and night-sky text contrast, neutral undrawn film: OK",
+);

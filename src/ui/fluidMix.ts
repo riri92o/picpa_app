@@ -30,6 +30,9 @@ const rgb = (hex: string): RGB =>
 const blend = (a: RGB, b: RGB, t: number): RGB =>
   a.map((c, i) => mix(c, b[i], t)) as RGB;
 const gray: RGB = [189, 193, 197];
+const neutralFilm: RGB = [226, 235, 247];
+const coolFilm: RGB = [183, 239, 243];
+const warmFilm: RGB = [255, 216, 230];
 
 /** UI-only field renderer. Spring-linked tails deform independently of their heads;
  * overlapping compact density kernels produce a shared contour, rather than stacked shapes.
@@ -156,7 +159,7 @@ export function createFluidMix(
         node.radius =
           mix(base, moving, gatherU) * knead * (1 - 0.85 * smooth(settling));
         node.strength =
-          mix(i < 2 ? 0.26 : 0.36, 1, gatherU) * (1 - smooth(settling));
+          mix(i < 2 ? 0.46 : 0.7, 1, gatherU) * (1 - smooth(settling));
         node.color = blend(
           gray,
           blend(group.color, result, finalMix),
@@ -223,11 +226,24 @@ export function createFluidMix(
         // Shade the same unified field, so connected liquid retains its depth while mixing.
         const slopeX = density[index - 1] - density[index + 1] || 0;
         const slopeY = density[index - width] - density[index + width] || 0;
-        const light = Math.max(-0.12, Math.min(0.22, -(slopeX + slopeY) * 1.7));
+        const light = Math.max(-0.14, Math.min(0.28, -(slopeX + slopeY) * 1.7));
+        // Soap-film bands follow the shared density contour. The spring trajectories,
+        // mixing recipes and convergence timing above are deliberately unchanged.
+        const edge = 1 - smooth((value - 0.98) / 1.7);
+        const band =
+          0.5 +
+          0.5 * Math.sin(x * 0.09 + y * 0.055 + value * 4 - elapsed * 0.0006);
+        const filmWeight = edge * (0.18 + 0.42 * band);
         for (let c = 0; c < 3; c++) {
           const base = channels[c][index] / weights[index];
-          pixels.data[p + c] =
+          const lit =
             light > 0 ? base + (255 - base) * light : base * (1 + light);
+          const film = mix(
+            neutralFilm[c],
+            mix(coolFilm[c], warmFilm[c], band),
+            neutralToColor,
+          );
+          pixels.data[p + c] = mix(lit, film, filmWeight);
         }
         // Retain the original feathered contour and fade into the settled SVG bubble.
         pixels.data[p + 3] =
