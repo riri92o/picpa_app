@@ -1,4 +1,4 @@
-// Matching cubic commands let round bubbles morph into curled, tapered droplets.
+// Matching cubic commands let nearly circular bubbles morph into curled droplets.
 type Point = [number, number];
 function smoothLoop(points: Point[]): string {
   let path = `M${points[0].join(",")}`;
@@ -18,9 +18,9 @@ export function bubbleOutline(seed = 0, curl = 0): string {
       const radius =
         47 *
         (1 +
-          0.035 * Math.sin(angle * 4 + seed) +
-          0.026 * Math.sin(angle * 3 - seed) +
-          0.012 * Math.cos(angle * 2 + seed));
+          0.011 * Math.sin(angle * 4 + seed) +
+          0.008 * Math.sin(angle * 3 - seed) +
+          0.004 * Math.cos(angle * 2 + seed));
       const tip = Math.pow(Math.max(0, Math.cos(angle)), 3);
       // The round head remains full; a tapered tip bends inward like a magatama.
       return [

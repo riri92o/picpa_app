@@ -9,7 +9,6 @@ import { Settings } from "./screens/Settings";
 import { useApp } from "./state/AppContext";
 import { LiquidBackdrop } from "./components/LiquidBackdrop";
 import { useColorRitual } from "./ui/useColorRitual";
-import { SKY } from "./constants/sky";
 import { useViewportGuard } from "./ui/useViewportGuard";
 import { accentTokens } from "./ui/theme";
 
@@ -17,23 +16,33 @@ export default function App() {
   const { ready, error, clearError, today, settings, drawToday } = useApp();
   const { probeRef, systemInset } = useViewportGuard(ready);
   const [tab, setTab] = useState<Tab>("home");
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
   const ritual = useColorRitual(today, drawToday);
   const color = colorById(ritual.visibleColorId);
+  const revealScene = !!ritual.visibleColorId || ritual.phase === "settle";
+  const themeAccent = revealScene
+    ? colorById(ritual.visibleColorId ?? ritual.resultId).hex
+    : "#bdc1c5";
+  const dark =
+    settings.theme === "dark" || (settings.theme === "system" && systemDark);
+  const tokens = accentTokens(themeAccent, revealScene, dark);
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const updateChrome = () => {
-      const dark =
-        settings.theme === "dark" ||
-        (settings.theme === "system" && media.matches);
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", dark ? SKY.dark.page : SKY.light.page);
-    };
-    updateChrome();
-    media.addEventListener("change", updateChrome);
-    return () => media.removeEventListener("change", updateChrome);
+    const updateScheme = () => setSystemDark(media.matches);
+    media.addEventListener("change", updateScheme);
+    return () => media.removeEventListener("change", updateScheme);
   }, [settings.theme]);
+  useEffect(() => {
+    const root = document.documentElement;
+    for (const key of ["--sky-page", "--sky-surface", "--sky-bottom"] as const)
+      root.style.setProperty(key, tokens[key]);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", tokens["--sky-page"]);
+  }, [tokens["--sky-page"], tokens["--sky-surface"], tokens["--sky-bottom"]]);
   if (!ready)
     return (
       <div className="loading-screen">
@@ -48,10 +57,7 @@ export default function App() {
       data-statusbar-inset={systemInset ? "system" : "web"}
       style={
         {
-          ...accentTokens(
-            ritual.visibleColorId ? color.hex : "#bdc1c5",
-            !!ritual.visibleColorId,
-          ),
+          ...tokens,
           "--tint": ritual.visibleColorId ? color.tint : "#f4f6f5",
         } as CSSProperties
       }

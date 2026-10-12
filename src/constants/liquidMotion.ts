@@ -38,8 +38,8 @@ export const LIQUID_MOTION = {
 
 /** Material and handoff controls; the spring motion and ritual timings stay separate. */
 export const FLUID_SURFACE = {
-  interiorOpacity: 0.3,
-  rimOpacity: 0.84,
+  interiorOpacity: 0.68,
+  rimOpacity: 0.93,
   contourThreshold: 0.92,
   contourFeather: 0.16,
   rimStart: 0.98,

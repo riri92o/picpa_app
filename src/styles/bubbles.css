@@ -8,6 +8,7 @@
   background: var(--sky-page);
   color: #f8f4fb;
   color-scheme: dark;
+  transition: background-color 0.8s ease;
 }
 [data-theme="dark"] {
   --sky-page: #0d132f;
@@ -39,13 +40,13 @@ body {
     radial-gradient(ellipse at 27% 18%, #ffffff35 0%, transparent 38%),
     radial-gradient(
       ellipse at 75% 83%,
-      color-mix(in srgb, var(--accent) 44%, transparent),
+      color-mix(in srgb, var(--scene-vivid) 60%, transparent),
       transparent 70%
     ),
     linear-gradient(
       150deg,
       #ffffff12,
-      color-mix(in srgb, var(--accent) 17%, var(--surface))
+      color-mix(in srgb, var(--scene-vivid) 29%, var(--surface))
     );
   overflow: visible;
   background: transparent;
@@ -64,9 +65,14 @@ body {
   z-index: -1;
   background:
     radial-gradient(
+      ellipse at 8% 8%,
+      color-mix(in srgb, var(--scene-vivid) 14%, transparent),
+      transparent 38%
+    ),
+    radial-gradient(
       ellipse at 95% 100%,
-      color-mix(in srgb, var(--accent) 12%, transparent),
-      transparent 58%
+      color-mix(in srgb, var(--scene-vivid) 35%, transparent),
+      transparent 65%
     ),
     linear-gradient(172deg, var(--page) 20%, var(--sky-bottom));
 }
@@ -280,8 +286,8 @@ body {
 .sky-star {
   position: absolute;
   border-radius: 50%;
-  background: #e2edff;
-  box-shadow: 0 0 5px #b3d8ff88;
+  background: var(--scene-glow);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--scene-vivid) 60%, transparent);
   opacity: 0.6;
   animation: star-breathe 8s ease-in-out infinite;
 }
@@ -294,12 +300,12 @@ body {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--accent) 24%, transparent),
+    color-mix(in srgb, var(--scene-vivid) 55%, transparent),
     transparent 72%
   );
   width: 85px;
   height: 85px;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 .haze-one {
   left: -45px;
@@ -332,7 +338,7 @@ body {
     radial-gradient(
       circle at 48% 46%,
       #ffffff04 34%,
-      color-mix(in srgb, var(--accent) 35%, transparent) 67%,
+      color-mix(in srgb, var(--scene-vivid) 48%, transparent) 67%,
       var(--film-blue) 89%,
       var(--film-pink) 97%
     );
@@ -344,7 +350,7 @@ body {
 }
 .sky-bubble {
   position: absolute;
-  opacity: 0.38;
+  opacity: 0.63;
   animation: sky-float 11s ease-in-out infinite;
 }
 .sky-bubble-one {

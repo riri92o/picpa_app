@@ -189,15 +189,24 @@ for (const color of PALETTE) {
     `Unreadable selected control: ${color.id}`,
   );
   assert.ok(
-    contrastRatio(tokens["--accent-readable-dark"], "#252d4c") >= 5.2,
+    contrastRatio(tokens["--accent-readable-dark"], tokens["--sky-surface"]) >= 5.2,
     `Unreadable accent on night sky: ${color.id}`,
   );
 }
 const undrawn = accentTokens("#bdc1c5");
 assert.equal(undrawn["--film-pink"], "#e0e5ed");
 assert.equal(undrawn["--film-blue"], "#bfc8d7");
+const sceneSamples = Object.fromEntries(
+  ["red", "leaf", "blue"].map((id) => {
+    const color = PALETTE.find((item) => item.id === id);
+    return [id, accentTokens(color.hex, true)];
+  }),
+);
+assert.equal(new Set(Object.values(sceneSamples).map((t) => t["--sky-bottom"])).size, 3);
+assert.equal(new Set(Object.values(sceneSamples).map((t) => t["--film-blue"])).size, 3);
+assert.equal(undrawn["--sky-page"], accentTokens("#bdc1c5", false)["--sky-page"]);
 console.log(
-  "38 daily colors: selected-control and night-sky text contrast, neutral undrawn film: OK",
+  "38 daily colors: selected-control and themed-surface contrast, neutral undrawn film, red/green/blue scenes: OK",
 );
 
 const { hasSystemStatusBarInset, floatingBubblePosition } =

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ROUND_BUBBLES } from "../ui/bubbleGeometry";
 import { LIQUID_MOTION } from "../constants/liquidMotion";
+import { mixHex, vividAccent } from "../ui/theme";
 
 /** A code-native soap film. The silhouette and its clipped color ribbons morph together. */
 export function BubbleSurface({
@@ -22,16 +23,17 @@ export function BubbleSurface({
     repeat: reduced ? 0 : Infinity,
     ease: "easeInOut" as const,
   };
-  const pearl = neutral ? "#e0e4ed" : "#ffdae8";
-  const aqua = neutral ? "#b7c0d0" : "#b7eff3";
-  const gold = neutral ? "#f2f3f7" : "#fff2c9";
+  const vivid = neutral ? color : vividAccent(color);
+  const pearl = neutral ? "#e0e4ed" : mixHex(vivid, "#ffe8f2", 0.67);
+  const aqua = neutral ? "#b7c0d0" : mixHex(vivid, "#d5f6ff", 0.57);
+  const gold = neutral ? "#f2f3f7" : mixHex(vivid, "#fff1d2", 0.63);
   return (
     <>
       <defs>
         <radialGradient id={`${id}-body`} cx="38%" cy="33%" r="72%">
-          <stop offset="0" stopColor={color} stopOpacity=".26" />
-          <stop offset=".5" stopColor={color} stopOpacity=".62" />
-          <stop offset=".78" stopColor={color} stopOpacity=".8" />
+          <stop offset="0" stopColor={vivid} stopOpacity=".44" />
+          <stop offset=".5" stopColor={vivid} stopOpacity=".76" />
+          <stop offset=".78" stopColor={vivid} stopOpacity=".9" />
           <stop offset=".94" stopColor={aqua} stopOpacity=".9" />
           <stop offset="1" stopColor={pearl} />
         </radialGradient>
@@ -39,7 +41,7 @@ export function BubbleSurface({
           <stop stopColor={gold} />
           <stop offset=".25" stopColor={pearl} />
           <stop offset=".5" stopColor={aqua} />
-          <stop offset=".75" stopColor={color} />
+          <stop offset=".75" stopColor={vivid} />
           <stop offset="1" stopColor={gold} />
         </linearGradient>
         <radialGradient id={`${id}-veil`}>

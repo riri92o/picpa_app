@@ -7,6 +7,7 @@ import {
 import { fluidFilmOpacity, fluidHandoff } from "./fluidSurface";
 import { floatingBubblePosition } from "./viewport";
 import { ingredientForBubble, recipeForColor } from "../constants/mixRecipes";
+import { vividAccent } from "./theme";
 
 export interface FluidBox {
   width: number;
@@ -72,7 +73,7 @@ export function createFluidMix(
   const mixed = [0, 1, 2].map(
     (channel) =>
       recipe.reduce(
-        (sum, item) => sum + rgb(item.hex)[channel] * item.weight,
+        (sum, item) => sum + rgb(vividAccent(item.hex))[channel] * item.weight,
         0,
       ) / totalWeight,
   ) as RGB;
@@ -82,7 +83,7 @@ export function createFluidMix(
       startX: start.x,
       startY: start.y,
       angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
-      color: rgb(ingredientForBubble(recipe, i).hex),
+      color: rgb(vividAccent(ingredientForBubble(recipe, i).hex)),
       nodes: Array.from({ length: 4 }, (_, j): Node => ({
         x: start.x,
         y: start.y,
@@ -243,7 +244,7 @@ export function createFluidMix(
         const band =
           0.5 +
           0.5 * Math.sin(x * 0.09 + y * 0.055 + value * 4 - elapsed * 0.0006);
-        const filmWeight = edge * (0.18 + 0.42 * band);
+        const filmWeight = edge * (0.06 + 0.18 * band);
         for (let c = 0; c < 3; c++) {
           const base = channels[c][index] / weights[index];
           const lit =
