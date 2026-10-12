@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { colorById } from "../constants/palette";
 import type { DayRecord } from "../domain/types";
 import type { ImageUrls } from "../state/AppContext";
 import { CollageGrid } from "./CollageGrid";
@@ -8,7 +10,7 @@ export function CompletionPreview({
   day,
   images,
 }: {
-  day: Pick<DayRecord, "count" | "spacing" | "photos">;
+  day: Pick<DayRecord, "count" | "spacing" | "photos" | "colorId">;
   images: Record<string, ImageUrls>;
 }) {
   return (
@@ -16,6 +18,9 @@ export function CompletionPreview({
       className="completion-preview"
       role="img"
       aria-label="完成するコラージュのプレビュー"
+      style={
+        { "--completion-color": colorById(day.colorId).hex } as CSSProperties
+      }
     >
       <CollageStage count={day.count} spacing={day.spacing} inactive={false}>
         <CollageGrid

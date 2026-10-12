@@ -243,6 +243,16 @@
 .completion-preview .collage-stage {
   height: 100%;
 }
+.completion-preview .collage-frame {
+  background: linear-gradient(
+    130deg,
+    color-mix(in srgb, var(--completion-color) 20%, white),
+    var(--completion-color) 22%,
+    color-mix(in srgb, var(--completion-color) 32%, white) 48%,
+    color-mix(in srgb, var(--completion-color) 82%, #26304d) 76%,
+    color-mix(in srgb, var(--completion-color) 18%, white)
+  );
+}
 .finish-preview {
   width: min(calc(100% - 32px), 390px);
 }

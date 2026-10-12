@@ -79,6 +79,113 @@ export function drawPlacement(
 export function gridDimensions(count: GridCount): [number, number] {
   return count === 9 ? [3, 3] : count === 4 ? [2, 2] : [2, 3];
 }
+
+function blendHex(hex: string, target: number, amount: number) {
+  const match = /^#([\da-f]{6})$/i.exec(hex);
+  if (!match) return hex;
+  const value = Number.parseInt(match[1], 16);
+  const channels = [16, 8, 0].map((shift) =>
+    Math.round(((value >> shift) & 255) * (1 - amount) + target * amount),
+  );
+  return `rgb(${channels.join(",")})`;
+}
+
+function visibleFrameColor(color: string) {
+  const match = /^#([\da-f]{6})$/i.exec(color);
+  if (!match) return color;
+  const value = Number.parseInt(match[1], 16);
+  const channels = [16, 8, 0].map((shift) => (value >> shift) & 255);
+  const average = channels.reduce((sum, channel) => sum + channel, 0) / 3;
+  const spread = Math.max(...channels) - Math.min(...channels);
+  if (average > 235 && spread < 20) return "#8994ad";
+  if (average < 30 && spread < 20) return "#59657d";
+  return color;
+}
+
+/** A restrained color-film edge, drawn outside the photos and their crop area. */
+function drawColorFrame(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: string,
+) {
+  const radius = 18;
+  const edge = 8;
+  const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
+  gradient.addColorStop(0, blendHex(color, 255, 0.75));
+  gradient.addColorStop(0.18, blendHex(color, 255, 0.26));
+  gradient.addColorStop(0.43, blendHex(color, 255, 0.68));
+  gradient.addColorStop(0.72, blendHex(color, 0, 0.18));
+  gradient.addColorStop(1, blendHex(color, 255, 0.82));
+  ctx.save();
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, radius);
+  ctx.fill();
+  ctx.strokeStyle = blendHex(color, 255, 0.55);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.roundRect(
+    x + edge,
+    y + edge,
+    width - edge * 2,
+    height - edge * 2,
+    radius - edge,
+  );
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawFrameGlints(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: string,
+) {
+  const glints: [number, number, number][] = [
+    [0.15, 0, 5],
+    [0.88, 0, 3],
+    [1, 0.32, 4],
+    [0, 0.71, 3],
+    [0.7, 1, 5],
+  ];
+  ctx.save();
+  for (const [px, py, size] of glints) {
+    const centerX = x + width * px;
+    const centerY = y + height * py;
+    const halo = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      size * 4,
+    );
+    halo.addColorStop(0, "#ffffff");
+    halo.addColorStop(0.16, blendHex(color, 255, 0.7));
+    halo.addColorStop(1, "#ffffff00");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, size * 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(centerX - size * 1.7, centerY);
+    ctx.lineTo(centerX + size * 1.7, centerY);
+    ctx.moveTo(centerX, centerY - size * 1.7);
+    ctx.lineTo(centerX, centerY + size * 1.7);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export async function exportCollage(
   count: GridCount,
   photos: PhotoPlacement[],
@@ -94,15 +201,26 @@ export async function exportCollage(
   const gap = spacing === "joined" ? 0 : 7;
   const collageWidth = cols * cellWidth + (cols - 1) * gap;
   const collageHeight = rows * cellHeight + (rows - 1) * gap;
-  const left = 86,
-    top = 42,
-    right = 42,
-    bottom = 42;
+  // Keep only a small neutral margin around the artwork; the app's night-sky
+  // background is intentionally excluded from exported images.
+  const left = logo ? 76 : 24,
+    top = 24,
+    right = 24,
+    bottom = 24;
   canvas.width = left + collageWidth + right;
   canvas.height = top + collageHeight + bottom;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const frameColor = visibleFrameColor(color);
+  drawColorFrame(
+    ctx,
+    left - 10,
+    top - 10,
+    collageWidth + 20,
+    collageHeight + 20,
+    frameColor,
+  );
   for (let i = 0; i < photos.length; i++) {
     const blob = await getBlob(photos[i].id);
     if (!blob) continue;
@@ -123,11 +241,19 @@ export async function exportCollage(
       image.close();
     }
   }
+  drawFrameGlints(
+    ctx,
+    left - 10,
+    top - 10,
+    collageWidth + 20,
+    collageHeight + 20,
+    frameColor,
+  );
   if (logo) {
     ctx.save();
-    ctx.translate(34, canvas.height / 2);
+    ctx.translate(30, canvas.height / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = color;
+    ctx.fillStyle = frameColor;
     ctx.font = "600 24px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("PicPa", 0, 0);
