@@ -44,17 +44,17 @@ export function accentTokens(
     ? darkMode
       ? "#0d132f"
       : "#171e3e"
-    : mixHex(darkMode ? "#080f28" : "#0b1533", vivid, darkMode ? 0.14 : 0.19);
+    : mixHex(darkMode ? "#0b1230" : "#141d3e", vivid, 0.045);
   const surface = neutral
     ? darkMode
       ? "#1a2341"
       : "#252d4c"
-    : mixHex(darkMode ? "#141e37" : "#1c2945", vivid, darkMode ? 0.12 : 0.16);
+    : mixHex(darkMode ? "#192342" : "#252d4c", vivid, 0.055);
   const bottom = neutral
     ? darkMode
       ? "#281337"
       : "#382348"
-    : mixHex(darkMode ? "#1b122e" : "#241a3b", vivid, darkMode ? 0.2 : 0.27);
+    : mixHex(darkMode ? "#25143d" : "#38234f", vivid, 0.095);
   return {
     "--accent": accent,
     "--accent-soft": mixHex(accent, white, 0.5),

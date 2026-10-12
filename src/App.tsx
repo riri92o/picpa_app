@@ -63,7 +63,7 @@ export default function App() {
       }
     >
       <span ref={probeRef} className="safe-area-probe" aria-hidden="true" />
-      <LiquidBackdrop busy={ritual.busy} ambient={tab !== "home"} />
+      <LiquidBackdrop busy={ritual.busy} ambient />
       <div id="color-scene-root" aria-hidden="true" />
       <AnimatePresence mode="wait">
         <motion.div

@@ -295,6 +295,46 @@ body {
   background: #fff0cb;
   box-shadow: 0 0 7px #ffe4a45c;
 }
+.sky-star.sparkle {
+  box-shadow:
+    0 0 7px var(--scene-glow),
+    0 0 13px color-mix(in srgb, var(--scene-vivid) 42%, transparent);
+}
+.sky-star.sparkle::before,
+.sky-star.sparkle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 99px;
+  background: var(--scene-glow);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--scene-vivid) 55%, transparent);
+}
+.sky-star.sparkle::before {
+  width: 8px;
+  height: 1px;
+}
+.sky-star.sparkle::after {
+  width: 1px;
+  height: 8px;
+}
+.sky-star.sparkle.warm::before,
+.sky-star.sparkle.warm::after {
+  background: #fff0cb;
+}
+.sky-bokeh {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.35;
+  filter: blur(2px);
+  background: radial-gradient(
+    circle at 42% 38%,
+    color-mix(in srgb, var(--scene-glow) 55%, transparent),
+    color-mix(in srgb, var(--scene-vivid) 26%, transparent) 54%,
+    transparent 73%
+  );
+}
 .sky-haze {
   position: absolute;
   border-radius: 50%;
@@ -352,6 +392,22 @@ body {
   position: absolute;
   opacity: 0.63;
   animation: sky-float 11s ease-in-out infinite;
+}
+.sky-bubble-decor {
+  box-shadow:
+    inset 1px 1px 2px var(--film-blue),
+    inset -1px -1px 3px var(--film-pink),
+    0 0 9px color-mix(in srgb, var(--scene-vivid) 24%, transparent);
+}
+.sky-bubble-speck {
+  border: 1px solid color-mix(in srgb, var(--film-gold) 65%, white);
+  background: radial-gradient(
+    circle at 32% 27%,
+    #ffffffd9,
+    var(--scene-glow) 43%,
+    var(--scene-vivid)
+  );
+  box-shadow: 0 0 7px color-mix(in srgb, var(--scene-vivid) 44%, transparent);
 }
 .sky-bubble-one {
   width: 54px;
