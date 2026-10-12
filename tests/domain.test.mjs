@@ -95,6 +95,21 @@ assert.ok(
   "Competing colors must lower coherence",
 );
 assert.ok(score(scene(green, green)) > score(scene(blue, blue)));
+const vermilion = toOklab(222, 136, 108);
+const warmBeige = toOklab(216, 204, 176);
+const paleGreen = toOklab(169, 216, 174);
+const greenWithWarmBackground = Array.from(
+  { length: 3600 },
+  (_, i) => (i % 60 < 42 ? warmBeige : paleGreen),
+);
+assert.ok(
+  score(greenWithWarmBackground, vermilion) < 40,
+  "Pale-green photos with warm neutral areas must not score as vermilion",
+);
+assert.ok(
+  score(scene(white, paleGreen, 0.16), paleGreen) >= 85,
+  "Tighter color separation must preserve a matching pale-green subject",
+);
 assert.equal(score(scene(neutral, neutral), neutral), 100);
 assert.ok(
   score(scene(white, neutral, 0.16), neutral) >= 80,

@@ -1,9 +1,9 @@
 export const COLOR_MATCH = {
-  version: 2,
+  version: 3,
   sampleWidth: 96,
   // Chroma-aware hue distance allows muted shades without treating gray as a color.
   hueTolerance: 0.14,
-  chromaTolerance: 0.18,
+  chromaTolerance: 0.1,
   lightnessTolerance: 0.28,
   lightnessWeight: 0.1,
   oppositeHuePower: 3,
@@ -14,5 +14,5 @@ export const COLOR_MATCH = {
   hueBins: 24,
   saliencyContrast: 0.14,
   minimumFamilyFraction: 0.015,
-  subjectWeight: 0.65,
+  subjectWeight: 0.78,
 };

@@ -102,7 +102,7 @@ function visibleFrameColor(color: string) {
   return color;
 }
 
-/** A restrained color-film edge, drawn outside the photos and their crop area. */
+/** Layered metallic edge, drawn outside the photos and their crop area. */
 function drawColorFrame(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -112,20 +112,32 @@ function drawColorFrame(
   color: string,
 ) {
   const radius = 18;
-  const edge = 8;
+  const edge = 16;
   const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-  gradient.addColorStop(0, blendHex(color, 255, 0.75));
-  gradient.addColorStop(0.18, blendHex(color, 255, 0.26));
-  gradient.addColorStop(0.43, blendHex(color, 255, 0.68));
-  gradient.addColorStop(0.72, blendHex(color, 0, 0.18));
-  gradient.addColorStop(1, blendHex(color, 255, 0.82));
+  gradient.addColorStop(0, blendHex(color, 0, 0.58));
+  gradient.addColorStop(0.09, blendHex(color, 255, 0.86));
+  gradient.addColorStop(0.21, color);
+  gradient.addColorStop(0.32, blendHex(color, 255, 0.92));
+  gradient.addColorStop(0.47, blendHex(color, 0, 0.56));
+  gradient.addColorStop(0.61, blendHex(color, 255, 0.7));
+  gradient.addColorStop(0.76, color);
+  gradient.addColorStop(0.88, blendHex(color, 255, 0.96));
+  gradient.addColorStop(1, blendHex(color, 0, 0.54));
   ctx.save();
   ctx.fillStyle = gradient;
+  ctx.shadowColor = blendHex(color, 255, 0.1);
+  ctx.shadowBlur = 16;
   ctx.beginPath();
   ctx.roundRect(x, y, width, height, radius);
   ctx.fill();
-  ctx.strokeStyle = blendHex(color, 255, 0.55);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = blendHex(color, 255, 0.74);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.strokeStyle = "#ffffffdc";
   ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(x + 3, y + 3, width - 6, height - 6, radius - 3);
   ctx.stroke();
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
@@ -137,6 +149,9 @@ function drawColorFrame(
     radius - edge,
   );
   ctx.fill();
+  ctx.strokeStyle = blendHex(color, 0, 0.6);
+  ctx.lineWidth = 2;
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -149,11 +164,11 @@ function drawFrameGlints(
   color: string,
 ) {
   const glints: [number, number, number][] = [
-    [0.15, 0, 5],
-    [0.88, 0, 3],
-    [1, 0.32, 4],
-    [0, 0.71, 3],
-    [0.7, 1, 5],
+    [0.15, 0, 8],
+    [0.88, 0, 5],
+    [1, 0.32, 7],
+    [0, 0.71, 5],
+    [0.7, 1, 8],
   ];
   ctx.save();
   for (const [px, py, size] of glints) {
@@ -215,10 +230,10 @@ export async function exportCollage(
   const frameColor = visibleFrameColor(color);
   drawColorFrame(
     ctx,
-    left - 10,
-    top - 10,
-    collageWidth + 20,
-    collageHeight + 20,
+    left - 16,
+    top - 16,
+    collageWidth + 32,
+    collageHeight + 32,
     frameColor,
   );
   for (let i = 0; i < photos.length; i++) {
@@ -243,10 +258,10 @@ export async function exportCollage(
   }
   drawFrameGlints(
     ctx,
-    left - 10,
-    top - 10,
-    collageWidth + 20,
-    collageHeight + 20,
+    left - 16,
+    top - 16,
+    collageWidth + 32,
+    collageHeight + 32,
     frameColor,
   );
   if (logo) {

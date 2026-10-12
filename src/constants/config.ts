@@ -17,6 +17,4 @@ export const BUBBLE_MOTION = {
 export const SCORE_MOTION = {
   duration: 1.15,
   delay: 0.18,
-  hold: 1200,
-  completionTimeout: 15000,
 };

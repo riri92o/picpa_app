@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -14,12 +15,13 @@ import {
 import { LiquidColorScene } from "../components/LiquidColorScene";
 import type { ColorRitual } from "../ui/useColorRitual";
 import { LIQUID_MOTION } from "../constants/liquidMotion";
-import { BUBBLE_MOTION, SCORE_MOTION } from "../constants/config";
+import { BUBBLE_MOTION } from "../constants/config";
 import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { CompletionPreview } from "../components/CompletionPreview";
+import { ExportedCollage } from "../components/ExportedCollage";
 import { CroppedPhoto } from "../components/CroppedPhoto";
 import { Modal } from "../components/Modal";
 import { SamplePhotoButton } from "../dev/SamplePhotoButton";
@@ -46,6 +48,7 @@ export function Home({
     updatePlacement,
     reorderPhotos,
     completeToday,
+    getImageBlob,
   } = useApp();
   const screenRef = useRef<HTMLElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
@@ -54,27 +57,6 @@ export function Home({
   const [editing, setEditing] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [finished, setFinished] = useState(false);
-  const finishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const scoreRevealed = useCallback(() => {
-    clearTimeout(finishTimer.current);
-    finishTimer.current = setTimeout(
-      () => setFinished(false),
-      SCORE_MOTION.hold,
-    );
-  }, []);
-  useEffect(() => {
-    if (finished && !finishTimer.current)
-      finishTimer.current = setTimeout(
-        () => setFinished(false),
-        SCORE_MOTION.completionTimeout,
-      );
-    return () => {
-      clearTimeout(finishTimer.current);
-      finishTimer.current = undefined;
-    };
-  }, [finished]);
   const [reduceTo, setReduceTo] = useState<GridCount | null>(null);
   const [keep, setKeep] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -116,6 +98,7 @@ export function Home({
     setConfirm(false);
     setFinished(true);
   };
+  const overlayRoot = document.getElementById("modal-root");
   return (
     <main
       ref={screenRef}
@@ -448,51 +431,55 @@ export function Home({
           </button>
         </div>
       </Modal>
-      <AnimatePresence>
-        {finished && (
-          <motion.div
-            className="finish-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="finish-bubble"
-              initial={{
-                y: ritual.reduced ? 0 : 280,
-                scale: ritual.reduced ? 1 : 0.75,
-              }}
-              animate={{ y: ritual.reduced ? 0 : -20, scale: 1 }}
-              exit={{ y: ritual.reduced ? 0 : -160, opacity: 0 }}
-              transition={{
-                duration: ritual.reduced ? 0 : 1.25,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              <Check size={50} />
-            </motion.div>
-            <motion.div
-              className="finish-preview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: ritual.reduced ? 0 : 0.35,
-                delay: ritual.reduced ? 0 : 0.15,
-              }}
-            >
-              <CompletionPreview day={today} images={images} />
-            </motion.div>
-            <p>完成</p>
-            <div className="finish-score">
-              <ColorMatchBadge
-                day={today}
-                animateReveal
-                onRevealComplete={scoreRevealed}
-              />
-            </div>
-          </motion.div>
+      {overlayRoot &&
+        createPortal(
+          <AnimatePresence>
+            {finished && (
+              <motion.div
+                className="finish-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-label="完成したコラージュ"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="finish-card">
+                  <button
+                    className="icon-button small finish-close"
+                    onClick={() => setFinished(false)}
+                    aria-label="完成画面を閉じる"
+                  >
+                    <X size={20} />
+                  </button>
+                  <motion.div
+                    className="finish-bubble"
+                    initial={{
+                      y: ritual.reduced ? 0 : 220,
+                      scale: ritual.reduced ? 1 : 0.75,
+                    }}
+                    animate={{ y: 0, scale: 1 }}
+                    transition={{
+                      duration: ritual.reduced ? 0 : 1.1,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  >
+                    <Check size={34} />
+                  </motion.div>
+                  <h2>完成</h2>
+                  <ExportedCollage
+                    day={today}
+                    logo={settings.exportLogo}
+                    getImageBlob={getImageBlob}
+                  >
+                    <ColorMatchBadge day={today} animateReveal />
+                  </ExportedCollage>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          overlayRoot,
         )}
-      </AnimatePresence>
     </main>
   );
 }
