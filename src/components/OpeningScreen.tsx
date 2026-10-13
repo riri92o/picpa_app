@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion } from "framer-motion";
 import {
   BRAND_LOGO,
   OPENING_BUBBLES,
@@ -8,6 +8,65 @@ import {
 import { SKY_STARS } from "../constants/sky";
 import { BrandLogo } from "./BrandLogo";
 import { BubbleSurface } from "./BubbleSurface";
+import {
+  openingBubbleOffset,
+  type OpeningBubbleDefinition,
+} from "../ui/openingMotion";
+
+function FloatingOpeningBubble({
+  bubble,
+  index,
+  id,
+  reduced,
+}: {
+  bubble: OpeningBubbleDefinition;
+  index: number;
+  id: string;
+  reduced: boolean;
+}) {
+  const initial = reduced
+    ? { x: 0, y: 0 }
+    : openingBubbleOffset(bubble, index, 0);
+  const x = useMotionValue(initial.x);
+  const y = useMotionValue(initial.y);
+  useEffect(() => {
+    if (reduced) {
+      x.set(0);
+      y.set(0);
+      return;
+    }
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const position = openingBubbleOffset(bubble, index, now - start);
+      x.set(position.x);
+      y.set(position.y);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [bubble, index, reduced, x, y]);
+  return (
+    <div
+      className="opening-bubble-anchor"
+      style={{
+        left: `${bubble.x}%`,
+        top: `${bubble.y}%`,
+        width: bubble.size,
+        height: bubble.size,
+      }}
+    >
+      <motion.svg viewBox="-54 -54 108 108" style={{ x, y }}>
+        <BubbleSurface
+          id={id}
+          color={bubble.color}
+          reduced={reduced}
+          period={bubble.period * 0.77}
+        />
+      </motion.svg>
+    </div>
+  );
+}
 
 export function OpeningScreen({
   ready,
@@ -78,54 +137,23 @@ export function OpeningScreen({
           />
         ))}
         {OPENING_BUBBLES.map((bubble, index) => (
-          <div
-            className="opening-bubble-anchor"
+          <FloatingOpeningBubble
             key={index}
-            style={{
-              left: `${bubble.x}%`,
-              top: `${bubble.y}%`,
-              width: bubble.size,
-              height: bubble.size,
-            }}
-          >
-            <motion.svg
-              viewBox="-54 -54 108 108"
-              initial={false}
-              animate={
-                reduced
-                  ? { x: 0, y: 0 }
-                  : {
-                      x: [0, bubble.dx, -bubble.dx * 0.35, 0],
-                      y: [0, bubble.dy, -bubble.dy * 0.3, 0],
-                    }
-              }
-              transition={{
-                duration: bubble.period,
-                ease: "easeInOut",
-                repeat: reduced ? 0 : Infinity,
-              }}
-            >
-              <BubbleSurface
-                id={`${id}-${index}`}
-                color={bubble.color}
-                reduced={!!reduced}
-                period={bubble.period * 0.77}
-              />
-            </motion.svg>
-          </div>
+            bubble={bubble}
+            index={index}
+            id={`${id}-${index}`}
+            reduced={!!reduced}
+          />
         ))}
       </div>
-      <motion.button
+      <button
         className="opening-logo-button"
         disabled={!ready}
         onClick={onComplete}
         aria-label="PicPa、オープニングをスキップ"
-        initial={reduced ? false : { opacity: 0, scale: 0.96, y: 5 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: reduced ? 0 : 0.7, ease: OPENING_MOTION.ease }}
       >
         <BrandLogo />
-      </motion.button>
+      </button>
     </motion.div>
   );
 }

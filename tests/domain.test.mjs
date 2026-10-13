@@ -339,7 +339,7 @@ console.log(
   "Translucent fluid pixels, visible rims and complementary SVG/canvas handoffs: OK",
 );
 
-const { collageLogoPlacement } = load("src/domain/branding.ts");
+const { collageBrandHeader } = load("src/domain/branding.ts");
 const { gridDimensions } = load("src/domain/image.ts");
 for (const count of [4, 6, 9]) {
   const [columns, rows] = gridDimensions(count);
@@ -348,23 +348,49 @@ for (const count of [4, 6, 9]) {
   for (const gap of [0, 7]) {
     const width = columns * cellWidth + (columns - 1) * gap;
     const height = rows * cellHeight + (rows - 1) * gap;
-    const logo = collageLogoPlacement(count, width, cellHeight, gap);
+    const header = collageBrandHeader(width, true);
+    const logo = header.logo;
     assert.equal(logo.x, width / 2);
     assert.ok(logo.x - logo.width / 2 > 0 && logo.x + logo.width / 2 < width);
     assert.ok(
-      logo.y - logo.height / 2 > 0 && logo.y + logo.height / 2 < height,
+      logo.y - logo.height / 2 > 0 && logo.y + logo.height / 2 < header.height,
+      "The logo must stay entirely above the photos",
     );
-    const seams = Array.from(
-      { length: rows - 1 },
-      (_, index) => (index + 1) * cellHeight + (index + 0.5) * gap,
-    );
-    assert.ok(seams.includes(logo.y), "Logo must sit on a photo seam");
     assert.ok(
-      logo.width <= width * 0.19,
-      "Logo must remain smaller than the photos",
+      header.height < height / 4,
+      "Branding must not dominate the collage",
     );
+    assert.deepEqual(collageBrandHeader(width, false), {
+      height: 0,
+      logo: undefined,
+    });
   }
 }
 console.log(
-  "Approved logo: interior photo seam and bounded size for 4/6/9, joined/separated: OK",
+  "White logo: metallic header stays above 4/6/9 photos and is removed when OFF: OK",
+);
+
+const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");
+const { openingBubbleOffset } = load("src/ui/openingMotion.ts");
+let openingTravel = 0;
+for (const [index, bubble] of OPENING_BUBBLES.entries()) {
+  const start = openingBubbleOffset(bubble, index, 0);
+  const end = openingBubbleOffset(
+    bubble,
+    index,
+    OPENING_MOTION.minimumDuration,
+  );
+  openingTravel += Math.hypot(end.x - start.x, end.y - start.y);
+  for (let time = 0; time < bubble.period * 1000; time += 100) {
+    const position = openingBubbleOffset(bubble, index, time);
+    assert.ok(Math.abs(position.x) <= Math.abs(bubble.dx) + 1e-8);
+    assert.ok(Math.abs(position.y) <= bubble.dy + 1e-8);
+  }
+}
+assert.ok(
+  openingTravel / OPENING_BUBBLES.length > 25,
+  "Floating must be visible during the short opening",
+);
+console.log(
+  "Opening float: bounded continuous drift and visible travel during launch: OK",
 );

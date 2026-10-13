@@ -1,9 +1,25 @@
 import { useId } from "react";
-import { BRAND_LOGO } from "../constants/branding";
+import { BRAND_LOGO, EXPORT_BRAND_LOGO } from "../constants/branding";
 
 /** A presentation crop/mask preserves the approved pixels and letter shapes. */
-export function BrandLogo({ className = "" }: { className?: string }) {
+export function BrandLogo({
+  className = "",
+  variant = "bubble",
+}: {
+  className?: string;
+  variant?: "bubble" | "white";
+}) {
   const id = `brand-${useId().replace(/:/g, "")}`;
+  if (variant === "white")
+    return (
+      <img
+        className={`brand-logo ${className}`}
+        src={EXPORT_BRAND_LOGO.url}
+        width={EXPORT_BRAND_LOGO.width}
+        height={EXPORT_BRAND_LOGO.height}
+        alt="PicPa"
+      />
+    );
   const { crop, sourceWidth, sourceHeight, url } = BRAND_LOGO;
   return (
     <svg

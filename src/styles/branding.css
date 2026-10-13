@@ -7,19 +7,41 @@
 .completion-photo-grid {
   position: relative;
 }
-.completion-grid-logo {
-  position: absolute;
-  width: 18.5%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  filter: drop-shadow(0 1px 2px #10152f85);
-  pointer-events: none;
+.completion-brand-header {
+  aspect-ratio: 6.25;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff38,
+      #ffffff00 18%,
+      #0c12202a 55%,
+      #ffffff14 89%,
+      #0c12203d
+    ),
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--completion-color) 52%, black),
+      color-mix(in srgb, var(--completion-color) 16%, white) 9%,
+      color-mix(in srgb, var(--completion-color) 70%, black) 19%,
+      color-mix(in srgb, var(--completion-color) 30%, white) 30%,
+      color-mix(in srgb, var(--completion-color) 38%, black) 40%,
+      color-mix(in srgb, var(--completion-color) 50%, black) 60%,
+      color-mix(in srgb, var(--completion-color) 21%, white) 72%,
+      color-mix(in srgb, var(--completion-color) 68%, black) 86%,
+      color-mix(in srgb, var(--completion-color) 7%, white) 96%,
+      color-mix(in srgb, var(--completion-color) 50%, black)
+    );
+  border-bottom: 1px solid #ffffff88;
 }
-.completion-grid-logo.center-seam {
-  top: 50%;
+.completion-header-logo {
+  width: 24.5%;
+  filter: drop-shadow(0 1px 1px #10152f85);
 }
-.completion-grid-logo.lower-seam {
-  top: 66.6667%;
+.completion-photo-grid:has(.completion-brand-header) .collage-grid {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 .opening-screen {
   position: fixed;
@@ -71,7 +93,7 @@
 .opening-bubble-anchor {
   position: absolute;
   transform: translate(-50%, -50%);
-  opacity: 0.72;
+  opacity: 0.82;
 }
 .opening-bubble-anchor svg {
   width: 100%;

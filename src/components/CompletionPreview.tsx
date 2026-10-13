@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { colorById } from "../constants/palette";
+import { EXPORT_BRAND_LOGO } from "../constants/branding";
 import type { DayRecord } from "../domain/types";
 import type { ImageUrls } from "../state/AppContext";
 import { CollageGrid } from "./CollageGrid";
@@ -25,8 +26,18 @@ export function CompletionPreview({
         { "--completion-color": colorById(day.colorId).hex } as CSSProperties
       }
     >
-      <CollageStage count={day.count} spacing={day.spacing} inactive={false}>
+      <CollageStage
+        count={day.count}
+        spacing={day.spacing}
+        inactive={false}
+        headerRatio={logo ? EXPORT_BRAND_LOGO.headerRatio : 0}
+      >
         <div className="completion-photo-grid">
+          {logo && (
+            <div className="completion-brand-header">
+              <BrandLogo variant="white" className="completion-header-logo" />
+            </div>
+          )}
           <CollageGrid
             count={day.count}
             spacing={day.spacing}
@@ -34,11 +45,6 @@ export function CompletionPreview({
             images={images}
             locked
           />
-          {logo && (
-            <BrandLogo
-              className={`completion-grid-logo ${day.count === 4 ? "center-seam" : "lower-seam"}`}
-            />
-          )}
         </div>
       </CollageStage>
     </div>

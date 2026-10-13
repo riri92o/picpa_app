@@ -5,7 +5,7 @@ import type {
   CollageSpacing,
 } from "./types";
 import { getCropGeometry } from "./crop";
-import { collageLogoPlacement, drawCollageLogo } from "./branding";
+import { collageBrandHeader, drawCollageLogo } from "./branding";
 
 function canvasBlob(
   canvas: HTMLCanvasElement,
@@ -202,6 +202,50 @@ function drawFrameGlints(
   ctx.restore();
 }
 
+/** Reflective color metal with a darker central fold beneath the white logo. */
+function drawMetallicHeader(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  color: string,
+) {
+  ctx.save();
+  const metal = ctx.createLinearGradient(x, y, x + width, y + height);
+  metal.addColorStop(0, blendHex(color, 0, 0.48));
+  metal.addColorStop(0.09, blendHex(color, 255, 0.84));
+  metal.addColorStop(0.19, blendHex(color, 0, 0.3));
+  metal.addColorStop(0.3, blendHex(color, 255, 0.7));
+  metal.addColorStop(0.4, blendHex(color, 0, 0.62));
+  metal.addColorStop(0.6, blendHex(color, 0, 0.5));
+  metal.addColorStop(0.72, blendHex(color, 255, 0.79));
+  metal.addColorStop(0.86, blendHex(color, 0, 0.32));
+  metal.addColorStop(0.96, blendHex(color, 255, 0.93));
+  metal.addColorStop(1, blendHex(color, 0, 0.5));
+  ctx.fillStyle = metal;
+  ctx.fillRect(x, y, width, height);
+  const sheen = ctx.createLinearGradient(x, y, x, y + height);
+  sheen.addColorStop(0, "#ffffff48");
+  sheen.addColorStop(0.18, "#ffffff00");
+  sheen.addColorStop(0.55, "#0c12202a");
+  sheen.addColorStop(0.89, "#ffffff14");
+  sheen.addColorStop(1, "#0c12203d");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(x, y, width, height);
+  // Fine horizontal reflections stay inside the header; photographs are untouched.
+  ctx.globalAlpha = 0.035;
+  for (let row = 2; row < height; row += 3) {
+    ctx.fillStyle = row % 2 ? "#ffffff" : "#11192b";
+    ctx.fillRect(x, y + row, width, 1);
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = blendHex(color, 255, 0.8);
+  ctx.fillRect(x, y + height - 1, width, 1);
+  ctx.restore();
+  drawFrameGlints(ctx, x + 22, y + 12, width - 44, height - 24, color);
+}
+
 export async function exportCollage(
   count: GridCount,
   photos: PhotoPlacement[],
@@ -217,10 +261,12 @@ export async function exportCollage(
   const gap = spacing === "joined" ? 0 : 7;
   const collageWidth = cols * cellWidth + (cols - 1) * gap;
   const collageHeight = rows * cellHeight + (rows - 1) * gap;
+  const header = collageBrandHeader(collageWidth, logo);
   // Keep only a small neutral margin around the artwork; the app's night-sky
   // background is intentionally excluded from exported images.
   const left = 24,
-    top = 24,
+    headerTop = 24,
+    top = headerTop + header.height,
     right = 24,
     bottom = 24;
   canvas.width = left + collageWidth + right;
@@ -232,11 +278,22 @@ export async function exportCollage(
   drawColorFrame(
     ctx,
     left - 16,
-    top - 16,
+    headerTop - 16,
     collageWidth + 32,
-    collageHeight + 32,
+    collageHeight + header.height + 32,
     frameColor,
   );
+  if (header.logo) {
+    drawMetallicHeader(
+      ctx,
+      left,
+      headerTop,
+      collageWidth,
+      header.height,
+      frameColor,
+    );
+    await drawCollageLogo(ctx, header.logo, left, headerTop);
+  }
   for (let i = 0; i < photos.length; i++) {
     const blob = await getBlob(photos[i].id);
     if (!blob) continue;
@@ -260,18 +317,10 @@ export async function exportCollage(
   drawFrameGlints(
     ctx,
     left - 16,
-    top - 16,
+    headerTop - 16,
     collageWidth + 32,
-    collageHeight + 32,
+    collageHeight + header.height + 32,
     frameColor,
   );
-  if (logo) {
-    await drawCollageLogo(
-      ctx,
-      collageLogoPlacement(count, collageWidth, cellHeight, gap),
-      left,
-      top,
-    );
-  }
   return canvasBlob(canvas, "image/jpeg", 0.92);
 }
