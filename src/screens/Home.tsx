@@ -415,7 +415,11 @@ export function Home({
         onClose={() => setConfirm(false)}
         title="完成しますか？"
       >
-        <CompletionPreview day={today} images={images} />
+        <CompletionPreview
+          day={today}
+          images={images}
+          logo={settings.exportLogo}
+        />
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
         </p>

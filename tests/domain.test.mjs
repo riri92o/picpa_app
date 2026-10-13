@@ -98,9 +98,8 @@ assert.ok(score(scene(green, green)) > score(scene(blue, blue)));
 const vermilion = toOklab(222, 136, 108);
 const warmBeige = toOklab(216, 204, 176);
 const paleGreen = toOklab(169, 216, 174);
-const greenWithWarmBackground = Array.from(
-  { length: 3600 },
-  (_, i) => (i % 60 < 42 ? warmBeige : paleGreen),
+const greenWithWarmBackground = Array.from({ length: 3600 }, (_, i) =>
+  i % 60 < 42 ? warmBeige : paleGreen,
 );
 assert.ok(
   score(greenWithWarmBackground, vermilion) < 40,
@@ -204,7 +203,8 @@ for (const color of PALETTE) {
     `Unreadable selected control: ${color.id}`,
   );
   assert.ok(
-    contrastRatio(tokens["--accent-readable-dark"], tokens["--sky-surface"]) >= 5.2,
+    contrastRatio(tokens["--accent-readable-dark"], tokens["--sky-surface"]) >=
+      5.2,
     `Unreadable accent on night sky: ${color.id}`,
   );
 }
@@ -217,9 +217,18 @@ const sceneSamples = Object.fromEntries(
     return [id, accentTokens(color.hex, true)];
   }),
 );
-assert.equal(new Set(Object.values(sceneSamples).map((t) => t["--sky-bottom"])).size, 3);
-assert.equal(new Set(Object.values(sceneSamples).map((t) => t["--film-blue"])).size, 3);
-assert.equal(undrawn["--sky-page"], accentTokens("#bdc1c5", false)["--sky-page"]);
+assert.equal(
+  new Set(Object.values(sceneSamples).map((t) => t["--sky-bottom"])).size,
+  3,
+);
+assert.equal(
+  new Set(Object.values(sceneSamples).map((t) => t["--film-blue"])).size,
+  3,
+);
+assert.equal(
+  undrawn["--sky-page"],
+  accentTokens("#bdc1c5", false)["--sky-page"],
+);
 console.log(
   "38 daily colors: selected-control and themed-surface contrast, neutral undrawn film, red/green/blue scenes: OK",
 );
@@ -328,4 +337,34 @@ assert.ok(
 );
 console.log(
   "Translucent fluid pixels, visible rims and complementary SVG/canvas handoffs: OK",
+);
+
+const { collageLogoPlacement } = load("src/domain/branding.ts");
+const { gridDimensions } = load("src/domain/image.ts");
+for (const count of [4, 6, 9]) {
+  const [columns, rows] = gridDimensions(count);
+  const cellWidth = count === 9 ? 340 : 510;
+  const cellHeight = count === 9 ? 340 : count === 4 ? 455 : 408;
+  for (const gap of [0, 7]) {
+    const width = columns * cellWidth + (columns - 1) * gap;
+    const height = rows * cellHeight + (rows - 1) * gap;
+    const logo = collageLogoPlacement(count, width, cellHeight, gap);
+    assert.equal(logo.x, width / 2);
+    assert.ok(logo.x - logo.width / 2 > 0 && logo.x + logo.width / 2 < width);
+    assert.ok(
+      logo.y - logo.height / 2 > 0 && logo.y + logo.height / 2 < height,
+    );
+    const seams = Array.from(
+      { length: rows - 1 },
+      (_, index) => (index + 1) * cellHeight + (index + 0.5) * gap,
+    );
+    assert.ok(seams.includes(logo.y), "Logo must sit on a photo seam");
+    assert.ok(
+      logo.width <= width * 0.19,
+      "Logo must remain smaller than the photos",
+    );
+  }
+}
+console.log(
+  "Approved logo: interior photo seam and bounded size for 4/6/9, joined/separated: OK",
 );

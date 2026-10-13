@@ -104,7 +104,7 @@ export function Settings() {
             </span>
             <div>
               <h3>PicPaロゴを入れる</h3>
-              <p>書き出し画像の余白に小さく表示</p>
+              <p>写真の継ぎ目に小さく表示</p>
             </div>
             <label className="switch">
               <input

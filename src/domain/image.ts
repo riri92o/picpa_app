@@ -5,6 +5,7 @@ import type {
   CollageSpacing,
 } from "./types";
 import { getCropGeometry } from "./crop";
+import { collageLogoPlacement, drawCollageLogo } from "./branding";
 
 function canvasBlob(
   canvas: HTMLCanvasElement,
@@ -218,7 +219,7 @@ export async function exportCollage(
   const collageHeight = rows * cellHeight + (rows - 1) * gap;
   // Keep only a small neutral margin around the artwork; the app's night-sky
   // background is intentionally excluded from exported images.
-  const left = logo ? 76 : 24,
+  const left = 24,
     top = 24,
     right = 24,
     bottom = 24;
@@ -265,14 +266,12 @@ export async function exportCollage(
     frameColor,
   );
   if (logo) {
-    ctx.save();
-    ctx.translate(30, canvas.height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = frameColor;
-    ctx.font = "600 24px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("PicPa", 0, 0);
-    ctx.restore();
+    await drawCollageLogo(
+      ctx,
+      collageLogoPlacement(count, collageWidth, cellHeight, gap),
+      left,
+      top,
+    );
   }
   return canvasBlob(canvas, "image/jpeg", 0.92);
 }
