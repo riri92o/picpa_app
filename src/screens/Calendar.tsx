@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
+import { ArtworkMemo } from "../components/ArtworkMemo";
+import { SpacingSelector } from "../components/SpacingSelector";
 import { CollageGrid } from "../components/CollageGrid";
 import { ExportedCollage } from "../components/ExportedCollage";
 import { Modal } from "../components/Modal";
@@ -17,6 +19,7 @@ export function Calendar() {
     ensureFullImages,
     todayKey,
     setSpacing,
+    setMemo,
   } = useApp();
   const [month, setMonth] = useState(() => new Date());
   const [selected, setSelected] = useState<string | null>(null);
@@ -166,28 +169,11 @@ export function Calendar() {
               </span>
             </div>
             {selectedDay.completedAt && (
-              <div
-                className="spacing-selector detail-spacing"
-                role="group"
-                aria-label="写真の間隔"
-              >
-                {(["joined", "separated"] as const).map((spacing) => (
-                  <button
-                    key={spacing}
-                    className={
-                      (selectedDay.spacing ?? "separated") === spacing
-                        ? "selected"
-                        : ""
-                    }
-                    aria-pressed={
-                      (selectedDay.spacing ?? "separated") === spacing
-                    }
-                    onClick={() => setSpacing(spacing, selectedDay.date)}
-                  >
-                    {spacing === "joined" ? "くっつける" : "離す"}
-                  </button>
-                ))}
-              </div>
+              <SpacingSelector
+                value={selectedDay.spacing}
+                onChange={(spacing) => setSpacing(spacing, selectedDay.date)}
+                detail
+              />
             )}
             {selectedDay.completedAt ? (
               <ExportedCollage
@@ -196,6 +182,11 @@ export function Calendar() {
                 getImageBlob={getImageBlob}
               >
                 <ColorMatchBadge day={selectedDay} showComment />
+                <ArtworkMemo
+                  key={selectedDay.date}
+                  value={selectedDay.memo}
+                  onSave={(memo) => setMemo(selectedDay.date, memo)}
+                />
               </ExportedCollage>
             ) : (
               <>

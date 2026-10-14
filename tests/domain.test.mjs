@@ -400,3 +400,61 @@ assert.ok(
 console.log(
   "Opening float: gentle continuous drift and visible travel during launch: OK",
 );
+
+const { COLOR_HINTS } = load("src/constants/colorHints.ts");
+assert.deepEqual(
+  Object.keys(COLOR_HINTS).sort(),
+  PALETTE.map((color) => color.id).sort(),
+);
+for (const color of PALETTE) {
+  const hint = COLOR_HINTS[color.id];
+  assert.ok(hint.description.trim(), `Missing color description: ${color.id}`);
+  assert.equal(
+    new Set(hint.examples).size,
+    3,
+    `Need three distinct examples: ${color.id}`,
+  );
+  assert.ok(hint.examples.every((example) => example.trim()));
+}
+const { withArtworkMemo, memoLength, MEMO_MAX_LENGTH } =
+  load("src/domain/memo.ts");
+const memoSource = {
+  ...scored,
+  completedAt: "2026-10-08T10:00:00Z",
+  spacing: "joined",
+};
+const memoResult = withArtworkMemo(
+  memoSource,
+  "  散歩で見つけた緑。\r\n葉っぱがきれい。  ",
+);
+assert.equal(memoResult.memo, "散歩で見つけた緑。\n葉っぱがきれい。");
+assert.deepEqual(
+  Object.fromEntries(
+    Object.entries(memoResult).filter(([key]) => key !== "memo"),
+  ),
+  memoSource,
+);
+assert.equal(
+  memoSource.memo,
+  undefined,
+  "Adding a memo must not mutate the existing record",
+);
+assert.equal(
+  validColorMatch(memoResult).score,
+  80,
+  "Memo edits must not invalidate photo scoring",
+);
+assert.equal(withArtworkMemo(memoResult, " \n ").memo, undefined);
+const emojiMemo = withArtworkMemo(
+  memoSource,
+  "🌿".repeat(MEMO_MAX_LENGTH + 1),
+).memo;
+assert.equal(memoLength(emojiMemo), MEMO_MAX_LENGTH);
+assert.equal(
+  emojiMemo,
+  "🌿".repeat(MEMO_MAX_LENGTH),
+  "The memo limit must not split emoji surrogate pairs",
+);
+console.log(
+  "38 color hints; legacy, completed, cleared and Unicode memos preserve photos and scores: OK",
+);

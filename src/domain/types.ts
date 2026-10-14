@@ -26,6 +26,8 @@ export interface DayRecord {
   photos: PhotoPlacement[];
   completedAt?: string;
   colorMatch?: ColorMatchResult;
+  /** Optional editable metadata, including after the photographs are locked. */
+  memo?: string;
 }
 export interface PhotoAsset {
   id: string;

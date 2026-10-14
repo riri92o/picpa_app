@@ -13,6 +13,7 @@ import { chooseDailyColor, chooseGridCount } from "../domain/color";
 import { isChallengeLocked, isRandomChallenge } from "../domain/challenge";
 import { localDateKey } from "../domain/date";
 import { preparePhoto } from "../domain/image";
+import { withArtworkMemo } from "../domain/memo";
 import type {
   AppSettings,
   CollageSpacing,
@@ -48,6 +49,7 @@ interface AppContextValue {
   drawToday: () => DayRecord;
   setCount: (count: GridCount) => void;
   setSpacing: (spacing: CollageSpacing, date?: string) => void;
+  setMemo: (date: string, memo: string) => Promise<boolean>;
   addSamplePhotos: () => Promise<void>;
   reduceCount: (count: GridCount, ids: string[]) => void;
   addPhotos: (files: FileList | File[], replaceId?: string) => Promise<void>;
@@ -211,11 +213,14 @@ export function AppProvider({
         next,
       ];
       setDays(daysRef.current);
-      writeQueueRef.current = writeQueueRef.current
-        .then(() => repository.putDay(next))
-        .catch(() =>
-          setError("保存に失敗しました。空き容量を確認してください"),
-        );
+      const pending = writeQueueRef.current.then(() => repository.putDay(next));
+      writeQueueRef.current = pending.catch(() =>
+        setError("保存に失敗しました。空き容量を確認してください"),
+      );
+      return pending.then(
+        () => true,
+        () => false,
+      );
     },
     [repository],
   );
@@ -294,6 +299,14 @@ export function AppProvider({
       saveDay({ ...day, spacing });
     },
     [currentDay, saveDay],
+  );
+  const setMemo = useCallback(
+    (date: string, memo: string) => {
+      const day = daysRef.current.find((item) => item.date === date);
+      if (!day?.completedAt) return Promise.resolve(false);
+      return saveDay(withArtworkMemo(day, memo));
+    },
+    [saveDay],
   );
   const addPhotos = useCallback(
     async (files: FileList | File[], replaceId?: string) => {
@@ -528,6 +541,7 @@ export function AppProvider({
         drawToday,
         setCount,
         setSpacing,
+        setMemo,
         addSamplePhotos,
         reduceCount,
         addPhotos,

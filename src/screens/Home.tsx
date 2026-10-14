@@ -20,6 +20,9 @@ import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
+import { ColorHintButton } from "../components/ColorHintButton";
+import { ArtworkMemo } from "../components/ArtworkMemo";
+import { SpacingSelector } from "../components/SpacingSelector";
 import { CompletionPreview } from "../components/CompletionPreview";
 import { ExportedCollage } from "../components/ExportedCollage";
 import { CroppedPhoto } from "../components/CroppedPhoto";
@@ -42,6 +45,7 @@ export function Home({
     images,
     setCount,
     setSpacing,
+    setMemo,
     reduceCount,
     addPhotos,
     removePhoto,
@@ -143,6 +147,7 @@ export function Home({
             <h2 aria-hidden={!today.colorId || ritual.busy}>
               {!ritual.busy && today.colorId ? color.name : ""}
             </h2>
+            {!ritual.busy && today.colorId && <ColorHintButton color={color} />}
           </motion.div>
         </AnimatePresence>
       </section>
@@ -190,24 +195,7 @@ export function Home({
           </div>
         )}
         <div className="home-tools">
-          <div
-            className="spacing-selector"
-            role="group"
-            aria-label="写真の間隔"
-          >
-            {(["joined", "separated"] as const).map((spacing) => (
-              <button
-                key={spacing}
-                className={
-                  (today.spacing ?? "separated") === spacing ? "selected" : ""
-                }
-                aria-pressed={(today.spacing ?? "separated") === spacing}
-                onClick={() => setSpacing(spacing)}
-              >
-                {spacing === "joined" ? "くっつける" : "離す"}
-              </button>
-            ))}
-          </div>
+          <SpacingSelector value={today.spacing} onChange={setSpacing} />
           <SamplePhotoButton />
         </div>
         <CollageStage
@@ -473,6 +461,11 @@ export function Home({
                     getImageBlob={getImageBlob}
                   >
                     <ColorMatchBadge day={today} animateReveal />
+                    <ArtworkMemo
+                      key={today.date}
+                      value={today.memo}
+                      onSave={(memo) => setMemo(today.date, memo)}
+                    />
                   </ExportedCollage>
                 </div>
               </motion.div>
