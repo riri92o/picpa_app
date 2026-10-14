@@ -34,8 +34,13 @@ export function CompletionPreview({
       >
         <div className="completion-photo-grid">
           {logo && (
-            <div className="completion-brand-header">
-              <BrandLogo variant="white" className="completion-header-logo" />
+            <div
+              className="completion-brand-header"
+              style={{ aspectRatio: 1 / EXPORT_BRAND_LOGO.headerRatio }}
+            >
+              <div style={{ width: `${EXPORT_BRAND_LOGO.logoRatio * 100}%` }}>
+                <BrandLogo variant="white" className="completion-header-logo" />
+              </div>
             </div>
           )}
           <CollageGrid

@@ -190,7 +190,7 @@
 }
 .collage-frame {
   background: var(--surface);
-  border-radius: 15px;
+  border-radius: 0;
   padding: 4px;
   overflow: hidden;
   flex: none;
@@ -215,7 +215,7 @@
   aspect-ratio: 1.25;
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--surface-soft);
   touch-action: none;
 }
@@ -406,7 +406,7 @@
   transform: scale(0.97);
 }
 .empty-tile:not(:disabled):active {
-  border-radius: 17px 12px 18px 10px;
+  border-radius: 0;
 }
 @keyframes liquid-morph {
   0%,
@@ -442,7 +442,7 @@
   height: clamp(78px, 12.2dvh, 110px);
 }
 .home-screen .empty-tile {
-  border-radius: 14px;
+  border-radius: 0;
   background: color-mix(in srgb, var(--accent) 4%, var(--page));
 }
 .home-screen .spacing-joined .empty-tile {

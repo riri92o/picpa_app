@@ -194,7 +194,7 @@ body {
 .home-screen .collage-frame,
 .collage-frame {
   padding: 4px;
-  border-radius: 19px;
+  border-radius: 0;
   background: linear-gradient(
     135deg,
     var(--film-gold),
@@ -206,7 +206,7 @@ body {
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .collage-grid {
-  border-radius: 15px;
+  border-radius: 0;
   overflow: hidden;
 }
 .home-screen .empty-tile,
@@ -214,10 +214,11 @@ body {
   background: var(--surface-soft);
   color: var(--accent-readable);
   border-color: color-mix(in srgb, var(--accent-soft) 43%, transparent);
-  border-radius: 10px;
+  border-radius: 0;
 }
 .home-screen .spacing-joined .empty-tile {
-  border-radius: 0;
+  /* Keep each empty slot legible even without a gap between photographs. */
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 60%, transparent);
 }
 .collage-frame.inactive {
   opacity: 0.73;

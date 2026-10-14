@@ -140,12 +140,8 @@ export function Home({
             exit={{ opacity: 0, y: -8 }}
             transition={ritual.reduced ? { duration: 0 } : BUBBLE_MOTION}
           >
-            <h2>
-              {ritual.busy
-                ? ""
-                : today.colorId
-                  ? color.name
-                  : "今日の色を見つけよう"}
+            <h2 aria-hidden={!today.colorId || ritual.busy}>
+              {!ritual.busy && today.colorId ? color.name : ""}
             </h2>
           </motion.div>
         </AnimatePresence>

@@ -163,7 +163,7 @@
   font-weight: 750;
 }
 .detail-collage {
-  border-radius: 15px;
+  border-radius: 0;
   overflow: hidden;
 }
 .detail-actions {

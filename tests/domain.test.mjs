@@ -381,16 +381,22 @@ for (const [index, bubble] of OPENING_BUBBLES.entries()) {
     OPENING_MOTION.minimumDuration,
   );
   openingTravel += Math.hypot(end.x - start.x, end.y - start.y);
+  let previous = start;
   for (let time = 0; time < bubble.period * 1000; time += 100) {
     const position = openingBubbleOffset(bubble, index, time);
     assert.ok(Math.abs(position.x) <= Math.abs(bubble.dx) + 1e-8);
     assert.ok(Math.abs(position.y) <= bubble.dy + 1e-8);
+    assert.ok(
+      Math.hypot(position.x - previous.x, position.y - previous.y) < 2.5,
+      "Opening bubbles must drift gently, below 25 pixels per second",
+    );
+    previous = position;
   }
 }
 assert.ok(
-  openingTravel / OPENING_BUBBLES.length > 25,
+  openingTravel / OPENING_BUBBLES.length > 12,
   "Floating must be visible during the short opening",
 );
 console.log(
-  "Opening float: bounded continuous drift and visible travel during launch: OK",
+  "Opening float: gentle continuous drift and visible travel during launch: OK",
 );

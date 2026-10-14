@@ -103,7 +103,7 @@ function visibleFrameColor(color: string) {
   return color;
 }
 
-/** Layered metallic edge, drawn outside the photos and their crop area. */
+/** One continuous metal surface; branding simply extends its top edge. */
 function drawColorFrame(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -111,8 +111,8 @@ function drawColorFrame(
   width: number,
   height: number,
   color: string,
+  headerHeight: number,
 ) {
-  const radius = 18;
   const edge = 16;
   const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
   gradient.addColorStop(0, blendHex(color, 0, 0.58));
@@ -129,7 +129,7 @@ function drawColorFrame(
   ctx.shadowColor = blendHex(color, 255, 0.1);
   ctx.shadowBlur = 16;
   ctx.beginPath();
-  ctx.roundRect(x, y, width, height, radius);
+  ctx.rect(x, y, width, height);
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.strokeStyle = blendHex(color, 255, 0.74);
@@ -138,16 +138,15 @@ function drawColorFrame(
   ctx.strokeStyle = "#ffffffdc";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(x + 3, y + 3, width - 6, height - 6, radius - 3);
+  ctx.rect(x + 3, y + 3, width - 6, height - 6);
   ctx.stroke();
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.roundRect(
+  ctx.rect(
     x + edge,
-    y + edge,
+    y + edge + headerHeight,
     width - edge * 2,
-    height - edge * 2,
-    radius - edge,
+    height - edge * 2 - headerHeight,
   );
   ctx.fill();
   ctx.strokeStyle = blendHex(color, 0, 0.6);
@@ -202,50 +201,6 @@ function drawFrameGlints(
   ctx.restore();
 }
 
-/** Reflective color metal with a darker central fold beneath the white logo. */
-function drawMetallicHeader(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-) {
-  ctx.save();
-  const metal = ctx.createLinearGradient(x, y, x + width, y + height);
-  metal.addColorStop(0, blendHex(color, 0, 0.48));
-  metal.addColorStop(0.09, blendHex(color, 255, 0.84));
-  metal.addColorStop(0.19, blendHex(color, 0, 0.3));
-  metal.addColorStop(0.3, blendHex(color, 255, 0.7));
-  metal.addColorStop(0.4, blendHex(color, 0, 0.62));
-  metal.addColorStop(0.6, blendHex(color, 0, 0.5));
-  metal.addColorStop(0.72, blendHex(color, 255, 0.79));
-  metal.addColorStop(0.86, blendHex(color, 0, 0.32));
-  metal.addColorStop(0.96, blendHex(color, 255, 0.93));
-  metal.addColorStop(1, blendHex(color, 0, 0.5));
-  ctx.fillStyle = metal;
-  ctx.fillRect(x, y, width, height);
-  const sheen = ctx.createLinearGradient(x, y, x, y + height);
-  sheen.addColorStop(0, "#ffffff48");
-  sheen.addColorStop(0.18, "#ffffff00");
-  sheen.addColorStop(0.55, "#0c12202a");
-  sheen.addColorStop(0.89, "#ffffff14");
-  sheen.addColorStop(1, "#0c12203d");
-  ctx.fillStyle = sheen;
-  ctx.fillRect(x, y, width, height);
-  // Fine horizontal reflections stay inside the header; photographs are untouched.
-  ctx.globalAlpha = 0.035;
-  for (let row = 2; row < height; row += 3) {
-    ctx.fillStyle = row % 2 ? "#ffffff" : "#11192b";
-    ctx.fillRect(x, y + row, width, 1);
-  }
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = blendHex(color, 255, 0.8);
-  ctx.fillRect(x, y + height - 1, width, 1);
-  ctx.restore();
-  drawFrameGlints(ctx, x + 22, y + 12, width - 44, height - 24, color);
-}
-
 export async function exportCollage(
   count: GridCount,
   photos: PhotoPlacement[],
@@ -282,16 +237,9 @@ export async function exportCollage(
     collageWidth + 32,
     collageHeight + header.height + 32,
     frameColor,
+    header.height,
   );
   if (header.logo) {
-    drawMetallicHeader(
-      ctx,
-      left,
-      headerTop,
-      collageWidth,
-      header.height,
-      frameColor,
-    );
     await drawCollageLogo(ctx, header.logo, left, headerTop);
   }
   for (let i = 0; i < photos.length; i++) {

@@ -28,7 +28,10 @@ export function collageBrandHeader(collageWidth: number, enabled: boolean) {
   const height = enabled
     ? Math.round(collageWidth * EXPORT_BRAND_LOGO.headerRatio)
     : 0;
-  const width = Math.min(250, collageWidth * 0.245);
+  const width = Math.min(
+    EXPORT_BRAND_LOGO.logoMaxWidth,
+    collageWidth * EXPORT_BRAND_LOGO.logoRatio,
+  );
   const logo: CollageLogoPlacement | undefined = enabled
     ? {
         x: collageWidth / 2,

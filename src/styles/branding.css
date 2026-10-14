@@ -8,35 +8,13 @@
   position: relative;
 }
 .completion-brand-header {
-  aspect-ratio: 6.25;
   display: grid;
   place-items: center;
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff38,
-      #ffffff00 18%,
-      #0c12202a 55%,
-      #ffffff14 89%,
-      #0c12203d
-    ),
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--completion-color) 52%, black),
-      color-mix(in srgb, var(--completion-color) 16%, white) 9%,
-      color-mix(in srgb, var(--completion-color) 70%, black) 19%,
-      color-mix(in srgb, var(--completion-color) 30%, white) 30%,
-      color-mix(in srgb, var(--completion-color) 38%, black) 40%,
-      color-mix(in srgb, var(--completion-color) 50%, black) 60%,
-      color-mix(in srgb, var(--completion-color) 21%, white) 72%,
-      color-mix(in srgb, var(--completion-color) 68%, black) 86%,
-      color-mix(in srgb, var(--completion-color) 7%, white) 96%,
-      color-mix(in srgb, var(--completion-color) 50%, black)
-    );
-  border-bottom: 1px solid #ffffff88;
+  /* Transparent: the outer frame's metal continues through this expanded rim. */
+  background: transparent;
 }
 .completion-header-logo {
-  width: 24.5%;
+  width: 100%;
   filter: drop-shadow(0 1px 1px #10152f85);
 }
 .completion-photo-grid:has(.completion-brand-header) .collage-grid {
