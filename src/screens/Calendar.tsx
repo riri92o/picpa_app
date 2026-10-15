@@ -1,13 +1,11 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Share2 } from "lucide-react";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
-import { ArtworkMemo } from "../components/ArtworkMemo";
-import { SpacingSelector } from "../components/SpacingSelector";
 import { CollageGrid } from "../components/CollageGrid";
-import { ExportedCollage } from "../components/ExportedCollage";
 import { Modal } from "../components/Modal";
 import { colorById } from "../constants/palette";
 import { dateFromKey, localDateKey } from "../domain/date";
+import { exportCollage } from "../domain/image";
 import { useApp } from "../state/AppContext";
 
 export function Calendar() {
@@ -19,10 +17,11 @@ export function Calendar() {
     ensureFullImages,
     todayKey,
     setSpacing,
-    setMemo,
   } = useApp();
   const [month, setMonth] = useState(() => new Date());
   const [selected, setSelected] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
   const year = month.getFullYear(),
     monthIndex = month.getMonth();
   const firstWeekday = new Date(year, monthIndex, 1).getDay();
@@ -41,8 +40,65 @@ export function Calendar() {
   const selectedColor = colorById(selectedDay?.colorId);
   const changeMonth = (step: number) =>
     setMonth(new Date(year, monthIndex + step, 1));
+  const makeBlob = async () => {
+    if (!selectedDay?.completedAt) return;
+    setBusy(true);
+    try {
+      return await exportCollage(
+        selectedDay.count,
+        selectedDay.photos,
+        getImageBlob,
+        selectedColor.hex,
+        settings.exportLogo,
+        selectedDay.spacing,
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const download = async () => {
+    try {
+      const blob = await makeBlob();
+      if (!blob || !selectedDay) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `PicPa-${selectedDay.date}.jpg`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice("画像を保存しました");
+    } catch {
+      setNotice("画像を書き出せませんでした");
+    }
+  };
+  const share = async () => {
+    try {
+      const blob = await makeBlob();
+      if (!blob || !selectedDay) return;
+      const file = new File([blob], `PicPa-${selectedDay.date}.jpg`, {
+        type: "image/jpeg",
+      });
+      if (navigator.share && navigator.canShare?.({ files: [file] }))
+        await navigator.share({ files: [file], title: "PicPa" });
+      else {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setNotice("共有に対応していないため画像を保存しました");
+      }
+    } catch (error) {
+      if ((error as Error).name !== "AbortError")
+        setNotice("共有できませんでした");
+    }
+  };
   return (
     <main className="screen calendar-screen">
+      <header className="app-header">
+        <h1>PicPa</h1>
+      </header>
       <section
         className="calendar-card"
         aria-label="月のカレンダー"
@@ -101,6 +157,7 @@ export function Calendar() {
                 className={`date-cell ${key === todayKey ? "today" : ""}`}
                 onClick={() => {
                   setSelected(key);
+                  setNotice("");
                 }}
                 aria-label={`${number}日${color ? `、${color.name}` : ""}${day?.completedAt ? "、完成済み" : ""}`}
               >
@@ -169,42 +226,67 @@ export function Calendar() {
               </span>
             </div>
             {selectedDay.completedAt && (
-              <SpacingSelector
-                value={selectedDay.spacing}
-                onChange={(spacing) => setSpacing(spacing, selectedDay.date)}
-                detail
+              <div
+                className="spacing-selector detail-spacing"
+                role="group"
+                aria-label="写真の間隔"
+              >
+                {(["joined", "separated"] as const).map((spacing) => (
+                  <button
+                    key={spacing}
+                    className={
+                      (selectedDay.spacing ?? "separated") === spacing
+                        ? "selected"
+                        : ""
+                    }
+                    aria-pressed={
+                      (selectedDay.spacing ?? "separated") === spacing
+                    }
+                    onClick={() => setSpacing(spacing, selectedDay.date)}
+                  >
+                    {spacing === "joined" ? "くっつける" : "離す"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="detail-collage">
+              <CollageGrid
+                count={selectedDay.count}
+                spacing={selectedDay.spacing}
+                photos={selectedDay.photos}
+                images={images}
+                locked
               />
+            </div>
+            {selectedDay.completedAt && (
+              <ColorMatchBadge day={selectedDay} showComment />
             )}
             {selectedDay.completedAt ? (
-              <ExportedCollage
-                day={selectedDay}
-                logo={settings.exportLogo}
-                getImageBlob={getImageBlob}
-              >
-                <ColorMatchBadge day={selectedDay} showComment />
-                <ArtworkMemo
-                  key={selectedDay.date}
-                  value={selectedDay.memo}
-                  onSave={(memo) => setMemo(selectedDay.date, memo)}
-                />
-              </ExportedCollage>
+              <div className="detail-actions">
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={() => void download()}
+                >
+                  <Download size={18} />
+                  保存
+                </button>
+                <button
+                  className="primary-button"
+                  disabled={busy}
+                  onClick={() => void share()}
+                >
+                  <Share2 size={18} />
+                  共有
+                </button>
+              </div>
             ) : (
-              <>
-                <div className="detail-collage">
-                  <CollageGrid
-                    count={selectedDay.count}
-                    spacing={selectedDay.spacing}
-                    photos={selectedDay.photos}
-                    images={images}
-                    locked
-                  />
-                </div>
-                <p className="modal-footnote">
-                  {selectedDay.photos.length} / {selectedDay.count}枚 ·
-                  完成するとここから保存・共有できます。
-                </p>
-              </>
+              <p className="modal-footnote">
+                {selectedDay.photos.length} / {selectedDay.count}枚 ·
+                完成するとここから保存・共有できます。
+              </p>
             )}
+            {notice && <p className="modal-footnote centered">{notice}</p>}
           </>
         ) : (
           <div className="empty-day">

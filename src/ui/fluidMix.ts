@@ -1,13 +1,6 @@
-import {
-  FLOATING_BUBBLES,
-  FLUID_SURFACE,
-  LIQUID_MOTION,
-} from "../constants/liquidMotion";
+import { FLOATING_BUBBLES, LIQUID_MOTION } from "../constants/liquidMotion";
 
-import { fluidFilmOpacity, fluidHandoff } from "./fluidSurface";
-import { floatingBubblePosition } from "./viewport";
 import { ingredientForBubble, recipeForColor } from "../constants/mixRecipes";
-import { vividAccent } from "./theme";
 
 export interface FluidBox {
   width: number;
@@ -37,9 +30,6 @@ const rgb = (hex: string): RGB =>
 const blend = (a: RGB, b: RGB, t: number): RGB =>
   a.map((c, i) => mix(c, b[i], t)) as RGB;
 const gray: RGB = [189, 193, 197];
-const neutralFilm: RGB = [226, 235, 247];
-const coolFilm: RGB = [183, 239, 243];
-const warmFilm: RGB = [255, 216, 230];
 
 /** UI-only field renderer. Spring-linked tails deform independently of their heads;
  * overlapping compact density kernels produce a shared contour, rather than stacked shapes.
@@ -49,7 +39,6 @@ export function createFluidMix(
   box: FluidBox,
   resultHex: string,
   colorId: string,
-  systemInset = false,
 ) {
   const scale = Math.min(LIQUID_MOTION.fieldScale, 384 / box.width);
   const width = Math.ceil(box.width * scale),
@@ -73,28 +62,25 @@ export function createFluidMix(
   const mixed = [0, 1, 2].map(
     (channel) =>
       recipe.reduce(
-        (sum, item) => sum + rgb(vividAccent(item.hex))[channel] * item.weight,
+        (sum, item) => sum + rgb(item.hex)[channel] * item.weight,
         0,
       ) / totalWeight,
   ) as RGB;
-  const groups = FLOATING_BUBBLES.map((b, i) => {
-    const start = floatingBubblePosition(b, box.width, box.height, systemInset);
-    return {
-      startX: start.x,
-      startY: start.y,
-      angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
-      color: rgb(vividAccent(ingredientForBubble(recipe, i).hex)),
-      nodes: Array.from({ length: 4 }, (_, j): Node => ({
-        x: start.x,
-        y: start.y,
-        vx: 0,
-        vy: 0,
-        radius: b.r * [0.86, 0.52, 0.3, 0.13][j],
-        color: gray,
-        strength: 0,
-      })),
-    };
-  });
+  const groups = FLOATING_BUBBLES.map((b, i) => ({
+    startX: box.width * b.x,
+    startY: box.height * b.y,
+    angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
+    color: rgb(ingredientForBubble(recipe, i).hex),
+    nodes: Array.from({ length: 4 }, (_, j): Node => ({
+      x: box.width * b.x,
+      y: box.height * b.y,
+      vx: 0,
+      vy: 0,
+      radius: b.r * [0.86, 0.52, 0.3, 0.13][j],
+      color: gray,
+      strength: 0,
+    })),
+  }));
   const core: Node = {
     x: box.x,
     y: box.y,
@@ -170,7 +156,7 @@ export function createFluidMix(
         node.radius =
           mix(base, moving, gatherU) * knead * (1 - 0.85 * smooth(settling));
         node.strength =
-          mix(i < 2 ? 0.46 : 0.7, 1, gatherU) * (1 - smooth(settling));
+          mix(i < 2 ? 0.26 : 0.36, 1, gatherU) * (1 - smooth(settling));
         node.color = blend(
           gray,
           blend(group.color, result, finalMix),
@@ -227,39 +213,18 @@ export function createFluidMix(
         }
       }
     }
-    const handoff = fluidHandoff(elapsed);
+    const fade = 1 - smooth((settling - 0.67) / 0.33);
     for (let y = minY; y <= maxY; y++)
       for (let x = minX; x <= maxX; x++) {
         const index = y * width + x,
           value = density[index];
-        if (value < FLUID_SURFACE.contourThreshold) continue;
+        if (value < 0.92) continue;
         const p = index * 4;
-        // Shade the same unified field, so connected liquid retains its depth while mixing.
-        const slopeX = density[index - 1] - density[index + 1] || 0;
-        const slopeY = density[index - width] - density[index + width] || 0;
-        const light = Math.max(-0.14, Math.min(0.28, -(slopeX + slopeY) * 1.7));
-        // Soap-film bands follow the shared density contour. The spring trajectories,
-        // mixing recipes and convergence timing above are deliberately unchanged.
-        const edge = 1 - smooth((value - 0.98) / 1.7);
-        const band =
-          0.5 +
-          0.5 * Math.sin(x * 0.09 + y * 0.055 + value * 4 - elapsed * 0.0006);
-        const filmWeight = edge * (0.06 + 0.18 * band);
-        for (let c = 0; c < 3; c++) {
-          const base = channels[c][index] / weights[index];
-          const lit =
-            light > 0 ? base + (255 - base) * light : base * (1 + light);
-          const film = mix(
-            neutralFilm[c],
-            mix(coolFilm[c], warmFilm[c], band),
-            neutralToColor,
-          );
-          pixels.data[p + c] = mix(lit, film, filmWeight);
-        }
-        // Transparent interiors share a single alpha field. Keep the rim legible
-        // and hand off to the SVG with the very same complementary progress.
+        for (let c = 0; c < 3; c++)
+          pixels.data[p + c] = channels[c][index] / weights[index];
+        // Feather only the contour edge; no lighting, reflections, or drop shadows.
         pixels.data[p + 3] =
-          (255 * fluidFilmOpacity(value) * handoff.fluid * coverage[index]) /
+          (255 * smooth((value - 0.92) / 0.16) * fade * coverage[index]) /
           weights[index];
       }
     context.putImageData(pixels, 0, 0);

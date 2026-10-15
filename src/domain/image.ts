@@ -5,7 +5,6 @@ import type {
   CollageSpacing,
 } from "./types";
 import { getCropGeometry } from "./crop";
-import { collageBrandHeader, drawCollageLogo } from "./branding";
 
 function canvasBlob(
   canvas: HTMLCanvasElement,
@@ -80,127 +79,6 @@ export function drawPlacement(
 export function gridDimensions(count: GridCount): [number, number] {
   return count === 9 ? [3, 3] : count === 4 ? [2, 2] : [2, 3];
 }
-
-function blendHex(hex: string, target: number, amount: number) {
-  const match = /^#([\da-f]{6})$/i.exec(hex);
-  if (!match) return hex;
-  const value = Number.parseInt(match[1], 16);
-  const channels = [16, 8, 0].map((shift) =>
-    Math.round(((value >> shift) & 255) * (1 - amount) + target * amount),
-  );
-  return `rgb(${channels.join(",")})`;
-}
-
-function visibleFrameColor(color: string) {
-  const match = /^#([\da-f]{6})$/i.exec(color);
-  if (!match) return color;
-  const value = Number.parseInt(match[1], 16);
-  const channels = [16, 8, 0].map((shift) => (value >> shift) & 255);
-  const average = channels.reduce((sum, channel) => sum + channel, 0) / 3;
-  const spread = Math.max(...channels) - Math.min(...channels);
-  if (average > 235 && spread < 20) return "#8994ad";
-  if (average < 30 && spread < 20) return "#59657d";
-  return color;
-}
-
-/** One continuous metal surface; branding simply extends its top edge. */
-function drawColorFrame(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-  headerHeight: number,
-) {
-  const edge = 16;
-  const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-  gradient.addColorStop(0, blendHex(color, 0, 0.58));
-  gradient.addColorStop(0.09, blendHex(color, 255, 0.86));
-  gradient.addColorStop(0.21, color);
-  gradient.addColorStop(0.32, blendHex(color, 255, 0.92));
-  gradient.addColorStop(0.47, blendHex(color, 0, 0.56));
-  gradient.addColorStop(0.61, blendHex(color, 255, 0.7));
-  gradient.addColorStop(0.76, color);
-  gradient.addColorStop(0.88, blendHex(color, 255, 0.96));
-  gradient.addColorStop(1, blendHex(color, 0, 0.54));
-  ctx.save();
-  ctx.fillStyle = gradient;
-  ctx.shadowColor = blendHex(color, 255, 0.1);
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  ctx.rect(x, y, width, height);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = blendHex(color, 255, 0.74);
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.strokeStyle = "#ffffffdc";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.rect(x + 3, y + 3, width - 6, height - 6);
-  ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.rect(
-    x + edge,
-    y + edge + headerHeight,
-    width - edge * 2,
-    height - edge * 2 - headerHeight,
-  );
-  ctx.fill();
-  ctx.strokeStyle = blendHex(color, 0, 0.6);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawFrameGlints(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-) {
-  const glints: [number, number, number][] = [
-    [0.15, 0, 8],
-    [0.88, 0, 5],
-    [1, 0.32, 7],
-    [0, 0.71, 5],
-    [0.7, 1, 8],
-  ];
-  ctx.save();
-  for (const [px, py, size] of glints) {
-    const centerX = x + width * px;
-    const centerY = y + height * py;
-    const halo = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      size * 4,
-    );
-    halo.addColorStop(0, "#ffffff");
-    halo.addColorStop(0.16, blendHex(color, 255, 0.7));
-    halo.addColorStop(1, "#ffffff00");
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, size * 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(centerX - size * 1.7, centerY);
-    ctx.lineTo(centerX + size * 1.7, centerY);
-    ctx.moveTo(centerX, centerY - size * 1.7);
-    ctx.lineTo(centerX, centerY + size * 1.7);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
 export async function exportCollage(
   count: GridCount,
   photos: PhotoPlacement[],
@@ -216,32 +94,15 @@ export async function exportCollage(
   const gap = spacing === "joined" ? 0 : 7;
   const collageWidth = cols * cellWidth + (cols - 1) * gap;
   const collageHeight = rows * cellHeight + (rows - 1) * gap;
-  const header = collageBrandHeader(collageWidth, logo);
-  // Keep only a small neutral margin around the artwork; the app's night-sky
-  // background is intentionally excluded from exported images.
-  const left = 24,
-    headerTop = 24,
-    top = headerTop + header.height,
-    right = 24,
-    bottom = 24;
+  const left = 86,
+    top = 42,
+    right = 42,
+    bottom = 42;
   canvas.width = left + collageWidth + right;
   canvas.height = top + collageHeight + bottom;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const frameColor = visibleFrameColor(color);
-  drawColorFrame(
-    ctx,
-    left - 16,
-    headerTop - 16,
-    collageWidth + 32,
-    collageHeight + header.height + 32,
-    frameColor,
-    header.height,
-  );
-  if (header.logo) {
-    await drawCollageLogo(ctx, header.logo, left, headerTop);
-  }
   for (let i = 0; i < photos.length; i++) {
     const blob = await getBlob(photos[i].id);
     if (!blob) continue;
@@ -262,13 +123,15 @@ export async function exportCollage(
       image.close();
     }
   }
-  drawFrameGlints(
-    ctx,
-    left - 16,
-    headerTop - 16,
-    collageWidth + 32,
-    collageHeight + header.height + 32,
-    frameColor,
-  );
+  if (logo) {
+    ctx.save();
+    ctx.translate(34, canvas.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = color;
+    ctx.font = "600 24px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("PicPa", 0, 0);
+    ctx.restore();
+  }
   return canvasBlob(canvas, "image/jpeg", 0.92);
 }

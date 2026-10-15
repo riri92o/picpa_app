@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
   Camera,
   Check,
+  Download,
   ImagePlus,
   Images,
+  RotateCcw,
   RotateCw,
+  Share2,
   Trash2,
   Upload,
   X,
@@ -20,32 +22,23 @@ import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
-import { ColorHintButton } from "../components/ColorHintButton";
-import { ArtworkMemo } from "../components/ArtworkMemo";
-import { SpacingSelector } from "../components/SpacingSelector";
 import { CompletionPreview } from "../components/CompletionPreview";
-import { ExportedCollage } from "../components/ExportedCollage";
 import { CroppedPhoto } from "../components/CroppedPhoto";
 import { Modal } from "../components/Modal";
 import { SamplePhotoButton } from "../dev/SamplePhotoButton";
 import { isRandomChallenge } from "../domain/challenge";
+import { exportCollage } from "../domain/image";
 import type { GridCount } from "../domain/types";
 import { useApp } from "../state/AppContext";
 
-export function Home({
-  ritual,
-  systemInset,
-}: {
-  ritual: ColorRitual;
-  systemInset: boolean;
-}) {
+export function Home({ ritual }: { ritual: ColorRitual }) {
   const {
     today,
+    todayKey,
     settings,
     images,
     setCount,
     setSpacing,
-    setMemo,
     reduceCount,
     addPhotos,
     removePhoto,
@@ -61,6 +54,8 @@ export function Home({
   const [editing, setEditing] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [busyExport, setBusyExport] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [reduceTo, setReduceTo] = useState<GridCount | null>(null);
   const [keep, setKeep] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -68,6 +63,11 @@ export function Home({
   const randomChallenge = isRandomChallenge(today, settings);
   const color = colorById(today.colorId);
   const placement = today.photos.find((p) => p.id === editing);
+  const dateLabel = new Intl.DateTimeFormat("ja-JP", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }).format(new Date(`${todayKey}T12:00:00`));
   const openSource = (id?: string) => {
     setReplaceId(id);
     setEditing(null);
@@ -101,8 +101,74 @@ export function Home({
     completeToday();
     setConfirm(false);
     setFinished(true);
+    window.setTimeout(() => {
+      setFinished(false);
+      setExportNotice("コラージュが完成しました！保存やシェアができます");
+      window.setTimeout(() => setExportNotice(null), 3500);
+    }, 1700);
   };
-  const overlayRoot = document.getElementById("modal-root");
+
+  const makeTodayBlob = async () => {
+    if (!today.completedAt) return;
+    setBusyExport(true);
+    try {
+      return await exportCollage(
+        today.count,
+        today.photos,
+        getImageBlob,
+        color.hex,
+        settings.exportLogo,
+        today.spacing,
+      );
+    } finally {
+      setBusyExport(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const blob = await makeTodayBlob();
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `PicPa-${today.date}.jpg`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportNotice("画像を保存しました");
+      window.setTimeout(() => setExportNotice(null), 3000);
+    } catch {
+      setExportNotice("画像を書き出せませんでした");
+      window.setTimeout(() => setExportNotice(null), 3000);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const blob = await makeTodayBlob();
+      if (!blob) return;
+      const file = new File([blob], `PicPa-${today.date}.jpg`, {
+        type: "image/jpeg",
+      });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "PicPa" });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportNotice("共有に対応していないため画像を保存しました");
+        window.setTimeout(() => setExportNotice(null), 3000);
+      }
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        setExportNotice("共有できませんでした");
+        window.setTimeout(() => setExportNotice(null), 3000);
+      }
+    }
+  };
   return (
     <main
       ref={screenRef}
@@ -111,10 +177,13 @@ export function Home({
     >
       <LiquidColorScene
         ritual={ritual}
-        systemInset={systemInset}
         screenRef={screenRef}
         bubbleRef={bubbleRef}
       />
+      <header className="app-header">
+        <span className="header-side date-text">{dateLabel}</span>
+        <h1>PicPa</h1>
+      </header>
       <section className="color-section">
         <button
           ref={bubbleRef}
@@ -144,10 +213,13 @@ export function Home({
             exit={{ opacity: 0, y: -8 }}
             transition={ritual.reduced ? { duration: 0 } : BUBBLE_MOTION}
           >
-            <h2 aria-hidden={!today.colorId || ritual.busy}>
-              {!ritual.busy && today.colorId ? color.name : ""}
+            <h2>
+              {ritual.busy
+                ? ""
+                : today.colorId
+                  ? color.name
+                  : "今日の色を見つけよう"}
             </h2>
-            {!ritual.busy && today.colorId && <ColorHintButton color={color} />}
           </motion.div>
         </AnimatePresence>
       </section>
@@ -195,7 +267,24 @@ export function Home({
           </div>
         )}
         <div className="home-tools">
-          <SpacingSelector value={today.spacing} onChange={setSpacing} />
+          <div
+            className="spacing-selector"
+            role="group"
+            aria-label="写真の間隔"
+          >
+            {(["joined", "separated"] as const).map((spacing) => (
+              <button
+                key={spacing}
+                className={
+                  (today.spacing ?? "separated") === spacing ? "selected" : ""
+                }
+                aria-pressed={(today.spacing ?? "separated") === spacing}
+                onClick={() => setSpacing(spacing)}
+              >
+                {spacing === "joined" ? "くっつける" : "離す"}
+              </button>
+            ))}
+          </div>
           <SamplePhotoButton />
         </div>
         <CollageStage
@@ -222,19 +311,54 @@ export function Home({
         {today.colorId && !today.completedAt && (
           <p className="grid-hint">長押しで並べ替え · タップで編集</p>
         )}
-        <button
-          className="primary-button complete-button"
-          disabled={
-            !today.colorId ||
-            !!today.completedAt ||
-            today.photos.length !== today.count
-          }
-          onClick={() => setConfirm(true)}
-        >
-          {today.completedAt ? "完成済み" : "完成"}{" "}
-          {today.completedAt ? <Check size={20} /> : <ArrowRight size={20} />}
-        </button>
+        {today.completedAt ? (
+          <div className="home-completed-actions">
+            <button
+              className="secondary-button"
+              onClick={handleDownload}
+              disabled={busyExport}
+              aria-label="画像を保存"
+            >
+              <Download size={18} />
+              画像を保存
+            </button>
+            <button
+              className="primary-button"
+              onClick={handleShare}
+              disabled={busyExport}
+              aria-label="シェアする"
+            >
+              <Share2 size={18} />
+              シェア
+            </button>
+          </div>
+        ) : (
+          <button
+            className="primary-button complete-button"
+            disabled={
+              !today.colorId ||
+              !!today.completedAt ||
+              today.photos.length !== today.count
+            }
+            onClick={() => setConfirm(true)}
+          >
+            完成 <ArrowRight size={20} />
+          </button>
+        )}
       </section>
+      <AnimatePresence>
+        {exportNotice && (
+          <motion.div
+            className="export-toast"
+            initial={{ opacity: 0, y: -16, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.94 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <span>{exportNotice}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <input
         ref={fileRef}
         className="hidden-input"
@@ -284,10 +408,14 @@ export function Home({
                 src={images[placement.id]?.full ?? images[placement.id]?.thumb}
                 placement={placement}
                 alt="編集中の写真"
+                showGrid
                 onPan={(x, y) => updatePlacement(placement.id, { x, y })}
+                onZoom={(zoom) => updatePlacement(placement.id, { zoom })}
               />
             </div>
-            <p className="modal-footnote centered">ドラッグして位置を調整</p>
+            <p className="modal-footnote centered">
+              ドラッグで位置調整 · 2本指ピンチで拡大縮小
+            </p>
             <div className="editor-controls">
               <label>
                 拡大{" "}
@@ -341,6 +469,19 @@ export function Home({
               >
                 <RotateCw size={19} />
                 回転
+              </button>
+              <button
+                onClick={() =>
+                  updatePlacement(placement.id, {
+                    x: 0,
+                    y: 0,
+                    zoom: 1,
+                    rotation: 0,
+                  })
+                }
+              >
+                <RotateCcw size={19} />
+                リセット
               </button>
               <button onClick={() => openSource(placement.id)}>
                 <Upload size={19} />
@@ -399,11 +540,7 @@ export function Home({
         onClose={() => setConfirm(false)}
         title="完成しますか？"
       >
-        <CompletionPreview
-          day={today}
-          images={images}
-          logo={settings.exportLogo}
-        />
+        <CompletionPreview day={today} images={images} />
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
         </p>
@@ -419,60 +556,47 @@ export function Home({
           </button>
         </div>
       </Modal>
-      {overlayRoot &&
-        createPortal(
-          <AnimatePresence>
-            {finished && (
-              <motion.div
-                className="finish-overlay"
-                role="dialog"
-                aria-modal="true"
-                aria-label="完成したコラージュ"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="finish-card">
-                  <button
-                    className="icon-button small finish-close"
-                    onClick={() => setFinished(false)}
-                    aria-label="完成画面を閉じる"
-                  >
-                    <X size={20} />
-                  </button>
-                  <motion.div
-                    className="finish-bubble"
-                    initial={{
-                      y: ritual.reduced ? 0 : 220,
-                      scale: ritual.reduced ? 1 : 0.75,
-                    }}
-                    animate={{ y: 0, scale: 1 }}
-                    transition={{
-                      duration: ritual.reduced ? 0 : 1.1,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                  >
-                    <Check size={34} />
-                  </motion.div>
-                  <h2>完成</h2>
-                  <ExportedCollage
-                    day={today}
-                    logo={settings.exportLogo}
-                    getImageBlob={getImageBlob}
-                  >
-                    <ColorMatchBadge day={today} animateReveal />
-                    <ArtworkMemo
-                      key={today.date}
-                      value={today.memo}
-                      onSave={(memo) => setMemo(today.date, memo)}
-                    />
-                  </ExportedCollage>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          overlayRoot,
+      <AnimatePresence>
+        {finished && (
+          <motion.div
+            className="finish-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="finish-bubble"
+              initial={{
+                y: ritual.reduced ? 0 : 280,
+                scale: ritual.reduced ? 1 : 0.75,
+              }}
+              animate={{ y: ritual.reduced ? 0 : -20, scale: 1 }}
+              exit={{ y: ritual.reduced ? 0 : -160, opacity: 0 }}
+              transition={{
+                duration: ritual.reduced ? 0 : 1.25,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <Check size={50} />
+            </motion.div>
+            <motion.div
+              className="finish-preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: ritual.reduced ? 0 : 0.35,
+                delay: ritual.reduced ? 0 : 0.15,
+              }}
+            >
+              <CompletionPreview day={today} images={images} />
+            </motion.div>
+            <p>完成</p>
+            <div className="finish-score">
+              <ColorMatchBadge day={today} />
+            </div>
+          </motion.div>
         )}
+      </AnimatePresence>
     </main>
   );
 }

@@ -54,14 +54,9 @@ export function pixelSimilarity(pixel: Lab, target: Lab): number {
   const oppositePenalty =
     (1 - clamp((angularDistance - Math.PI / 2) / (Math.PI / 2))) **
     COLOR_MATCH.oppositeHuePower;
-  // Muted warm backgrounds can otherwise look close to a warm target even
-  // when the visible subject belongs to a distant color family.
-  const distantHue = clamp((angularDistance - 0.9) / 1.1);
-  const distantHuePenalty = 1 - 0.88 * distantHue ** 2 * (3 - 2 * distantHue);
   return (
     presence *
     oppositePenalty *
-    distantHuePenalty *
     Math.exp(-hue * hue - chroma * chroma - light * light)
   );
 }

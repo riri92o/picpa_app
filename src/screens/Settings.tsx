@@ -30,6 +30,9 @@ export function Settings() {
   );
   return (
     <main className="screen settings-screen">
+      <header className="app-header">
+        <h1>PicPa</h1>
+      </header>
       <div className="page-heading">
         <h2>設定</h2>
       </div>
@@ -39,7 +42,6 @@ export function Settings() {
             <Palette size={19} />
             <h3>外観テーマ</h3>
           </div>
-          <p className="theme-note">夜空の明るさを選べます</p>
           <div className="theme-selector">
             {(
               [
@@ -104,7 +106,7 @@ export function Settings() {
             </span>
             <div>
               <h3>PicPaロゴを入れる</h3>
-              <p>画像上部の金属調の帯に表示</p>
+              <p>書き出し画像の余白に小さく表示</p>
             </div>
             <label className="switch">
               <input

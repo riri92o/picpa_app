@@ -163,7 +163,7 @@
   font-weight: 750;
 }
 .detail-collage {
-  border-radius: 0;
+  border-radius: 15px;
   overflow: hidden;
 }
 .detail-actions {
@@ -264,10 +264,7 @@
   border-radius: 50%;
   opacity: 0.6;
 }
-.spacing-selector.detail-spacing {
-  display: inline-flex;
-  width: fit-content;
-  max-width: 100%;
+.detail-spacing {
   margin-bottom: 12px;
 }
 @media (max-height: 650px) {
