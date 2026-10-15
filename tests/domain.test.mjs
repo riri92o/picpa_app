@@ -195,19 +195,46 @@ console.log(
   "Completed challenge lock, preserved OFF state, midnight unlock, white/black scoring: OK",
 );
 
-const { accentTokens, contrastRatio } = load("src/ui/theme.ts");
+const { accentTokens, contrastRatio, vividAccent, bubbleTones } =
+  load("src/ui/theme.ts");
+const lightness = (hex) => {
+  const channels = [1, 3, 5].map(
+    (i) => parseInt(hex.slice(i, i + 2), 16) / 255,
+  );
+  return (Math.max(...channels) + Math.min(...channels)) / 2;
+};
 for (const color of PALETTE) {
-  const tokens = accentTokens(color.hex, true);
-  assert.ok(
-    contrastRatio(tokens["--accent-soft"], tokens["--control-ink"]) >= 4.5,
-    `Unreadable selected control: ${color.id}`,
-  );
-  assert.ok(
-    contrastRatio(tokens["--accent-readable-dark"], tokens["--sky-surface"]) >=
-      5.2,
-    `Unreadable accent on night sky: ${color.id}`,
-  );
+  for (const darkMode of [false, true]) {
+    const tokens = accentTokens(color.hex, true, darkMode);
+    for (const fill of ["--accent-soft", "--control-highlight"])
+      assert.ok(
+        contrastRatio(tokens[fill], tokens["--control-ink"]) >= 4.5,
+        `Unreadable selected control: ${color.id} / ${darkMode} / ${fill}`,
+      );
+    assert.ok(
+      contrastRatio(
+        tokens["--accent-readable-dark"],
+        tokens["--sky-surface"],
+      ) >= 5.2,
+      `Unreadable accent on night sky: ${color.id} / ${darkMode}`,
+    );
+    assert.ok(
+      contrastRatio("#f8f4fb", tokens["--sky-surface"]) >= 4.5,
+      `Unreadable surface text: ${color.id} / ${darkMode}`,
+    );
+  }
+  const tones = bubbleTones(color.hex);
+  assert.ok(lightness(tones.shadow) < lightness(tones.body), color.id);
+  assert.ok(lightness(tones.light) >= lightness(tones.body), color.id);
+  if (lightness(color.hex) >= 0.72)
+    assert.ok(
+      Math.abs(lightness(vividAccent(color.hex)) - lightness(color.hex)) <
+        0.016,
+      `Pastel identity lost: ${color.id}`,
+    );
 }
+assert.equal(vividAccent("#FFFFFF"), "#FFFFFF");
+assert.equal(vividAccent("#242628"), "#242628");
 const undrawn = accentTokens("#bdc1c5");
 assert.equal(undrawn["--film-pink"], "#e0e5ed");
 assert.equal(undrawn["--film-blue"], "#bfc8d7");
@@ -230,7 +257,7 @@ assert.equal(
   accentTokens("#bdc1c5", false)["--sky-page"],
 );
 console.log(
-  "38 daily colors: selected-control and themed-surface contrast, neutral undrawn film, red/green/blue scenes: OK",
+  "38 daily colors: light/dark contrast, pastel lightness, bubble shading, neutral undrawn film, red/green/blue scenes: OK",
 );
 
 const { hasSystemStatusBarInset, floatingBubblePosition } =

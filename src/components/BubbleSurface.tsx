@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ROUND_BUBBLES } from "../ui/bubbleGeometry";
 import { LIQUID_MOTION } from "../constants/liquidMotion";
-import { mixHex, vividAccent } from "../ui/theme";
+import { bubbleTones } from "../ui/theme";
 
 /** A code-native soap film. The silhouette and its clipped color ribbons morph together. */
 export function BubbleSurface({
@@ -23,25 +23,25 @@ export function BubbleSurface({
     repeat: reduced ? 0 : Infinity,
     ease: "easeInOut" as const,
   };
-  const vivid = neutral ? color : vividAccent(color);
-  const pearl = neutral ? "#e0e4ed" : mixHex(vivid, "#ffe8f2", 0.67);
-  const aqua = neutral ? "#b7c0d0" : mixHex(vivid, "#d5f6ff", 0.57);
-  const gold = neutral ? "#f2f3f7" : mixHex(vivid, "#fff1d2", 0.63);
+  const { body, light, shadow, pearl, aqua, gold } = bubbleTones(
+    color,
+    neutral,
+  );
   return (
     <>
       <defs>
         <radialGradient id={`${id}-body`} cx="38%" cy="33%" r="72%">
-          <stop offset="0" stopColor={vivid} stopOpacity=".44" />
-          <stop offset=".5" stopColor={vivid} stopOpacity=".76" />
-          <stop offset=".78" stopColor={vivid} stopOpacity=".9" />
-          <stop offset=".94" stopColor={aqua} stopOpacity=".9" />
+          <stop offset="0" stopColor={light} stopOpacity=".82" />
+          <stop offset=".45" stopColor={body} stopOpacity=".86" />
+          <stop offset=".78" stopColor={shadow} stopOpacity=".94" />
+          <stop offset=".94" stopColor={aqua} stopOpacity=".94" />
           <stop offset="1" stopColor={pearl} />
         </radialGradient>
         <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
           <stop stopColor={gold} />
           <stop offset=".25" stopColor={pearl} />
           <stop offset=".5" stopColor={aqua} />
-          <stop offset=".75" stopColor={vivid} />
+          <stop offset=".75" stopColor={body} />
           <stop offset="1" stopColor={gold} />
         </linearGradient>
         <radialGradient id={`${id}-veil`}>
@@ -82,37 +82,37 @@ export function BubbleSurface({
             d="M-54 2C-33-47 2-48 27-36C58-18 6-29-7-6C-26 26-52 4-39 47"
             stroke={pearl}
             strokeWidth="12"
-            opacity=".78"
+            opacity=".56"
           />
           <path
             d="M-50 8C-34-35-5-45 18-37C44-29 4-21-5-3C-20 26-42 18-34 47"
             stroke={gold}
             strokeWidth="4.8"
-            opacity=".88"
+            opacity=".74"
           />
           <path
             d="M-53 16C-27-31-13-29 6-27C28-23-10-7-14 10C-18 33-38 26-24 48"
             stroke={aqua}
             strokeWidth="6"
-            opacity=".75"
+            opacity=".58"
           />
           <path
             d="M51-27C27-18 46 5 28 13C4 23 38 48-18 47"
             stroke={aqua}
             strokeWidth="13"
-            opacity=".75"
+            opacity=".55"
           />
           <path
             d="M49-29C24-19 43 6 24 17C4 29 30 40-20 48"
             stroke={gold}
             strokeWidth="4.5"
-            opacity=".94"
+            opacity=".8"
           />
           <path
             d="M48-35C19-16 42 5 21 14C-1 26 20 41-26 47"
             stroke={pearl}
             strokeWidth="6.5"
-            opacity=".8"
+            opacity=".63"
           />
         </g>
         <ellipse
@@ -122,14 +122,14 @@ export function BubbleSurface({
           ry="3.5"
           transform="rotate(-42 -24 -29)"
           fill="#fff"
-          opacity=".65"
+          opacity=".88"
         />
         <path
           d="M-35-19A40 40 0 0 1-9-39"
           fill="none"
           stroke="#fff"
           strokeWidth="1"
-          opacity=".62"
+          opacity=".78"
           strokeLinecap="round"
         />
         <ellipse

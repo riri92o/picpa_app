@@ -67,7 +67,7 @@ export function createFluidMix(
     new Float32Array(width * height),
     new Float32Array(width * height),
   ];
-  const result = rgb(resultHex);
+  const result = rgb(vividAccent(resultHex));
   const recipe = recipeForColor(colorId);
   const totalWeight = recipe.reduce((sum, item) => sum + item.weight, 0);
   const mixed = [0, 1, 2].map(

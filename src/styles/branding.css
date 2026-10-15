@@ -13,7 +13,7 @@
   overflow: hidden;
   background:
     radial-gradient(ellipse at 50% 47%, #3b2d6330, transparent 48%),
-    linear-gradient(174deg, #171e3e 18%, #27203e 64%, #382348);
+    linear-gradient(174deg, #111a33 18%, #20203b 64%, #29213f);
   color: #f8f4fb;
   isolation: isolate;
 }

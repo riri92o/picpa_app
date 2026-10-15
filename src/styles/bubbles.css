@@ -2,24 +2,24 @@
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --sky-page: #171e3e;
-  --sky-surface: #252d4c;
-  --sky-bottom: #382348;
+  --sky-page: #10172f;
+  --sky-surface: #202a43;
+  --sky-bottom: #26223c;
   background: var(--sky-page);
   color: #f8f4fb;
   color-scheme: dark;
   transition: background-color 0.8s ease;
 }
 [data-theme="dark"] {
-  --sky-page: #0d132f;
-  --sky-surface: #1a2341;
-  --sky-bottom: #281337;
+  --sky-page: #0a1126;
+  --sky-surface: #17213a;
+  --sky-bottom: #1d1b32;
 }
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
-    --sky-page: #0d132f;
-    --sky-surface: #1a2341;
-    --sky-bottom: #281337;
+    --sky-page: #0a1126;
+    --sky-surface: #17213a;
+    --sky-bottom: #1d1b32;
   }
 }
 html,
@@ -37,10 +37,10 @@ body {
   --accent-readable: var(--accent-readable-dark);
   --pearl-border: color-mix(in srgb, var(--accent-soft) 40%, #ffffff30);
   --film-surface:
-    radial-gradient(ellipse at 27% 18%, #ffffff35 0%, transparent 38%),
+    radial-gradient(ellipse at 27% 18%, #ffffff28 0%, transparent 38%),
     radial-gradient(
       ellipse at 75% 83%,
-      color-mix(in srgb, var(--scene-vivid) 60%, transparent),
+      color-mix(in srgb, var(--scene-vivid) 50%, transparent),
       transparent 70%
     ),
     linear-gradient(
@@ -66,12 +66,12 @@ body {
   background:
     radial-gradient(
       ellipse at 8% 8%,
-      color-mix(in srgb, var(--scene-vivid) 14%, transparent),
+      color-mix(in srgb, var(--scene-vivid) 8%, transparent),
       transparent 38%
     ),
     radial-gradient(
       ellipse at 95% 100%,
-      color-mix(in srgb, var(--scene-vivid) 35%, transparent),
+      color-mix(in srgb, var(--scene-vivid) 28%, transparent),
       transparent 65%
     ),
     linear-gradient(172deg, var(--page) 20%, var(--sky-bottom));
@@ -156,7 +156,7 @@ body {
   animation: none;
   background: linear-gradient(
     120deg,
-    color-mix(in srgb, var(--accent-soft) 80%, white),
+    var(--control-highlight),
     var(--accent-soft)
   );
   box-shadow:
@@ -246,12 +246,9 @@ body {
 .primary-button:not(:disabled) {
   background:
     radial-gradient(ellipse at 18% 0%, #ffffff28, transparent 46%),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent) 48%, var(--surface)),
-      color-mix(in srgb, var(--accent) 25%, var(--surface))
-    );
+    linear-gradient(135deg, var(--control-highlight), var(--accent-soft));
   border-color: var(--accent-soft);
+  color: var(--control-ink);
 }
 .primary-button:disabled {
   background: #ffffff08;
@@ -381,8 +378,8 @@ body {
     ),
     radial-gradient(
       circle at 48% 46%,
-      #ffffff04 34%,
-      color-mix(in srgb, var(--scene-vivid) 48%, transparent) 67%,
+      color-mix(in srgb, var(--scene-shadow) 40%, transparent) 34%,
+      color-mix(in srgb, var(--scene-vivid) 70%, transparent) 67%,
       var(--film-blue) 89%,
       var(--film-pink) 97%
     );
@@ -435,7 +432,7 @@ body {
 }
 .nav-shape {
   fill: color-mix(in srgb, var(--surface) 94%, transparent);
-  stroke: #dfe3ff36;
+  stroke: color-mix(in srgb, var(--film-blue) 27%, transparent);
   stroke-width: 0.8px;
 }
 .nav-bubble {
