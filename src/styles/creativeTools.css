@@ -8,15 +8,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 4px 9px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  flex: none;
   background: #ffffff0a;
   color: var(--text);
   border: 1px solid #ffffff2e;
-  border-radius: 999px;
-  font-size: 10px;
-  white-space: nowrap;
+  border-radius: 50%;
 }
 .hint-color {
   display: flex;
@@ -40,11 +40,6 @@
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
-}
-.hint-label {
-  color: var(--muted);
-  font-size: 11px;
-  margin: 0 0 10px;
 }
 .hint-examples {
   list-style: none;

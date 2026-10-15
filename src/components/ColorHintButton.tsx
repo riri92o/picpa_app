@@ -15,8 +15,7 @@ export function ColorHintButton({ color }: { color: ColorDefinition }) {
         onClick={() => setOpen(true)}
         aria-label={`${color.name}のヒント`}
       >
-        <Lightbulb size={14} aria-hidden="true" />
-        ヒント
+        <Lightbulb size={17} aria-hidden="true" />
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="色のヒント">
         <div className="hint-color">
@@ -30,15 +29,11 @@ export function ColorHintButton({ color }: { color: ColorDefinition }) {
             <p>{hint.description}</p>
           </div>
         </div>
-        <p className="hint-label">こんなところにあるかも</p>
         <ul className="hint-examples">
           {hint.examples.map((example) => (
             <li key={example}>{example}</li>
           ))}
         </ul>
-        <p className="modal-footnote">
-          上の色を見本に、写真の主役になる色を探してみて。
-        </p>
       </Modal>
     </>
   );
