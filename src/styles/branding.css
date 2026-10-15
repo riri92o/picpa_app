@@ -4,23 +4,6 @@
   height: auto;
   overflow: visible;
 }
-.completion-photo-grid {
-  position: relative;
-}
-.completion-brand-header {
-  display: grid;
-  place-items: center;
-  /* Transparent: the outer frame's metal continues through this expanded rim. */
-  background: transparent;
-}
-.completion-header-logo {
-  width: 100%;
-  filter: drop-shadow(0 1px 1px #10152f85);
-}
-.completion-photo-grid:has(.completion-brand-header) .collage-grid {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
 .opening-screen {
   position: fixed;
   z-index: 200;

@@ -341,6 +341,7 @@ console.log(
 
 const { collageBrandHeader } = load("src/domain/branding.ts");
 const { gridDimensions } = load("src/domain/image.ts");
+const { collageLayout } = load("src/domain/collageLayout.ts");
 for (const count of [4, 6, 9]) {
   const [columns, rows] = gridDimensions(count);
   const cellWidth = count === 9 ? 340 : 510;
@@ -348,6 +349,10 @@ for (const count of [4, 6, 9]) {
   for (const gap of [0, 7]) {
     const width = columns * cellWidth + (columns - 1) * gap;
     const height = rows * cellHeight + (rows - 1) * gap;
+    const layout = collageLayout(count, gap ? "separated" : "joined");
+    assert.equal(layout.width, width);
+    assert.equal(layout.height, height);
+    assert.equal(layout.gap, gap);
     const header = collageBrandHeader(width, true);
     const logo = header.logo;
     assert.equal(logo.x, width / 2);

@@ -60,6 +60,7 @@ export function Home({
   const [replaceId, setReplaceId] = useState<string | undefined>();
   const [editing, setEditing] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
   const [finished, setFinished] = useState(false);
   const [reduceTo, setReduceTo] = useState<GridCount | null>(null);
   const [keep, setKeep] = useState<string[]>([]);
@@ -98,6 +99,7 @@ export function Home({
           : previous,
     );
   const handleFinish = () => {
+    if (!previewReady) return;
     completeToday();
     setConfirm(false);
     setFinished(true);
@@ -229,7 +231,10 @@ export function Home({
             !!today.completedAt ||
             today.photos.length !== today.count
           }
-          onClick={() => setConfirm(true)}
+          onClick={() => {
+            setPreviewReady(false);
+            setConfirm(true);
+          }}
         >
           {today.completedAt ? "完成済み" : "完成"}{" "}
           {today.completedAt ? <Check size={20} /> : <ArrowRight size={20} />}
@@ -401,8 +406,9 @@ export function Home({
       >
         <CompletionPreview
           day={today}
-          images={images}
           logo={settings.exportLogo}
+          getImageBlob={getImageBlob}
+          onReadyChange={setPreviewReady}
         />
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
@@ -414,7 +420,11 @@ export function Home({
           >
             戻る
           </button>
-          <button className="primary-button" onClick={handleFinish}>
+          <button
+            className="primary-button"
+            onClick={handleFinish}
+            disabled={!previewReady}
+          >
             完成 <Check size={18} />
           </button>
         </div>

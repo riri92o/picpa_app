@@ -201,7 +201,11 @@
 }
 .collage-grid {
   display: grid;
-  gap: 4px;
+  gap: var(--collage-grid-gap, 4px);
+}
+.collage-grid.spacing-separated {
+  /* The exported collage uses the same white separators. */
+  background: #fff;
 }
 .collage-grid.spacing-joined {
   gap: 0;
@@ -212,7 +216,7 @@
 }
 .photo-tile,
 .empty-tile {
-  aspect-ratio: 1.25;
+  aspect-ratio: var(--collage-tile-ratio, 1.25);
   position: relative;
   overflow: hidden;
   border-radius: 0;
@@ -244,11 +248,11 @@
 }
 .collage-grid.count-4 .photo-tile,
 .collage-grid.count-4 .empty-tile {
-  aspect-ratio: 1.12;
+  aspect-ratio: var(--collage-tile-ratio, 1.12);
 }
 .collage-grid.count-9 .photo-tile,
 .collage-grid.count-9 .empty-tile {
-  aspect-ratio: 1;
+  aspect-ratio: var(--collage-tile-ratio, 1);
 }
 .photo-tile img {
   width: 100%;

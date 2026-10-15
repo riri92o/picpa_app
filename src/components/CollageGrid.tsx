@@ -14,12 +14,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus } from "lucide-react";
+import type { CSSProperties } from "react";
 import type {
   CollageSpacing,
   GridCount,
   PhotoPlacement,
 } from "../domain/types";
-import { gridDimensions } from "../domain/image";
+import { collageLayout } from "../domain/collageLayout";
 import type { ImageUrls } from "../state/AppContext";
 import { CroppedPhoto } from "./CroppedPhoto";
 
@@ -84,7 +85,11 @@ export function CollageGrid({
   mini?: boolean;
   spacing?: CollageSpacing;
 }) {
-  const [cols] = gridDimensions(count);
+  const {
+    columns: cols,
+    cellWidth,
+    cellHeight,
+  } = collageLayout(count, spacing);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, {
@@ -127,7 +132,12 @@ export function CollageGrid({
   const grid = (
     <div
       className={`collage-grid ${mini ? "mini" : ""} count-${count} spacing-${spacing}`}
-      style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}
+      style={
+        {
+          gridTemplateColumns: `repeat(${cols},1fr)`,
+          "--collage-tile-ratio": cellWidth / cellHeight,
+        } as CSSProperties
+      }
     >
       {tiles}
     </div>

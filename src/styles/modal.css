@@ -287,18 +287,26 @@
   width: 100%;
   margin: 12px 0 16px;
 }
-.completion-preview .collage-stage {
+.completion-preview .exported-collage-image {
   height: 100%;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
 }
-.completion-preview .collage-frame {
-  background: linear-gradient(
-    130deg,
-    color-mix(in srgb, var(--completion-color) 20%, white),
-    var(--completion-color) 22%,
-    color-mix(in srgb, var(--completion-color) 32%, white) 48%,
-    color-mix(in srgb, var(--completion-color) 82%, #26304d) 76%,
-    color-mix(in srgb, var(--completion-color) 18%, white)
-  );
+.completion-preview .exported-collage-image img {
+  max-height: min(42dvh, 340px);
+}
+.collage-image-error {
+  text-align: center;
+}
+.collage-image-error p {
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+.collage-image-error button {
+  min-height: 36px;
+  padding: 5px 16px;
+  font-size: 12px;
 }
 .finish-preview {
   width: min(calc(100% - 32px), 390px);

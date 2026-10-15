@@ -218,7 +218,10 @@ body {
 }
 .home-screen .spacing-joined .empty-tile {
   /* Keep each empty slot legible even without a gap between photographs. */
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 60%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent-soft) 75%, transparent);
+}
+.home-screen .spacing-separated .empty-tile {
+  border: 0;
 }
 .collage-frame.inactive {
   opacity: 0.73;

@@ -6,6 +6,8 @@ import type {
 } from "./types";
 import { getCropGeometry } from "./crop";
 import { collageBrandHeader, drawCollageLogo } from "./branding";
+import { COLLAGE_EDGE, collageLayout } from "./collageLayout";
+export { gridDimensions } from "./collageLayout";
 
 function canvasBlob(
   canvas: HTMLCanvasElement,
@@ -77,10 +79,6 @@ export function drawPlacement(
   );
   ctx.restore();
 }
-export function gridDimensions(count: GridCount): [number, number] {
-  return count === 9 ? [3, 3] : count === 4 ? [2, 2] : [2, 3];
-}
-
 function blendHex(hex: string, target: number, amount: number) {
   const match = /^#([\da-f]{6})$/i.exec(hex);
   if (!match) return hex;
@@ -113,7 +111,7 @@ function drawColorFrame(
   color: string,
   headerHeight: number,
 ) {
-  const edge = 16;
+  const edge = COLLAGE_EDGE;
   const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
   gradient.addColorStop(0, blendHex(color, 0, 0.58));
   gradient.addColorStop(0.09, blendHex(color, 255, 0.86));
@@ -209,13 +207,15 @@ export async function exportCollage(
   logo: boolean,
   spacing: CollageSpacing = "separated",
 ): Promise<Blob> {
-  const [cols, rows] = gridDimensions(count);
+  const {
+    columns: cols,
+    cellWidth,
+    cellHeight,
+    gap,
+    width: collageWidth,
+    height: collageHeight,
+  } = collageLayout(count, spacing);
   const canvas = document.createElement("canvas");
-  const cellWidth = count === 9 ? 340 : 510;
-  const cellHeight = count === 9 ? 340 : count === 4 ? 455 : 408;
-  const gap = spacing === "joined" ? 0 : 7;
-  const collageWidth = cols * cellWidth + (cols - 1) * gap;
-  const collageHeight = rows * cellHeight + (rows - 1) * gap;
   const header = collageBrandHeader(collageWidth, logo);
   // Keep only a small neutral margin around the artwork; the app's night-sky
   // background is intentionally excluded from exported images.
