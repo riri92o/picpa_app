@@ -9,6 +9,12 @@
   margin: 14px 0 18px;
   text-align: center;
 }
+.artwork-change-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
 .artwork-styles button {
   min-width: 0;
   padding: 7px 6px 8px;

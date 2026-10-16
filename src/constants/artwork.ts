@@ -5,14 +5,24 @@ export const ARTWORK_STYLES: {
   name: string;
   number: string;
 }[] = [
-  { id: "specimen", name: "色の標本", number: "01" },
-  { id: "bubble-window", name: "バブルの窓", number: "02" },
-  { id: "palette", name: "今日のパレット", number: "03" },
-  { id: "black-frame", name: "黒枠", number: "04" },
-  { id: "white-frame", name: "白枠", number: "05" },
+  { id: "black-frame", name: "黒枠", number: "01" },
+  { id: "white-frame", name: "白枠", number: "02" },
+  { id: "specimen", name: "色の標本", number: "03" },
+  { id: "bubble-window", name: "バブルの窓", number: "04" },
+  { id: "palette", name: "今日のパレット", number: "05" },
 ];
-export const DEFAULT_ARTWORK_STYLE: ArtworkStyle = "bubble-window";
+export const DEFAULT_ARTWORK_STYLE: ArtworkStyle = "black-frame";
 export const ARTWORK_WIDTH = 1200;
+
+export const WATER_MATERIAL = {
+  baseOpacity: 0.38,
+  rimOpacity: 0.24,
+  reflectionOpacity: 0.22,
+  maxOpacity: 0.86,
+  whiteMix: 0.04,
+  blurRadius: 7,
+  blurSigma: 3.5,
+} as const;
 
 /** Stable, asymmetric compositions. Exporting the same work never reshuffles its windows. */
 export const BUBBLE_COMPOSITIONS: Record<

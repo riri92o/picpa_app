@@ -412,6 +412,9 @@ export function Home({
           onReadyChange={setPreviewReady}
           onStyleChange={(style) => setArtworkStyle(style, today.date)}
         />
+        <p className="artwork-change-note">
+          コラージュの種類は、完成後もカレンダーから変更できます。
+        </p>
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
         </p>

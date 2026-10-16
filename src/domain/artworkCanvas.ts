@@ -1,6 +1,9 @@
 import { artworkLayout, type ArtworkRect } from "./artworkLayout";
 import { drawCollageLogo } from "./branding";
 import { drawPlacement } from "./photoCanvas";
+import { bubbleWindowCurves } from "./bubbleWindow";
+import { waterOpacity, waterTint } from "./waterMaterial";
+import { WATER_MATERIAL } from "../constants/artwork";
 import type {
   ArtworkStyle,
   CollageSpacing,
@@ -23,48 +26,17 @@ export function bubbleWindowPath(rect: ArtworkRect, index: number) {
   const path = new Path2D();
   const x = (n: number) => rect.x + rect.width * (index % 2 ? 1 - n : n);
   const y = (n: number) => rect.y + rect.height * n;
-  const shapes = [
-    [
-      [0.48, 0.03],
-      [0.72, 0.005, 0.95, 0.07, 0.96, 0.31],
-      [0.98, 0.48, 0.86, 0.48, 0.93, 0.66],
-      [0.99, 0.85, 0.79, 0.99, 0.53, 0.96],
-      [0.33, 0.94, 0.1, 0.995, 0.055, 0.77],
-      [0.015, 0.57, 0.1, 0.51, 0.045, 0.34],
-      [0.005, 0.16, 0.23, 0.01, 0.48, 0.03],
-    ],
-    [
-      [0.56, 0.025],
-      [0.86, 0.005, 0.97, 0.18, 0.91, 0.4],
-      [0.85, 0.58, 0.99, 0.61, 0.96, 0.78],
-      [0.9, 0.98, 0.64, 0.95, 0.42, 0.98],
-      [0.16, 0.995, 0.005, 0.82, 0.04, 0.6],
-      [0.08, 0.41, 0.015, 0.37, 0.09, 0.22],
-      [0.17, 0.06, 0.36, 0.03, 0.56, 0.025],
-    ],
-    [
-      [0.52, 0.06],
-      [0.82, 0.005, 0.99, 0.12, 0.96, 0.39],
-      [0.92, 0.64, 0.99, 0.83, 0.76, 0.92],
-      [0.56, 0.995, 0.48, 0.88, 0.31, 0.94],
-      [0.11, 0.99, 0.02, 0.78, 0.03, 0.55],
-      [0.04, 0.38, 0.18, 0.38, 0.12, 0.22],
-      [0.09, 0.06, 0.31, 0.08, 0.52, 0.06],
-    ],
-    [
-      [0.45, 0.025],
-      [0.68, 0.03, 0.98, 0.02, 0.97, 0.31],
-      [0.96, 0.51, 0.84, 0.56, 0.92, 0.73],
-      [0.98, 0.96, 0.7, 0.995, 0.49, 0.95],
-      [0.3, 0.9, 0.2, 0.99, 0.08, 0.83],
-      [0.005, 0.62, 0.08, 0.52, 0.04, 0.35],
-      [0.005, 0.14, 0.22, 0.005, 0.45, 0.025],
-    ],
-  ];
-  const [start, ...curves] = shapes[index % shapes.length];
-  path.moveTo(x(start[0]), y(start[1]));
-  for (const p of curves)
-    path.bezierCurveTo(x(p[0]), y(p[1]), x(p[2]), y(p[3]), x(p[4]), y(p[5]));
+  const curves = bubbleWindowCurves(index);
+  path.moveTo(x(curves[0].start[0]), y(curves[0].start[1]));
+  for (const curve of curves)
+    path.bezierCurveTo(
+      x(curve.control1[0]),
+      y(curve.control1[1]),
+      x(curve.control2[0]),
+      y(curve.control2[1]),
+      x(curve.end[0]),
+      y(curve.end[1]),
+    );
   path.closePath();
   return path;
 }
@@ -324,33 +296,27 @@ function drawLiquidWater(
           field[i + w - 1] + diagonal,
         );
     }
-  // Smooth the distance gradients before lighting; discrete chamfer steps must
-  // not turn into visible ribs in a glossy material.
+  // Smooth both quantized distance steps and central ridges before lighting.
   const horizontal = new Float32Array(w * h);
   const smooth = new Float32Array(w * h);
+  const radius = WATER_MATERIAL.blurRadius;
+  const weights = Array.from({ length: radius * 2 + 1 }, (_, i) =>
+    Math.exp(-((i - radius) ** 2) / (2 * WATER_MATERIAL.blurSigma ** 2)),
+  );
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
   for (let y = 0; y < h; y++)
-    for (let x = 2; x < w - 2; x++) {
+    for (let x = radius; x < w - radius; x++) {
       const i = y * w + x;
-      horizontal[i] =
-        (field[i - 2] +
-          4 * field[i - 1] +
-          6 * field[i] +
-          4 * field[i + 1] +
-          field[i + 2]) /
-        16;
+      for (let tap = -radius; tap <= radius; tap++)
+        horizontal[i] += (field[i + tap] * weights[tap + radius]) / total;
     }
-  for (let y = 2; y < h - 2; y++)
+  for (let y = radius; y < h - radius; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      smooth[i] =
-        (horizontal[i - 2 * w] +
-          4 * horizontal[i - w] +
-          6 * horizontal[i] +
-          4 * horizontal[i + w] +
-          horizontal[i + 2 * w]) /
-        16;
+      for (let tap = -radius; tap <= radius; tap++)
+        smooth[i] += (horizontal[i + tap * w] * weights[tap + radius]) / total;
     }
-  const base = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  const base = waterTint(color);
   const heightAt = (d: number) => 30 * (1 - Math.exp(-d / 17));
   for (let y = 1; y < h - 1; y++)
     for (let x = 1; x < w - 1; x++) {
@@ -365,19 +331,17 @@ function drawLiquidWater(
       const length = Math.hypot(nx, ny, 1);
       const diffuse = Math.max(0, (-nx * 0.46 - ny * 0.63 + 0.625) / length);
       const specular =
-        Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 32;
+        Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 20;
       const sheen =
         Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 6;
-      const shade = 0.75 + diffuse * 0.25;
+      const shade = 0.86 + diffuse * 0.14;
       for (let c = 0; c < 3; c++)
         pixels.data[p + c] = Math.min(
           255,
-          (base[c] * 0.75 + 255 * 0.25) * shade + 255 * specular * 0.5,
+          base[c] * shade + 255 * specular * 0.18,
         );
-      const rim = Math.exp(-field[i] / 3.6);
       pixels.data[p + 3] = Math.round(
-        pixels.data[p + 3] *
-          Math.min(0.82, 0.14 + rim * 0.32 + specular * 0.4 + sheen * 0.04),
+        pixels.data[p + 3] * waterOpacity(field[i], specular, sheen),
       );
     }
   m.putImageData(pixels, 0, 0);
@@ -395,10 +359,12 @@ function drawBubbleFrame(
   const contour = bubbleOutline(layout);
   drawLiquidWater(ctx, layout, contour, color);
   ctx.save();
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   const edge = ctx.createLinearGradient(0, 0, layout.width, layout.height);
-  edge.addColorStop(0, "#ffffffad");
-  edge.addColorStop(0.4, `${color}55`);
-  edge.addColorStop(0.72, "#ffffff32");
+  edge.addColorStop(0, `${mixHex(color, "#ffffff", 0.42)}b8`);
+  edge.addColorStop(0.4, `${color}88`);
+  edge.addColorStop(0.72, `${mixHex(color, "#ffffff", 0.22)}50`);
   edge.addColorStop(1, `${color}99`);
   ctx.strokeStyle = edge;
   ctx.lineWidth = 1.6;
@@ -411,8 +377,10 @@ function drawBubbleFrame(
     drawPhoto(ctx, photos[index], rect);
     ctx.restore();
     ctx.save();
-    ctx.strokeStyle = `${mixHex(color, NIGHT, 0.25)}40`;
-    ctx.lineWidth = 6;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.strokeStyle = `${mixHex(color, NIGHT, 0.12)}40`;
+    ctx.lineWidth = 4;
     ctx.stroke(path);
     const reflection = ctx.createLinearGradient(
       rect.x,
@@ -420,13 +388,13 @@ function drawBubbleFrame(
       rect.x + rect.width,
       rect.y + rect.height,
     );
-    reflection.addColorStop(0, "#ffffffc4");
-    reflection.addColorStop(0.24, `${mixHex(color, "#ffffff", 0.65)}a0`);
+    reflection.addColorStop(0, `${mixHex(color, "#ffffff", 0.5)}b0`);
+    reflection.addColorStop(0.24, `${mixHex(color, "#ffffff", 0.3)}88`);
     reflection.addColorStop(0.5, "#ffffff10");
-    reflection.addColorStop(0.78, "#ffffff80");
+    reflection.addColorStop(0.78, `${mixHex(color, "#ffffff", 0.4)}78`);
     reflection.addColorStop(1, `${color}66`);
     ctx.strokeStyle = reflection;
-    ctx.lineWidth = 3.2;
+    ctx.lineWidth = 2.4;
     ctx.stroke(path);
     ctx.restore();
   });
@@ -581,15 +549,6 @@ export async function drawArtwork(
       }
       ctx.restore();
     });
-    if (style === "specimen") {
-      drawBead(
-        ctx,
-        layout.pad + layout.cellWidth + layout.gap / 2,
-        layout.pad + layout.cellHeight + layout.gap / 2,
-        44,
-        vividAccent(color),
-      );
-    }
   }
   await drawFooter(ctx, layout, style, color, colorLabel, date, logo, photos);
 }

@@ -407,13 +407,68 @@ const { ARTWORK_STYLES, DEFAULT_ARTWORK_STYLE } = load(
 );
 assert.deepEqual(
   ARTWORK_STYLES.map(({ id }) => id),
-  ["specimen", "bubble-window", "palette", "black-frame", "white-frame"],
+  ["black-frame", "white-frame", "specimen", "bubble-window", "palette"],
 );
 const { artworkLayout, resolveArtworkStyle, withArtworkStyle } = load(
   "src/domain/artworkLayout.ts",
 );
 assert.equal(resolveArtworkStyle(), DEFAULT_ARTWORK_STYLE);
 assert.equal(resolveArtworkStyle("future-style"), DEFAULT_ARTWORK_STYLE);
+assert.equal(DEFAULT_ARTWORK_STYLE, "black-frame");
+// Explicit choices survive a change to the default for unstyled/older records.
+assert.equal(resolveArtworkStyle("bubble-window"), "bubble-window");
+const { bubbleWindowCurves } = load("src/domain/bubbleWindow.ts");
+for (let index = 0; index < 9; index++) {
+  const curves = bubbleWindowCurves(index);
+  for (let i = 0; i < curves.length; i++) {
+    const a = curves[i],
+      b = curves[(i + 1) % curves.length];
+    for (let axis = 0; axis < 2; axis++) {
+      assert.ok(Math.abs(a.end[axis] - b.start[axis]) < 1e-10);
+      assert.ok(
+        Math.abs(
+          a.end[axis] - a.control2[axis] - b.control1[axis] + b.start[axis],
+        ) < 1e-10,
+        "No tangent corners in a water window",
+      );
+      assert.ok(
+        Math.abs(
+          a.end[axis] -
+            2 * a.control2[axis] +
+            a.control1[axis] -
+            b.control2[axis] +
+            2 * b.control1[axis] -
+            b.start[axis],
+        ) < 1e-10,
+        "Curvature must flow smoothly through every join",
+      );
+    }
+  }
+}
+const { waterTint, waterOpacity } = load("src/domain/waterMaterial.ts");
+for (const color of PALETTE) {
+  const source = [1, 3, 5].map((i) => parseInt(color.hex.slice(i, i + 2), 16));
+  const tinted = waterTint(color.hex);
+  const dominant = source.indexOf(Math.max(...source));
+  assert.equal(tinted.indexOf(Math.max(...tinted)), dominant);
+  const chroma = (v) => Math.max(...v) - Math.min(...v);
+  assert.ok(
+    chroma(tinted) >= chroma(source) * 0.95,
+    "Water tint must retain the chosen color",
+  );
+}
+assert.ok(
+  waterOpacity(40, 0, 0) >= 0.35,
+  "Broad water bridges must visibly carry the daily color",
+);
+for (const distance of [0, 1, 8, 40])
+  for (const highlight of [0, 0.5, 1]) {
+    const alpha = waterOpacity(distance, highlight, highlight);
+    assert.ok(
+      alpha > 0 && alpha < 0.9,
+      "Colored water must remain translucent",
+    );
+  }
 for (const { id } of ARTWORK_STYLES) {
   assert.equal(resolveArtworkStyle(id), id);
   const original = {
@@ -507,7 +562,7 @@ assert.deepEqual(
   new Set(["#dc3c28", "#1e8cd2", "#f0dca0"]),
 );
 console.log(
-  "5 artwork styles × 4/6/9 × spacing: crop ratios, footer bounds, locked photo/score preservation, real photo swatches: OK",
+  "5 artwork styles × 4/6/9 × spacing: black default, C2-smooth windows, 38 colored water tints, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
 );
 
 const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");
