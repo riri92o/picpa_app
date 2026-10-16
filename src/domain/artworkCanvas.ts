@@ -2,6 +2,7 @@ import { artworkLayout, type ArtworkRect } from "./artworkLayout";
 import { drawCollageLogo } from "./branding";
 import { drawPlacement } from "./photoCanvas";
 import { waterOpacity, waterTint } from "./waterMaterial";
+import { waterSurfaceDistance } from "./waterSurface";
 import { BUBBLE_FRAME, WATER_MATERIAL } from "../constants/artwork";
 import type {
   ArtworkStyle,
@@ -34,20 +35,24 @@ export function bubbleWindowPath(rect: ArtworkRect) {
 }
 
 /** A continuous rounded outer edge, with no scallops between windows. */
-function bubbleOutline(layout: Layout) {
-  const path = new Path2D();
+function bubbleFrameGeometry(layout: Layout) {
   const inset = BUBBLE_FRAME.outerInset;
   const radius =
     Math.min(layout.cellWidth, layout.cellHeight) * BUBBLE_FRAME.cornerRatio +
     layout.pad -
     inset;
-  path.roundRect(
-    inset,
-    inset,
-    layout.width - inset * 2,
-    layout.height - inset * 2,
+  return {
+    x: inset,
+    y: inset,
+    width: layout.width - inset * 2,
+    height: layout.height - inset * 2,
     radius,
-  );
+  };
+}
+function bubbleOutline(layout: Layout) {
+  const { x, y, width, height, radius } = bubbleFrameGeometry(layout);
+  const path = new Path2D();
+  path.roundRect(x, y, width, height, radius);
   return path;
 }
 
@@ -138,34 +143,24 @@ function drawLiquidWater(
   const pixels = m.getImageData(0, 0, mask.width, mask.height);
   const { width: w, height: h } = mask;
   const field = new Float32Array(w * h);
-  for (let i = 0; i < field.length; i++)
-    field[i] = pixels.data[i * 4 + 3] >= 128 ? 10000 : 0;
-  const diagonal = Math.SQRT2;
-  for (let y = 1; y < h - 1; y++)
-    for (let x = 1; x < w - 1; x++) {
+  const outside = bubbleFrameGeometry(layout);
+  const windows = layout.slots.map((rect) => ({
+    ...rect,
+    radius: Math.min(rect.width, rect.height) * BUBBLE_FRAME.cornerRatio,
+  }));
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (field[i])
-        field[i] = Math.min(
-          field[i],
-          field[i - 1] + 1,
-          field[i - w] + 1,
-          field[i - w - 1] + diagonal,
-          field[i - w + 1] + diagonal,
-        );
+      if (pixels.data[i * 4 + 3])
+        field[i] =
+          waterSurfaceDistance(
+            (x + 0.5) / scale,
+            (y + 0.5) / scale,
+            outside,
+            windows,
+          ) * scale;
     }
-  for (let y = h - 2; y > 0; y--)
-    for (let x = w - 2; x > 0; x--) {
-      const i = y * w + x;
-      if (field[i])
-        field[i] = Math.min(
-          field[i],
-          field[i + 1] + 1,
-          field[i + w] + 1,
-          field[i + w + 1] + diagonal,
-          field[i + w - 1] + diagonal,
-        );
-    }
-  // Smooth both quantized distance steps and central ridges before lighting.
+  // Broad soft reflections over a continuous rounded surface, not bevel planes.
   const horizontal = new Float32Array(w * h);
   const smooth = new Float32Array(w * h);
   const radius = WATER_MATERIAL.blurRadius;
@@ -200,14 +195,14 @@ function drawLiquidWater(
       const length = Math.hypot(nx, ny, 1);
       const diffuse = Math.max(0, (-nx * 0.46 - ny * 0.63 + 0.625) / length);
       const specular =
-        Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 20;
+        Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 12;
       const sheen =
         Math.max(0, (-nx * 0.255 - ny * 0.35 + 0.901) / length) ** 6;
-      const shade = 0.86 + diffuse * 0.14;
+      const shade = 0.66 + diffuse * 0.34;
       for (let c = 0; c < 3; c++)
         pixels.data[p + c] = Math.min(
           255,
-          base[c] * shade + 255 * specular * 0.18,
+          base[c] * shade + 255 * specular * 0.28,
         );
       pixels.data[p + 3] = Math.round(
         pixels.data[p + 3] * waterOpacity(field[i], specular, sheen),
@@ -231,12 +226,12 @@ function drawBubbleFrame(
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   const edge = ctx.createLinearGradient(0, 0, layout.width, layout.height);
-  edge.addColorStop(0, `${mixHex(color, "#ffffff", 0.42)}b8`);
-  edge.addColorStop(0.4, `${color}88`);
-  edge.addColorStop(0.72, `${mixHex(color, "#ffffff", 0.22)}50`);
-  edge.addColorStop(1, `${color}99`);
+  edge.addColorStop(0, `${mixHex(color, "#ffffff", 0.55)}80`);
+  edge.addColorStop(0.4, `${color}40`);
+  edge.addColorStop(0.72, `${mixHex(color, "#ffffff", 0.25)}28`);
+  edge.addColorStop(1, `${color}50`);
   ctx.strokeStyle = edge;
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1;
   ctx.stroke(contour);
   ctx.restore();
   layout.slots.forEach((rect, index) => {
@@ -245,27 +240,7 @@ function drawBubbleFrame(
     ctx.clip(path);
     drawPhoto(ctx, photos[index], rect);
     ctx.restore();
-    ctx.save();
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.strokeStyle = `${mixHex(color, NIGHT, 0.12)}40`;
-    ctx.lineWidth = 4;
-    ctx.stroke(path);
-    const reflection = ctx.createLinearGradient(
-      rect.x,
-      rect.y,
-      rect.x + rect.width,
-      rect.y + rect.height,
-    );
-    reflection.addColorStop(0, `${mixHex(color, "#ffffff", 0.5)}b0`);
-    reflection.addColorStop(0.24, `${mixHex(color, "#ffffff", 0.3)}88`);
-    reflection.addColorStop(0.5, "#ffffff10");
-    reflection.addColorStop(0.78, `${mixHex(color, "#ffffff", 0.4)}78`);
-    reflection.addColorStop(1, `${color}66`);
-    ctx.strokeStyle = reflection;
-    ctx.lineWidth = 2.4;
-    ctx.stroke(path);
-    ctx.restore();
+    // The surface shader supplies the inner reflection, avoiding a double bevel.
   });
 }
 

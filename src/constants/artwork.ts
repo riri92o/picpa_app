@@ -15,18 +15,18 @@ export const DEFAULT_ARTWORK_STYLE: ArtworkStyle = "black-frame";
 export const ARTWORK_WIDTH = 1200;
 
 export const WATER_MATERIAL = {
-  baseOpacity: 0.38,
-  rimOpacity: 0.24,
-  reflectionOpacity: 0.22,
+  baseOpacity: 0.44,
+  rimOpacity: 0.18,
+  reflectionOpacity: 0.24,
   maxOpacity: 0.86,
   whiteMix: 0.04,
-  blurRadius: 7,
-  blurSigma: 3.5,
+  blurRadius: 9,
+  blurSigma: 4.5,
 } as const;
 
 /** Rounded, equally sized windows with a continuous translucent water rim. */
 export const BUBBLE_FRAME = {
   padding: 56,
   outerInset: 14,
-  cornerRatio: 0.16,
+  cornerRatio: 0.2,
 } as const;

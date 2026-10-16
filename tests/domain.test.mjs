@@ -417,6 +417,34 @@ assert.equal(resolveArtworkStyle("future-style"), DEFAULT_ARTWORK_STYLE);
 assert.equal(DEFAULT_ARTWORK_STYLE, "black-frame");
 // Explicit choices survive a change to the default for unstyled/older records.
 assert.equal(resolveArtworkStyle("bubble-window"), "bubble-window");
+const { roundedRectDistance, waterSurfaceDistance } = load(
+  "src/domain/waterSurface.ts",
+);
+const circle = { x: 0, y: 0, width: 100, height: 100, radius: 50 };
+assert.ok(
+  Math.abs(
+    roundedRectDistance(110, 50, circle) -
+      roundedRectDistance(50 + 60 / Math.SQRT2, 50 + 60 / Math.SQRT2, circle),
+  ) < 1e-10,
+  "Curved water has the same distance along axes and diagonals",
+);
+const outside = { x: 0, y: 0, width: 200, height: 100, radius: 20 };
+const windows = [20, 110].map((x) => ({
+  x,
+  y: 20,
+  width: 70,
+  height: 60,
+  radius: 15,
+}));
+const depth = (x) => waterSurfaceDistance(x, 50, outside, windows);
+assert.equal(depth(-1), 0);
+assert.equal(depth(50), 0);
+assert.ok(depth(100) > 0);
+assert.ok(
+  Math.abs((depth(100) - depth(99.999)) / 0.001) < 0.001 &&
+    Math.abs((depth(100.001) - depth(100)) / 0.001) < 0.001,
+  "Reflections cross the middle of a water bridge without a sharp ridge",
+);
 const { waterTint, waterOpacity } = load("src/domain/waterMaterial.ts");
 for (const color of PALETTE) {
   const source = [1, 3, 5].map((i) => parseInt(color.hex.slice(i, i + 2), 16));
