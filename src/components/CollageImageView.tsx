@@ -9,7 +9,7 @@ export function CollageImageView({
 }) {
   return (
     <div
-      className="exported-collage-image"
+      className={`exported-collage-image ${render.image?.blob.type === "image/png" ? "transparent" : ""}`}
       aria-live="polite"
       aria-busy={render.loading}
     >

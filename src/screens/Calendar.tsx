@@ -19,6 +19,7 @@ export function Calendar() {
     ensureFullImages,
     todayKey,
     setSpacing,
+    setArtworkStyle,
     setMemo,
   } = useApp();
   const [month, setMonth] = useState(() => new Date());
@@ -180,6 +181,9 @@ export function Calendar() {
                 day={selectedDay}
                 logo={settings.exportLogo}
                 getImageBlob={getImageBlob}
+                onStyleChange={(style) =>
+                  setArtworkStyle(style, selectedDay.date)
+                }
               >
                 <ColorMatchBadge day={selectedDay} showComment />
                 <ArtworkMemo

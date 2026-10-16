@@ -48,6 +48,7 @@ export async function drawCollageLogo(
   placement: CollageLogoPlacement,
   left: number,
   top: number,
+  ink?: string,
 ) {
   const image = await loadLogoImage();
   const { width, height } = placement;
@@ -58,6 +59,19 @@ export async function drawCollageLogo(
   );
   context.shadowColor = "#10152f85";
   context.shadowBlur = 3;
-  context.drawImage(image, 0, 0, width, height);
+  if (ink) {
+    const mask = document.createElement("canvas");
+    mask.width = Math.ceil(width * 2);
+    mask.height = Math.ceil(height * 2);
+    const brush = mask.getContext("2d")!;
+    brush.drawImage(image, 0, 0, mask.width, mask.height);
+    brush.globalCompositeOperation = "source-in";
+    brush.fillStyle = ink;
+    brush.fillRect(0, 0, mask.width, mask.height);
+    context.shadowBlur = 0;
+    context.drawImage(mask, 0, 0, width, height);
+    mask.width = 0;
+    mask.height = 0;
+  } else context.drawImage(image, 0, 0, width, height);
   context.restore();
 }

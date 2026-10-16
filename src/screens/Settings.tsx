@@ -104,7 +104,7 @@ export function Settings() {
             </span>
             <div>
               <h3>PicPaロゴを入れる</h3>
-              <p>画像上部の金属調の帯に表示</p>
+              <p>完成画像に表示</p>
             </div>
             <label className="switch">
               <input

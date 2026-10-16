@@ -3,10 +3,14 @@ import type {
   PhotoPlacement,
   GridCount,
   CollageSpacing,
+  ArtworkStyle,
 } from "./types";
-import { getCropGeometry } from "./crop";
-import { collageBrandHeader, drawCollageLogo } from "./branding";
-import { COLLAGE_EDGE, collageLayout } from "./collageLayout";
+import { ARTWORK_STYLES } from "../constants/artwork";
+import { artworkLayout, resolveArtworkStyle } from "./artworkLayout";
+import { drawArtwork, type ArtworkPhoto } from "./artworkCanvas";
+import { drawPlacement } from "./photoCanvas";
+import { photoPalette } from "./photoPalette";
+export { drawPlacement } from "./photoCanvas";
 export { gridDimensions } from "./collageLayout";
 
 function canvasBlob(
@@ -52,151 +56,165 @@ export async function preparePhoto(file: File): Promise<PhotoAsset> {
     image.close();
   }
 }
-export function drawPlacement(
-  ctx: CanvasRenderingContext2D,
-  image: CanvasImageSource,
-  sourceWidth: number,
-  sourceHeight: number,
-  p: PhotoPlacement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, width, height);
-  ctx.clip();
-  const crop = getCropGeometry(width, height, sourceWidth, sourceHeight, p);
-  ctx.translate(x + width / 2 + crop.panX, y + height / 2 + crop.panY);
-  ctx.rotate((p.rotation * Math.PI) / 180);
-  ctx.drawImage(
-    image,
-    -crop.imageWidth / 2,
-    -crop.imageHeight / 2,
-    crop.imageWidth,
-    crop.imageHeight,
-  );
-  ctx.restore();
+export interface ArtworkExportOptions {
+  style?: ArtworkStyle;
+  date?: string;
+  colorLabel?: string;
+  signal?: AbortSignal;
 }
-function blendHex(hex: string, target: number, amount: number) {
-  const match = /^#([\da-f]{6})$/i.exec(hex);
-  if (!match) return hex;
-  const value = Number.parseInt(match[1], 16);
-  const channels = [16, 8, 0].map((shift) =>
-    Math.round(((value >> shift) & 255) * (1 - amount) + target * amount),
-  );
-  return `rgb(${channels.join(",")})`;
-}
+const checkAbort = (signal?: AbortSignal) => {
+  if (signal?.aborted) throw new DOMException("Export cancelled", "AbortError");
+};
 
-function visibleFrameColor(color: string) {
-  const match = /^#([\da-f]{6})$/i.exec(color);
-  if (!match) return color;
-  const value = Number.parseInt(match[1], 16);
-  const channels = [16, 8, 0].map((shift) => (value >> shift) & 255);
-  const average = channels.reduce((sum, channel) => sum + channel, 0) / 3;
-  const spread = Math.max(...channels) - Math.min(...channels);
-  if (average > 235 && spread < 20) return "#8994ad";
-  if (average < 30 && spread < 20) return "#59657d";
-  return color;
-}
-
-/** One continuous metal surface; branding simply extends its top edge. */
-function drawColorFrame(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-  headerHeight: number,
+async function loadArtworkPhotos(
+  count: GridCount,
+  placements: PhotoPlacement[],
+  getBlob: (id: string) => Promise<Blob | undefined>,
+  signal?: AbortSignal,
 ) {
-  const edge = COLLAGE_EDGE;
-  const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-  gradient.addColorStop(0, blendHex(color, 0, 0.58));
-  gradient.addColorStop(0.09, blendHex(color, 255, 0.86));
-  gradient.addColorStop(0.21, color);
-  gradient.addColorStop(0.32, blendHex(color, 255, 0.92));
-  gradient.addColorStop(0.47, blendHex(color, 0, 0.56));
-  gradient.addColorStop(0.61, blendHex(color, 255, 0.7));
-  gradient.addColorStop(0.76, color);
-  gradient.addColorStop(0.88, blendHex(color, 255, 0.96));
-  gradient.addColorStop(1, blendHex(color, 0, 0.54));
-  ctx.save();
-  ctx.fillStyle = gradient;
-  ctx.shadowColor = blendHex(color, 255, 0.1);
-  ctx.shadowBlur = 16;
-  ctx.beginPath();
-  ctx.rect(x, y, width, height);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = blendHex(color, 255, 0.74);
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.strokeStyle = "#ffffffdc";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.rect(x + 3, y + 3, width - 6, height - 6);
-  ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.rect(
-    x + edge,
-    y + edge + headerHeight,
-    width - edge * 2,
-    height - edge * 2 - headerHeight,
+  if (placements.length !== count) throw new Error("写真が揃っていません");
+  const photos: ArtworkPhoto[] = [];
+  const sample = document.createElement("canvas");
+  sample.width = 64;
+  sample.height = Math.round(
+    64 * (count === 9 ? 1 : count === 4 ? 455 / 510 : 408 / 510),
   );
-  ctx.fill();
-  ctx.strokeStyle = blendHex(color, 0, 0.6);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawFrameGlints(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-) {
-  const glints: [number, number, number][] = [
-    [0.15, 0, 8],
-    [0.88, 0, 5],
-    [1, 0.32, 7],
-    [0, 0.71, 5],
-    [0.7, 1, 8],
-  ];
-  ctx.save();
-  for (const [px, py, size] of glints) {
-    const centerX = x + width * px;
-    const centerY = y + height * py;
-    const halo = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      size * 4,
-    );
-    halo.addColorStop(0, "#ffffff");
-    halo.addColorStop(0.16, blendHex(color, 255, 0.7));
-    halo.addColorStop(1, "#ffffff00");
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, size * 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(centerX - size * 1.7, centerY);
-    ctx.lineTo(centerX + size * 1.7, centerY);
-    ctx.moveTo(centerX, centerY - size * 1.7);
-    ctx.lineTo(centerX, centerY + size * 1.7);
-    ctx.stroke();
+  const ctx = sample.getContext("2d", { willReadFrequently: true })!;
+  try {
+    for (const placement of placements) {
+      checkAbort(signal);
+      const blob = await getBlob(placement.id);
+      if (!blob) throw new Error("写真を読み込めませんでした");
+      let image = await createImageBitmap(blob);
+      // Keep only the resolution needed for a 1200px collage and the chosen crop.
+      const maxSide = Math.min(
+        1800,
+        Math.ceil(900 * Math.max(1, placement.zoom)),
+      );
+      if (Math.max(image.width, image.height) > maxSide) {
+        const ratio = maxSide / Math.max(image.width, image.height);
+        try {
+          const scaled = await createImageBitmap(image, {
+            resizeWidth: Math.round(image.width * ratio),
+            resizeHeight: Math.round(image.height * ratio),
+            resizeQuality: "high",
+          });
+          image.close();
+          image = scaled;
+        } catch {
+          // Older WebViews may omit bitmap resize options; the source still renders.
+        }
+      }
+      try {
+        ctx.clearRect(0, 0, sample.width, sample.height);
+        drawPlacement(
+          ctx,
+          image,
+          image.width,
+          image.height,
+          placement,
+          0,
+          0,
+          sample.width,
+          sample.height,
+        );
+        photos.push({
+          image,
+          placement,
+          swatches: photoPalette(
+            ctx.getImageData(0, 0, sample.width, sample.height).data,
+          ),
+        });
+      } catch (error) {
+        image.close();
+        throw error;
+      }
+    }
+    checkAbort(signal);
+    return photos;
+  } catch (error) {
+    photos.forEach(({ image }) => image.close());
+    throw error;
+  } finally {
+    sample.width = 0;
+    sample.height = 0;
   }
-  ctx.restore();
+}
+
+async function renderArtworkStyles(
+  count: GridCount,
+  placements: PhotoPlacement[],
+  getBlob: (id: string) => Promise<Blob | undefined>,
+  color: string,
+  logo: boolean,
+  spacing: CollageSpacing,
+  styles: ArtworkStyle[],
+  options: ArtworkExportOptions,
+) {
+  const photos = await loadArtworkPhotos(
+    count,
+    placements,
+    getBlob,
+    options.signal,
+  );
+  const canvas = document.createElement("canvas");
+  const result: Partial<Record<ArtworkStyle, Blob>> = {};
+  try {
+    for (const style of styles) {
+      checkAbort(options.signal);
+      const layout = artworkLayout(count, spacing, style, logo);
+      canvas.width = layout.width;
+      canvas.height = layout.height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("画像を準備できませんでした");
+      await drawArtwork(
+        context,
+        count,
+        spacing,
+        style,
+        photos,
+        color,
+        options.colorLabel ?? "",
+        options.date ?? "",
+        logo,
+      );
+      checkAbort(options.signal);
+      result[style] = await canvasBlob(
+        canvas,
+        style === "bubble-window" ? "image/png" : "image/jpeg",
+        0.94,
+      );
+      // Yield between complete designs, keeping mobile selection and close controls responsive.
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+    }
+    return result;
+  } finally {
+    photos.forEach(({ image }) => image.close());
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
+/** Decode each photo once, then cache the exact final images for instant switching. */
+export async function exportCollageVariants(
+  count: GridCount,
+  photos: PhotoPlacement[],
+  getBlob: (id: string) => Promise<Blob | undefined>,
+  color: string,
+  logo: boolean,
+  spacing: CollageSpacing = "separated",
+  options: ArtworkExportOptions = {},
+) {
+  return renderArtworkStyles(
+    count,
+    photos,
+    getBlob,
+    color,
+    logo,
+    spacing,
+    ARTWORK_STYLES.map(({ id }) => id),
+    options,
+  ) as Promise<Record<ArtworkStyle, Blob>>;
 }
 
 export async function exportCollage(
@@ -206,69 +224,18 @@ export async function exportCollage(
   color: string,
   logo: boolean,
   spacing: CollageSpacing = "separated",
+  options: ArtworkExportOptions = {},
 ): Promise<Blob> {
-  const {
-    columns: cols,
-    cellWidth,
-    cellHeight,
-    gap,
-    width: collageWidth,
-    height: collageHeight,
-  } = collageLayout(count, spacing);
-  const canvas = document.createElement("canvas");
-  const header = collageBrandHeader(collageWidth, logo);
-  // Keep only a small neutral margin around the artwork; the app's night-sky
-  // background is intentionally excluded from exported images.
-  const left = 24,
-    headerTop = 24,
-    top = headerTop + header.height,
-    right = 24,
-    bottom = 24;
-  canvas.width = left + collageWidth + right;
-  canvas.height = top + collageHeight + bottom;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const frameColor = visibleFrameColor(color);
-  drawColorFrame(
-    ctx,
-    left - 16,
-    headerTop - 16,
-    collageWidth + 32,
-    collageHeight + header.height + 32,
-    frameColor,
-    header.height,
+  const style = resolveArtworkStyle(options.style);
+  const variants = await renderArtworkStyles(
+    count,
+    photos,
+    getBlob,
+    color,
+    logo,
+    spacing,
+    [style],
+    options,
   );
-  if (header.logo) {
-    await drawCollageLogo(ctx, header.logo, left, headerTop);
-  }
-  for (let i = 0; i < photos.length; i++) {
-    const blob = await getBlob(photos[i].id);
-    if (!blob) continue;
-    const image = await createImageBitmap(blob);
-    try {
-      drawPlacement(
-        ctx,
-        image,
-        image.width,
-        image.height,
-        photos[i],
-        left + (i % cols) * (cellWidth + gap),
-        top + Math.floor(i / cols) * (cellHeight + gap),
-        cellWidth,
-        cellHeight,
-      );
-    } finally {
-      image.close();
-    }
-  }
-  drawFrameGlints(
-    ctx,
-    left - 16,
-    headerTop - 16,
-    collageWidth + 32,
-    collageHeight + header.height + 32,
-    frameColor,
-  );
-  return canvasBlob(canvas, "image/jpeg", 0.92);
+  return variants[style]!;
 }

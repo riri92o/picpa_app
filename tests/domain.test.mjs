@@ -402,6 +402,114 @@ console.log(
   "White logo: metallic header stays above 4/6/9 photos and is removed when OFF: OK",
 );
 
+const { ARTWORK_STYLES, DEFAULT_ARTWORK_STYLE } = load(
+  "src/constants/artwork.ts",
+);
+assert.deepEqual(
+  ARTWORK_STYLES.map(({ id }) => id),
+  ["specimen", "bubble-window", "palette", "black-frame", "white-frame"],
+);
+const { artworkLayout, resolveArtworkStyle, withArtworkStyle } = load(
+  "src/domain/artworkLayout.ts",
+);
+assert.equal(resolveArtworkStyle(), DEFAULT_ARTWORK_STYLE);
+assert.equal(resolveArtworkStyle("future-style"), DEFAULT_ARTWORK_STYLE);
+for (const { id } of ARTWORK_STYLES) {
+  assert.equal(resolveArtworkStyle(id), id);
+  const original = {
+    ...scored,
+    completedAt: "2026-10-08T10:00:00Z",
+    memo: "写真の記録",
+  };
+  const updated = withArtworkStyle(original, id);
+  assert.equal(updated.artworkStyle, id);
+  assert.equal(colorMatchSignature(updated), colorMatchSignature(original));
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(updated).filter(([key]) => key !== "artworkStyle"),
+    ),
+    original,
+  );
+  for (const count of [4, 6, 9]) {
+    for (const spacing of ["joined", "separated"]) {
+      const layout = artworkLayout(count, spacing, id);
+      assert.equal(layout.slots.length, count);
+      assert.equal(layout.width, 1200);
+      assert.ok(layout.height < 1900);
+      const source = collageLayout(count, spacing);
+      layout.slots.forEach((slot, i) => {
+        if (id === "bubble-window") {
+          assert.ok(
+            slot.width / slot.height > 0.6 && slot.width / slot.height < 2,
+          );
+        } else {
+          assert.ok(
+            Math.abs(
+              slot.width / slot.height - source.cellWidth / source.cellHeight,
+            ) < 1e-10,
+          );
+        }
+        assert.ok(slot.x >= 0 && slot.x + slot.width <= layout.width);
+        assert.ok(
+          slot.y + slot.height + layout.stripHeight <= layout.footer.y + 1e-8,
+        );
+        if (i % layout.columns)
+          assert.ok(
+            layout.slots[i - 1].x + layout.slots[i - 1].width <= slot.x + 1e-8,
+          );
+      });
+      if (id === "bubble-window") {
+        assert.ok(
+          new Set(
+            layout.slots.map((slot) => Math.round(slot.width * slot.height)),
+          ).size >=
+            count - 1,
+          "Bubble windows must have visibly different areas",
+        );
+        assert.deepEqual(
+          artworkLayout(count, spacing, id),
+          layout,
+          "The composition must be stable between preview and save",
+        );
+      }
+      assert.ok(layout.logo.y - layout.logo.height / 2 > layout.footer.y);
+      assert.ok(layout.logo.y + layout.logo.height / 2 < layout.height);
+      const noLogo = artworkLayout(count, spacing, id, false);
+      assert.deepEqual(
+        noLogo.slots,
+        layout.slots,
+        "Turning off the logo must not recrop photographs",
+      );
+      if (id === "black-frame" || id === "white-frame")
+        assert.ok(
+          Math.abs(noLogo.height - noLogo.footer.y - noLogo.pad) <= 1,
+          "Plain frames without a logo have equal outer margins",
+        );
+    }
+  }
+}
+const { photoPalette } = load("src/domain/photoPalette.ts");
+const solidPixels = new Uint8ClampedArray(
+  Array.from({ length: 100 }, () => [204, 130, 103, 255]).flat(),
+);
+assert.deepEqual(photoPalette(solidPixels), ["#cc8267", "#cc8267", "#cc8267"]);
+assert.deepEqual(
+  photoPalette(new Uint8ClampedArray([255, 0, 0, 0, 0, 120, 220, 255])),
+  ["#0078dc", "#0078dc", "#0078dc"],
+);
+const distinctPixels = new Uint8ClampedArray([
+  ...Array.from({ length: 60 }, () => [220, 60, 40, 255]).flat(),
+  ...Array.from({ length: 30 }, () => [30, 140, 210, 255]).flat(),
+  ...Array.from({ length: 10 }, () => [240, 220, 160, 255]).flat(),
+]);
+assert.deepEqual(
+  new Set(photoPalette(distinctPixels)),
+  new Set(["#dc3c28", "#1e8cd2", "#f0dca0"]),
+);
+console.log(
+  "5 artwork styles × 4/6/9 × spacing: crop ratios, footer bounds, locked photo/score preservation, real photo swatches: OK",
+);
+
 const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");
 const { openingBubbleOffset } = load("src/ui/openingMotion.ts");
 let openingTravel = 0;

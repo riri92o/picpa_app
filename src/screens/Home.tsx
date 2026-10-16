@@ -45,6 +45,7 @@ export function Home({
     images,
     setCount,
     setSpacing,
+    setArtworkStyle,
     setMemo,
     reduceCount,
     addPhotos,
@@ -409,6 +410,7 @@ export function Home({
           logo={settings.exportLogo}
           getImageBlob={getImageBlob}
           onReadyChange={setPreviewReady}
+          onStyleChange={(style) => setArtworkStyle(style, today.date)}
         />
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
@@ -469,6 +471,9 @@ export function Home({
                     day={today}
                     logo={settings.exportLogo}
                     getImageBlob={getImageBlob}
+                    onStyleChange={(style) =>
+                      setArtworkStyle(style, today.date)
+                    }
                   >
                     <ColorMatchBadge day={today} animateReveal />
                     <ArtworkMemo

@@ -1,5 +1,7 @@
 export type GridCount = 4 | 6 | 9;
 export type CollageSpacing = "joined" | "separated";
+export type ArtworkStyle =
+  "specimen" | "bubble-window" | "palette" | "black-frame" | "white-frame";
 export type ThemeChoice = "light" | "dark" | "system";
 export interface PhotoPlacement {
   id: string;
@@ -21,6 +23,8 @@ export interface DayRecord {
   colorId?: string;
   count: GridCount;
   spacing?: CollageSpacing;
+  /** Export presentation only; may be changed after completion. */
+  artworkStyle?: ArtworkStyle;
   /** Mode captured when the daily color is drawn; absent on older records. */
   randomChallenge?: boolean;
   photos: PhotoPlacement[];

@@ -14,8 +14,10 @@ import { isChallengeLocked, isRandomChallenge } from "../domain/challenge";
 import { localDateKey } from "../domain/date";
 import { preparePhoto } from "../domain/image";
 import { withArtworkMemo } from "../domain/memo";
+import { withArtworkStyle, resolveArtworkStyle } from "../domain/artworkLayout";
 import type {
   AppSettings,
+  ArtworkStyle,
   CollageSpacing,
   DayRecord,
   GridCount,
@@ -49,6 +51,7 @@ interface AppContextValue {
   drawToday: () => DayRecord;
   setCount: (count: GridCount) => void;
   setSpacing: (spacing: CollageSpacing, date?: string) => void;
+  setArtworkStyle: (style: ArtworkStyle, date?: string) => void;
   setMemo: (date: string, memo: string) => Promise<boolean>;
   addSamplePhotos: () => Promise<void>;
   reduceCount: (count: GridCount, ids: string[]) => void;
@@ -308,6 +311,16 @@ export function AppProvider({
     },
     [saveDay],
   );
+  const setArtworkStyle = useCallback(
+    (style: ArtworkStyle, date?: string) => {
+      const day = date
+        ? daysRef.current.find((item) => item.date === date)
+        : currentDay();
+      if (!day?.colorId) return;
+      void saveDay(withArtworkStyle(day, style));
+    },
+    [currentDay, saveDay],
+  );
   const addPhotos = useCallback(
     async (files: FileList | File[], replaceId?: string) => {
       const day = currentDay();
@@ -435,7 +448,11 @@ export function AppProvider({
   const completeToday = useCallback(() => {
     const day = currentDay();
     if (day.colorId && !day.completedAt && day.photos.length === day.count)
-      saveDay({ ...day, completedAt: new Date().toISOString() });
+      saveDay({
+        ...day,
+        artworkStyle: resolveArtworkStyle(day.artworkStyle),
+        completedAt: new Date().toISOString(),
+      });
   }, [currentDay, saveDay]);
   const updateSettings = useCallback(
     (patch: Partial<AppSettings>) => {
@@ -541,6 +558,7 @@ export function AppProvider({
         drawToday,
         setCount,
         setSpacing,
+        setArtworkStyle,
         setMemo,
         addSamplePhotos,
         reduceCount,

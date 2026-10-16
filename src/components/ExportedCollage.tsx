@@ -1,23 +1,28 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Download, Share2 } from "lucide-react";
-import type { DayRecord } from "../domain/types";
+import type { ArtworkStyle, DayRecord } from "../domain/types";
 import { useCollageExport } from "../ui/useCollageExport";
 import { CollageImageView } from "./CollageImageView";
+import { ArtworkStyleSelector } from "./ArtworkStyleSelector";
+import { resolveArtworkStyle } from "../domain/artworkLayout";
 
-/** Displays the exact export, including the selected color's metallic frame. */
+/** Displays the selected final artwork, using its original PNG/JPEG for save and share. */
 export function ExportedCollage({
   day,
   logo,
   getImageBlob,
   children,
+  onStyleChange,
 }: {
   day: DayRecord;
   logo: boolean;
   getImageBlob: (id: string) => Promise<Blob | undefined>;
   children?: ReactNode;
+  onStyleChange: (style: ArtworkStyle) => void;
 }) {
   const render = useCollageExport(day, logo, getImageBlob);
   const { image } = render;
+  const extension = image?.blob.type === "image/png" ? "png" : "jpg";
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -29,7 +34,7 @@ export function ExportedCollage({
     if (!image) return;
     const link = document.createElement("a");
     link.href = image.url;
-    link.download = `PicPa-${day.date}.jpg`;
+    link.download = `PicPa-${day.date}-${resolveArtworkStyle(day.artworkStyle)}.${extension}`;
     link.click();
     setNotice("画像を保存しました");
   };
@@ -37,9 +42,13 @@ export function ExportedCollage({
     if (!image) return;
     setBusy(true);
     try {
-      const file = new File([image.blob], `PicPa-${day.date}.jpg`, {
-        type: "image/jpeg",
-      });
+      const file = new File(
+        [image.blob],
+        `PicPa-${day.date}-${resolveArtworkStyle(day.artworkStyle)}.${extension}`,
+        {
+          type: image.blob.type,
+        },
+      );
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: "PicPa" });
       } else {
@@ -57,6 +66,11 @@ export function ExportedCollage({
   return (
     <div className="exported-collage">
       <CollageImageView render={render} alt="保存・共有する完成画像" />
+      <ArtworkStyleSelector
+        value={day.artworkStyle}
+        previews={render.previews}
+        onChange={onStyleChange}
+      />
       {children}
       <div className="detail-actions">
         <button
