@@ -1,9 +1,8 @@
 import { artworkLayout, type ArtworkRect } from "./artworkLayout";
 import { drawCollageLogo } from "./branding";
 import { drawPlacement } from "./photoCanvas";
-import { bubbleWindowCurves } from "./bubbleWindow";
 import { waterOpacity, waterTint } from "./waterMaterial";
-import { WATER_MATERIAL } from "../constants/artwork";
+import { BUBBLE_FRAME, WATER_MATERIAL } from "../constants/artwork";
 import type {
   ArtworkStyle,
   CollageSpacing,
@@ -21,164 +20,34 @@ type Layout = ReturnType<typeof artworkLayout>;
 const NIGHT = "#061322";
 const TAU = Math.PI * 2;
 
-/** Different flowing contours for every window; the photographs themselves stay undistorted. */
-export function bubbleWindowPath(rect: ArtworkRect, index: number) {
+/** Matching rounded squares keep the photo sizes equal and the rim soft. */
+export function bubbleWindowPath(rect: ArtworkRect) {
   const path = new Path2D();
-  const x = (n: number) => rect.x + rect.width * (index % 2 ? 1 - n : n);
-  const y = (n: number) => rect.y + rect.height * n;
-  const curves = bubbleWindowCurves(index);
-  path.moveTo(x(curves[0].start[0]), y(curves[0].start[1]));
-  for (const curve of curves)
-    path.bezierCurveTo(
-      x(curve.control1[0]),
-      y(curve.control1[1]),
-      x(curve.control2[0]),
-      y(curve.control2[1]),
-      x(curve.end[0]),
-      y(curve.end[1]),
-    );
-  path.closePath();
+  path.roundRect(
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height,
+    Math.min(rect.width, rect.height) * BUBBLE_FRAME.cornerRatio,
+  );
   return path;
 }
 
-/** The outside follows the differently sized perimeter windows, with soft liquid necks. */
+/** A continuous rounded outer edge, with no scallops between windows. */
 function bubbleOutline(layout: Layout) {
-  const { slots, columns, rows } = layout;
   const path = new Path2D();
-  const left = 14,
-    right = layout.width - 14,
-    top = 14,
-    bottom = layout.height - 16;
-  const topSlots = slots.slice(0, columns);
-  const bottomSlots = slots.slice(-columns).reverse();
-  const rightSlots = Array.from(
-    { length: rows },
-    (_, row) => slots[row * columns + columns - 1],
+  const inset = BUBBLE_FRAME.outerInset;
+  const radius =
+    Math.min(layout.cellWidth, layout.cellHeight) * BUBBLE_FRAME.cornerRatio +
+    layout.pad -
+    inset;
+  path.roundRect(
+    inset,
+    inset,
+    layout.width - inset * 2,
+    layout.height - inset * 2,
+    radius,
   );
-  const leftSlots = Array.from(
-    { length: rows },
-    (_, row) => slots[(rows - row - 1) * columns],
-  );
-  const cx = (r: ArtworkRect) => r.x + r.width / 2;
-  const cy = (r: ArtworkRect) => r.y + r.height / 2;
-  path.moveTo(cx(topSlots[0]), top);
-  topSlots.slice(0, -1).forEach((r, i) => {
-    const next = topSlots[i + 1];
-    const mid = (r.x + r.width + next.x) / 2,
-      neck = Math.min(r.height, next.height) * 0.11;
-    path.bezierCurveTo(
-      cx(r) + r.width * 0.28,
-      top,
-      mid - r.width * 0.12,
-      top + neck,
-      mid,
-      top + neck,
-    );
-    path.bezierCurveTo(
-      mid + next.width * 0.12,
-      top + neck,
-      cx(next) - next.width * 0.28,
-      top,
-      cx(next),
-      top,
-    );
-  });
-  path.bezierCurveTo(
-    right,
-    top,
-    right,
-    cy(rightSlots[0]) - rightSlots[0].height * 0.28,
-    right,
-    cy(rightSlots[0]),
-  );
-  rightSlots.slice(0, -1).forEach((r, i) => {
-    const next = rightSlots[i + 1];
-    const mid = (r.y + r.height + next.y) / 2,
-      neck = Math.min(r.width, next.width) * 0.12;
-    path.bezierCurveTo(
-      right,
-      cy(r) + r.height * 0.28,
-      right - neck,
-      mid - r.height * 0.12,
-      right - neck,
-      mid,
-    );
-    path.bezierCurveTo(
-      right - neck,
-      mid + next.height * 0.12,
-      right,
-      cy(next) - next.height * 0.28,
-      right,
-      cy(next),
-    );
-  });
-  path.bezierCurveTo(
-    right,
-    bottom,
-    cx(bottomSlots[0]) + bottomSlots[0].width * 0.28,
-    bottom,
-    cx(bottomSlots[0]),
-    bottom,
-  );
-  bottomSlots.slice(0, -1).forEach((r, i) => {
-    const next = bottomSlots[i + 1];
-    const mid = (next.x + next.width + r.x) / 2,
-      neck = Math.min(r.height, next.height) * 0.11;
-    path.bezierCurveTo(
-      cx(r) - r.width * 0.28,
-      bottom,
-      mid + r.width * 0.12,
-      bottom - neck,
-      mid,
-      bottom - neck,
-    );
-    path.bezierCurveTo(
-      mid - next.width * 0.12,
-      bottom - neck,
-      cx(next) + next.width * 0.28,
-      bottom,
-      cx(next),
-      bottom,
-    );
-  });
-  path.bezierCurveTo(
-    left,
-    bottom,
-    left,
-    cy(leftSlots[0]) + leftSlots[0].height * 0.28,
-    left,
-    cy(leftSlots[0]),
-  );
-  leftSlots.slice(0, -1).forEach((r, i) => {
-    const next = leftSlots[i + 1];
-    const mid = (next.y + next.height + r.y) / 2,
-      neck = Math.min(r.width, next.width) * 0.12;
-    path.bezierCurveTo(
-      left,
-      cy(r) - r.height * 0.28,
-      left + neck,
-      mid + r.height * 0.12,
-      left + neck,
-      mid,
-    );
-    path.bezierCurveTo(
-      left + neck,
-      mid - next.height * 0.12,
-      left,
-      cy(next) + next.height * 0.28,
-      left,
-      cy(next),
-    );
-  });
-  path.bezierCurveTo(
-    left,
-    top,
-    cx(topSlots[0]) - topSlots[0].width * 0.28,
-    top,
-    cx(topSlots[0]),
-    top,
-  );
-  path.closePath();
   return path;
 }
 
@@ -264,7 +133,7 @@ function drawLiquidWater(
   m.fillStyle = "#ffffff";
   m.fill(outline);
   m.globalCompositeOperation = "destination-out";
-  layout.slots.forEach((rect, i) => m.fill(bubbleWindowPath(rect, i)));
+  layout.slots.forEach((rect) => m.fill(bubbleWindowPath(rect)));
   m.resetTransform();
   const pixels = m.getImageData(0, 0, mask.width, mask.height);
   const { width: w, height: h } = mask;
@@ -371,7 +240,7 @@ function drawBubbleFrame(
   ctx.stroke(contour);
   ctx.restore();
   layout.slots.forEach((rect, index) => {
-    const path = bubbleWindowPath(rect, index);
+    const path = bubbleWindowPath(rect);
     ctx.save();
     ctx.clip(path);
     drawPhoto(ctx, photos[index], rect);

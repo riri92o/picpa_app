@@ -417,34 +417,6 @@ assert.equal(resolveArtworkStyle("future-style"), DEFAULT_ARTWORK_STYLE);
 assert.equal(DEFAULT_ARTWORK_STYLE, "black-frame");
 // Explicit choices survive a change to the default for unstyled/older records.
 assert.equal(resolveArtworkStyle("bubble-window"), "bubble-window");
-const { bubbleWindowCurves } = load("src/domain/bubbleWindow.ts");
-for (let index = 0; index < 9; index++) {
-  const curves = bubbleWindowCurves(index);
-  for (let i = 0; i < curves.length; i++) {
-    const a = curves[i],
-      b = curves[(i + 1) % curves.length];
-    for (let axis = 0; axis < 2; axis++) {
-      assert.ok(Math.abs(a.end[axis] - b.start[axis]) < 1e-10);
-      assert.ok(
-        Math.abs(
-          a.end[axis] - a.control2[axis] - b.control1[axis] + b.start[axis],
-        ) < 1e-10,
-        "No tangent corners in a water window",
-      );
-      assert.ok(
-        Math.abs(
-          a.end[axis] -
-            2 * a.control2[axis] +
-            a.control1[axis] -
-            b.control2[axis] +
-            2 * b.control1[axis] -
-            b.start[axis],
-        ) < 1e-10,
-        "Curvature must flow smoothly through every join",
-      );
-    }
-  }
-}
 const { waterTint, waterOpacity } = load("src/domain/waterMaterial.ts");
 for (const color of PALETTE) {
   const source = [1, 3, 5].map((i) => parseInt(color.hex.slice(i, i + 2), 16));
@@ -494,9 +466,9 @@ for (const { id } of ARTWORK_STYLES) {
       const source = collageLayout(count, spacing);
       layout.slots.forEach((slot, i) => {
         if (id === "bubble-window") {
-          assert.ok(
-            slot.width / slot.height > 0.6 && slot.width / slot.height < 2,
-          );
+          assert.equal(slot.width, slot.height, "Bubble photos are square");
+          assert.equal(slot.width, layout.slots[0].width);
+          assert.equal(slot.height, layout.slots[0].height);
         } else {
           assert.ok(
             Math.abs(
@@ -517,9 +489,8 @@ for (const { id } of ARTWORK_STYLES) {
         assert.ok(
           new Set(
             layout.slots.map((slot) => Math.round(slot.width * slot.height)),
-          ).size >=
-            count - 1,
-          "Bubble windows must have visibly different areas",
+          ).size === 1,
+          "Bubble windows must all have equal areas",
         );
         assert.deepEqual(
           artworkLayout(count, spacing, id),
@@ -562,7 +533,7 @@ assert.deepEqual(
   new Set(["#dc3c28", "#1e8cd2", "#f0dca0"]),
 );
 console.log(
-  "5 artwork styles × 4/6/9 × spacing: black default, C2-smooth windows, 38 colored water tints, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
+  "5 artwork styles × 4/6/9 × spacing: black default, equal rounded-square windows, 38 colored water tints, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
 );
 
 const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");

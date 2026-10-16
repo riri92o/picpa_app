@@ -2,7 +2,7 @@ import {
   ARTWORK_STYLES,
   ARTWORK_WIDTH,
   DEFAULT_ARTWORK_STYLE,
-  BUBBLE_COMPOSITIONS,
+  BUBBLE_FRAME,
 } from "../constants/artwork";
 import { collageLayout } from "./collageLayout";
 import type {
@@ -31,7 +31,7 @@ export interface ArtworkRect {
   height: number;
 }
 
-/** Photo order stays fixed; bubble windows use deliberately varied sizes and crops. */
+/** Photo order stays fixed; every bubble window is the same rounded square. */
 export function artworkLayout(
   count: GridCount,
   spacing: CollageSpacing = "separated",
@@ -43,7 +43,7 @@ export function artworkLayout(
   const palette = style === "palette",
     bubble = style === "bubble-window";
   const plain = style === "black-frame" || style === "white-frame";
-  const pad = plain ? 24 : palette ? 54 : bubble ? 34 : 42;
+  const pad = plain ? 24 : palette ? 54 : bubble ? BUBBLE_FRAME.padding : 42;
   const gap =
     spacing === "joined"
       ? bubble
@@ -59,7 +59,9 @@ export function artworkLayout(
             ? 24
             : 20;
   const cellWidth = (ARTWORK_WIDTH - pad * 2 - gap * (columns - 1)) / columns;
-  const cellHeight = (cellWidth * source.cellHeight) / source.cellWidth;
+  const cellHeight = bubble
+    ? cellWidth
+    : (cellWidth * source.cellHeight) / source.cellWidth;
   const stripHeight = palette ? Math.round(cellWidth * 0.16) : 0;
   const strideY = cellHeight + stripHeight + gap;
   const gridHeight = rows * (cellHeight + stripHeight) + (rows - 1) * gap;
@@ -74,29 +76,12 @@ export function artworkLayout(
       : 156;
   const height = Math.ceil(pad + gridHeight + footerHeight);
   const footerY = pad + gridHeight;
-  let slots = Array.from({ length: count }, (_, i): ArtworkRect => ({
+  const slots = Array.from({ length: count }, (_, i): ArtworkRect => ({
     x: pad + (i % columns) * (cellWidth + gap),
     y: pad + Math.floor(i / columns) * strideY,
     width: cellWidth,
     height: cellHeight,
   }));
-  if (bubble) {
-    const composition = BUBBLE_COMPOSITIONS[count];
-    const usableWidth = ARTWORK_WIDTH - pad * 2 - gap * (columns - 1);
-    const usableHeight = gridHeight - gap * (rows - 1);
-    slots = [];
-    let y = pad;
-    composition.rows.forEach((weight, row) => {
-      const height = usableHeight * weight;
-      let x = pad;
-      composition.columns[row].forEach((widthWeight) => {
-        const width = usableWidth * widthWeight;
-        slots.push({ x, y, width, height });
-        x += width + gap;
-      });
-      y += height + gap;
-    });
-  }
   const footer = {
     x: 0,
     y: footerY,

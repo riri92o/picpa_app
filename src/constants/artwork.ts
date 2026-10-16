@@ -1,4 +1,4 @@
-import type { ArtworkStyle, GridCount } from "../domain/types";
+import type { ArtworkStyle } from "../domain/types";
 
 export const ARTWORK_STYLES: {
   id: ArtworkStyle;
@@ -24,32 +24,9 @@ export const WATER_MATERIAL = {
   blurSigma: 3.5,
 } as const;
 
-/** Stable, asymmetric compositions. Exporting the same work never reshuffles its windows. */
-export const BUBBLE_COMPOSITIONS: Record<
-  GridCount,
-  { rows: number[]; columns: number[][] }
-> = {
-  4: {
-    rows: [0.53, 0.47],
-    columns: [
-      [0.61, 0.39],
-      [0.43, 0.57],
-    ],
-  },
-  6: {
-    rows: [0.36, 0.28, 0.36],
-    columns: [
-      [0.61, 0.39],
-      [0.44, 0.56],
-      [0.53, 0.47],
-    ],
-  },
-  9: {
-    rows: [0.34, 0.28, 0.38],
-    columns: [
-      [0.4, 0.26, 0.34],
-      [0.28, 0.42, 0.3],
-      [0.35, 0.28, 0.37],
-    ],
-  },
-};
+/** Rounded, equally sized windows with a continuous translucent water rim. */
+export const BUBBLE_FRAME = {
+  padding: 56,
+  outerInset: 14,
+  cornerRatio: 0.16,
+} as const;
