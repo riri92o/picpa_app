@@ -7,11 +7,15 @@ export function Modal({
   onClose,
   children,
   title,
+  headerAction,
+  className = "",
 }: {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
   title?: string;
+  headerAction?: ReactNode;
+  className?: string;
 }) {
   const target = document.getElementById("modal-root");
   if (!target) return null;
@@ -28,7 +32,7 @@ export function Modal({
           }}
         >
           <motion.section
-            className="modal-sheet"
+            className={`modal-sheet ${className}`}
             role="dialog"
             aria-modal="true"
             aria-label={title}
@@ -40,13 +44,16 @@ export function Modal({
             <div className="modal-handle" />
             <div className="modal-heading">
               <h2>{title}</h2>
-              <button
-                className="icon-button small"
-                onClick={onClose}
-                aria-label="閉じる"
-              >
-                <X size={20} />
-              </button>
+              <div className="modal-heading-actions">
+                {headerAction}
+                <button
+                  className="icon-button small"
+                  onClick={onClose}
+                  aria-label="閉じる"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             {children}
           </motion.section>

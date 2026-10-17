@@ -13,12 +13,14 @@ export function ExportedCollage({
   getImageBlob,
   children,
   onStyleChange,
+  viewOnly = false,
 }: {
   day: DayRecord;
   logo: boolean;
   getImageBlob: (id: string) => Promise<Blob | undefined>;
   children?: ReactNode;
   onStyleChange: (style: ArtworkStyle) => void;
+  viewOnly?: boolean;
 }) {
   const render = useCollageExport(day, logo, getImageBlob);
   const { image } = render;
@@ -64,31 +66,40 @@ export function ExportedCollage({
   };
 
   return (
-    <div className="exported-collage">
-      <CollageImageView render={render} alt="保存・共有する完成画像" />
-      <ArtworkStyleSelector
-        value={day.artworkStyle}
-        previews={render.previews}
-        onChange={onStyleChange}
+    <div className={`exported-collage ${viewOnly ? "artwork-viewer" : ""}`}>
+      <CollageImageView
+        render={render}
+        alt={viewOnly ? "完成したコラージュ" : "保存・共有する完成画像"}
       />
+      {!viewOnly && (
+        <ArtworkStyleSelector
+          value={day.artworkStyle}
+          previews={render.previews}
+          onChange={onStyleChange}
+        />
+      )}
       {children}
-      <div className="detail-actions">
-        <button
-          className="secondary-button"
-          disabled={!image || busy}
-          onClick={save}
-        >
-          <Download size={18} /> 保存
-        </button>
-        <button
-          className="primary-button"
-          disabled={!image || busy}
-          onClick={() => void share()}
-        >
-          <Share2 size={18} /> 共有
-        </button>
-      </div>
-      {notice && <p className="modal-footnote centered">{notice}</p>}
+      {!viewOnly && (
+        <div className="detail-actions">
+          <button
+            className="secondary-button"
+            disabled={!image || busy}
+            onClick={save}
+          >
+            <Download size={18} /> 保存
+          </button>
+          <button
+            className="primary-button"
+            disabled={!image || busy}
+            onClick={() => void share()}
+          >
+            <Share2 size={18} /> 共有
+          </button>
+        </div>
+      )}
+      {!viewOnly && notice && (
+        <p className="modal-footnote centered">{notice}</p>
+      )}
     </div>
   );
 }

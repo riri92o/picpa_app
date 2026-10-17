@@ -34,6 +34,13 @@
   margin: 0;
   letter-spacing: -0.05em;
 }
+.modal-heading-actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+  margin-left: 12px;
+}
 .icon-button {
   width: 36px;
   height: 36px;

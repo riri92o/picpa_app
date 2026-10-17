@@ -141,12 +141,12 @@
 .memo-editor {
   text-align: left;
 }
-.memo-editor label {
+.memo-field label {
   display: block;
   margin-bottom: 9px;
   font-size: 12px;
 }
-.memo-editor textarea {
+.memo-field textarea {
   width: 100%;
   padding: 12px;
   border-radius: 12px;
@@ -159,20 +159,20 @@
   font-size: 16px;
   line-height: 1.6;
 }
-.memo-editor textarea::placeholder {
+.memo-field textarea::placeholder {
   color: var(--muted);
 }
-.memo-editor textarea:focus-visible {
+.memo-field textarea:focus-visible {
   outline: 2px solid var(--accent-readable);
   outline-offset: 2px;
 }
-.artwork-memo .memo-count {
+.memo-field .memo-count {
   margin: 5px 0 12px;
   color: var(--muted);
   font-size: 10px;
   text-align: right;
 }
-.artwork-memo .memo-count.over-limit {
+.memo-field .memo-count.over-limit {
   color: #ffb9c6;
 }
 .memo-actions {

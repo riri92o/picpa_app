@@ -15,6 +15,39 @@
   font-size: 12px;
   line-height: 1.65;
 }
+.artwork-viewer-sheet {
+  width: min(100%, 520px);
+}
+.artwork-viewer .exported-collage-image {
+  min-height: 0;
+  max-height: 65dvh;
+  margin-top: 8px;
+}
+.artwork-viewer .exported-collage-image img {
+  max-height: 65dvh;
+}
+.viewer-memo {
+  margin: 18px 0 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.completion-with-memo .completion-preview {
+  height: min(28dvh, 240px);
+}
+.completion-with-memo .completion-preview img {
+  max-height: min(28dvh, 240px);
+}
+.completion-memo {
+  margin: 14px 0;
+}
+.completion-memo textarea {
+  min-height: 68px;
+  resize: vertical;
+}
 .artwork-styles button {
   min-width: 0;
   padding: 7px 6px 8px;

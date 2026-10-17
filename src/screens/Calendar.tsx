@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { ArtworkMemo } from "../components/ArtworkMemo";
 import { SpacingSelector } from "../components/SpacingSelector";
@@ -24,6 +24,7 @@ export function Calendar() {
   } = useApp();
   const [month, setMonth] = useState(() => new Date());
   const [selected, setSelected] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const year = month.getFullYear(),
     monthIndex = month.getMonth();
   const firstWeekday = new Date(year, monthIndex, 1).getDay();
@@ -35,6 +36,7 @@ export function Calendar() {
       : i - firstWeekday + 1,
   );
   const selectedDay = days.find((day) => day.date === selected);
+  const viewingArtwork = !!selectedDay?.completedAt && !editing;
   useEffect(() => {
     if (selectedDay)
       void ensureFullImages(selectedDay.photos.map((photo) => photo.id));
@@ -101,6 +103,7 @@ export function Calendar() {
                 key={key}
                 className={`date-cell ${key === todayKey ? "today" : ""}`}
                 onClick={() => {
+                  setEditing(false);
                   setSelected(key);
                 }}
                 aria-label={`${number}日${color ? `、${color.name}` : ""}${day?.completedAt ? "、完成済み" : ""}`}
@@ -140,6 +143,19 @@ export function Calendar() {
       <Modal
         open={!!selected}
         onClose={() => setSelected(null)}
+        className={viewingArtwork ? "artwork-viewer-sheet" : undefined}
+        headerAction={
+          selectedDay?.completedAt ? (
+            <button
+              className="icon-button small"
+              aria-label={editing ? "作品を見る" : "デザイン・保存"}
+              title={editing ? "作品を見る" : "デザイン・保存"}
+              onClick={() => setEditing((value) => !value)}
+            >
+              {editing ? <ArrowLeft size={18} /> : <Ellipsis size={20} />}
+            </button>
+          ) : undefined
+        }
         title={
           selected
             ? new Intl.DateTimeFormat("ja-JP", {
@@ -152,24 +168,26 @@ export function Calendar() {
       >
         {selectedDay?.colorId ? (
           <>
-            <div className="detail-color">
-              <span
-                className="detail-bubble"
-                style={{
-                  backgroundColor: selectedColor.hex,
-                  border: ["white", "black"].includes(selectedColor.id)
-                    ? "1px solid var(--muted)"
-                    : undefined,
-                }}
-              />
-              <div>
-                <h3>{selectedColor.name}</h3>
+            {!viewingArtwork && (
+              <div className="detail-color">
+                <span
+                  className="detail-bubble"
+                  style={{
+                    backgroundColor: selectedColor.hex,
+                    border: ["white", "black"].includes(selectedColor.id)
+                      ? "1px solid var(--muted)"
+                      : undefined,
+                  }}
+                />
+                <div>
+                  <h3>{selectedColor.name}</h3>
+                </div>
+                <span className="detail-state">
+                  {selectedDay.completedAt ? "完成" : "制作中"}
+                </span>
               </div>
-              <span className="detail-state">
-                {selectedDay.completedAt ? "完成" : "制作中"}
-              </span>
-            </div>
-            {selectedDay.completedAt && (
+            )}
+            {selectedDay.completedAt && editing && (
               <SpacingSelector
                 value={selectedDay.spacing}
                 onChange={(spacing) => setSpacing(spacing, selectedDay.date)}
@@ -181,16 +199,27 @@ export function Calendar() {
                 day={selectedDay}
                 logo={settings.exportLogo}
                 getImageBlob={getImageBlob}
+                viewOnly={viewingArtwork}
                 onStyleChange={(style) =>
                   setArtworkStyle(style, selectedDay.date)
                 }
               >
-                <ColorMatchBadge day={selectedDay} showComment />
-                <ArtworkMemo
-                  key={selectedDay.date}
-                  value={selectedDay.memo}
-                  onSave={(memo) => setMemo(selectedDay.date, memo)}
-                />
+                {viewingArtwork ? (
+                  selectedDay.memo?.trim() ? (
+                    <p className="viewer-memo" aria-label="作品のひとこと">
+                      {selectedDay.memo}
+                    </p>
+                  ) : null
+                ) : (
+                  <>
+                    <ColorMatchBadge day={selectedDay} showComment />
+                    <ArtworkMemo
+                      key={selectedDay.date}
+                      value={selectedDay.memo}
+                      onSave={(memo) => setMemo(selectedDay.date, memo)}
+                    />
+                  </>
+                )}
               </ExportedCollage>
             ) : (
               <>

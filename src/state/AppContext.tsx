@@ -59,7 +59,7 @@ interface AppContextValue {
   removePhoto: (id: string) => void;
   updatePlacement: (id: string, patch: Partial<PhotoPlacement>) => void;
   reorderPhotos: (activeId: string, overId: string) => void;
-  completeToday: () => void;
+  completeToday: (memo?: string) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   getImageBlob: (id: string) => Promise<Blob | undefined>;
   ensureFullImages: (ids: string[]) => Promise<void>;
@@ -445,15 +445,18 @@ export function AppProvider({
     },
     [currentDay, saveDay],
   );
-  const completeToday = useCallback(() => {
-    const day = currentDay();
-    if (day.colorId && !day.completedAt && day.photos.length === day.count)
-      saveDay({
-        ...day,
-        artworkStyle: resolveArtworkStyle(day.artworkStyle),
-        completedAt: new Date().toISOString(),
-      });
-  }, [currentDay, saveDay]);
+  const completeToday = useCallback(
+    (memo?: string) => {
+      const day = currentDay();
+      if (day.colorId && !day.completedAt && day.photos.length === day.count)
+        saveDay({
+          ...(memo === undefined ? day : withArtworkMemo(day, memo)),
+          artworkStyle: resolveArtworkStyle(day.artworkStyle),
+          completedAt: new Date().toISOString(),
+        });
+    },
+    [currentDay, saveDay],
+  );
   const updateSettings = useCallback(
     (patch: Partial<AppSettings>) => {
       // Guard the state operation too, so a locked challenge cannot be bypassed.

@@ -22,6 +22,8 @@ import { CollageStage } from "../components/CollageStage";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { ColorHintButton } from "../components/ColorHintButton";
 import { ArtworkMemo } from "../components/ArtworkMemo";
+import { ArtworkMemoField } from "../components/ArtworkMemoField";
+import { MEMO_MAX_LENGTH, memoLength } from "../domain/memo";
 import { SpacingSelector } from "../components/SpacingSelector";
 import { CompletionPreview } from "../components/CompletionPreview";
 import { ExportedCollage } from "../components/ExportedCollage";
@@ -61,6 +63,8 @@ export function Home({
   const [replaceId, setReplaceId] = useState<string | undefined>();
   const [editing, setEditing] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [memoDraft, setMemoDraft] = useState("");
+  const memoTooLong = memoLength(memoDraft) > MEMO_MAX_LENGTH;
   const [previewReady, setPreviewReady] = useState(false);
   const [finished, setFinished] = useState(false);
   const [reduceTo, setReduceTo] = useState<GridCount | null>(null);
@@ -100,8 +104,8 @@ export function Home({
           : previous,
     );
   const handleFinish = () => {
-    if (!previewReady) return;
-    completeToday();
+    if (!previewReady || memoTooLong) return;
+    completeToday(memoDraft);
     setConfirm(false);
     setFinished(true);
   };
@@ -234,6 +238,7 @@ export function Home({
           }
           onClick={() => {
             setPreviewReady(false);
+            setMemoDraft(today.memo ?? "");
             setConfirm(true);
           }}
         >
@@ -404,6 +409,7 @@ export function Home({
         open={confirm}
         onClose={() => setConfirm(false)}
         title="完成しますか？"
+        className="completion-with-memo"
       >
         <CompletionPreview
           day={today}
@@ -413,8 +419,11 @@ export function Home({
           onStyleChange={(style) => setArtworkStyle(style, today.date)}
         />
         <p className="artwork-change-note">
-          コラージュの種類は、完成後もカレンダーから変更できます。
+          デザインは、完成後もカレンダーのメニューから変更できます。
         </p>
+        <div className="completion-memo">
+          <ArtworkMemoField value={memoDraft} onChange={setMemoDraft} />
+        </div>
         <p className="modal-description">
           本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
         </p>
@@ -428,7 +437,7 @@ export function Home({
           <button
             className="primary-button"
             onClick={handleFinish}
-            disabled={!previewReady}
+            disabled={!previewReady || memoTooLong}
           >
             完成 <Check size={18} />
           </button>

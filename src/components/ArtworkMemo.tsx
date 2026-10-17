@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { MessageSquarePlus, Pencil } from "lucide-react";
 import { MEMO_MAX_LENGTH, memoLength } from "../domain/memo";
+import { ArtworkMemoField } from "./ArtworkMemoField";
 
 export function ArtworkMemo({
   value = "",
@@ -43,25 +44,12 @@ export function ArtworkMemo({
     <section className="artwork-memo" aria-label="作品のひとことメモ">
       {editing ? (
         <form className="memo-editor" onSubmit={(event) => void submit(event)}>
-          <label htmlFor={id}>ひとことメモ</label>
-          <textarea
-            id={id}
+          <ArtworkMemoField
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="散歩で見つけた、やさしい緑。"
-            rows={3}
+            onChange={setDraft}
             disabled={saving}
-            aria-describedby={`${id}-count ${id}-notice`}
-            aria-invalid={tooLong}
             autoFocus
           />
-          <p
-            id={`${id}-count`}
-            className={`memo-count ${tooLong ? "over-limit" : ""}`}
-          >
-            {tooLong && `${MEMO_MAX_LENGTH}文字以内で入力してください · `}
-            {length} / {MEMO_MAX_LENGTH}
-          </p>
           <div className="memo-actions">
             <button
               type="button"
