@@ -209,6 +209,10 @@ body {
   border-radius: 0;
   overflow: hidden;
 }
+.home-screen .collage-frame .collage-grid.spacing-separated {
+  /* The outer frame also paints the gaps, keeping one continuous finish. */
+  background: transparent;
+}
 .home-screen .empty-tile,
 .empty-tile {
   background: var(--surface-soft);

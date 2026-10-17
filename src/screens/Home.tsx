@@ -19,6 +19,7 @@ import { BUBBLE_MOTION } from "../constants/config";
 import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
+import { HomeArtwork } from "../components/HomeArtwork";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { ColorHintButton } from "../components/ColorHintButton";
 import { ArtworkMemo } from "../components/ArtworkMemo";
@@ -205,22 +206,30 @@ export function Home({
           <SpacingSelector value={today.spacing} onChange={setSpacing} />
           <SamplePhotoButton />
         </div>
-        <CollageStage
-          count={today.count}
-          spacing={today.spacing}
-          inactive={!today.colorId}
-        >
-          <CollageGrid
+        {today.completedAt ? (
+          <HomeArtwork
+            day={today}
+            logo={settings.exportLogo}
+            getImageBlob={getImageBlob}
+          />
+        ) : (
+          <CollageStage
             count={today.count}
             spacing={today.spacing}
-            photos={today.photos}
-            images={images}
-            locked={!today.colorId || !!today.completedAt}
-            onAdd={() => openSource()}
-            onEdit={setEditing}
-            onReorder={reorderPhotos}
-          />
-        </CollageStage>
+            inactive={!today.colorId}
+          >
+            <CollageGrid
+              count={today.count}
+              spacing={today.spacing}
+              photos={today.photos}
+              images={images}
+              locked={!today.colorId}
+              onAdd={() => openSource()}
+              onEdit={setEditing}
+              onReorder={reorderPhotos}
+            />
+          </CollageStage>
+        )}
         {today.completedAt && (
           <div className="home-score">
             <ColorMatchBadge day={today} compact />
