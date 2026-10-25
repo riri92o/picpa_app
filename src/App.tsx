@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -19,6 +20,8 @@ import { useViewportGuard } from "./ui/useViewportGuard";
 import { accentTokens } from "./ui/theme";
 import { OpeningScreen } from "./components/OpeningScreen";
 import { soapFilmImage } from "./ui/soapFilm";
+import { AppearanceContext } from "./ui/AppearanceContext";
+import { resolveAppearance } from "./ui/appearance";
 
 export default function App() {
   const { ready, error, clearError, today, settings, drawToday } = useApp();
@@ -35,36 +38,38 @@ export default function App() {
   const themeAccent = revealScene
     ? colorById(ritual.visibleColorId ?? ritual.resultId).hex
     : "#bdc1c5";
+  const appearance = resolveAppearance(settings.theme, systemDark);
+  const dark = appearance === "night";
   const filmImage = useMemo(
     () =>
-      `url("${soapFilmImage(themeAccent, !revealScene, revealScene, false)}")`,
-    [themeAccent, revealScene],
+      `url("${soapFilmImage(themeAccent, !revealScene, revealScene, false, appearance)}")`,
+    [themeAccent, revealScene, appearance],
   );
-  const dark =
-    settings.theme === "dark" || (settings.theme === "system" && systemDark);
   const tokens = accentTokens(themeAccent, revealScene, dark);
   useEffect(() => {
-    document.documentElement.dataset.theme = settings.theme;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const updateScheme = () => setSystemDark(media.matches);
     media.addEventListener("change", updateScheme);
     return () => media.removeEventListener("change", updateScheme);
-  }, [settings.theme]);
-  useEffect(() => {
+  }, []);
+  useLayoutEffect(() => {
     const root = document.documentElement;
-    for (const key of ["--sky-page", "--sky-surface", "--sky-bottom"] as const)
-      root.style.setProperty(key, tokens[key]);
+    root.dataset.theme = settings.theme;
+    root.dataset.appearance = appearance;
+    for (const [key, value] of Object.entries(tokens))
+      root.style.setProperty(key, value);
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", tokens["--sky-page"]);
-  }, [tokens["--sky-page"], tokens["--sky-surface"], tokens["--sky-bottom"]]);
+  }, [settings.theme, appearance, themeAccent, revealScene]);
   return (
-    <>
+    <AppearanceContext.Provider value={appearance}>
       {ready && (
         <div
           className="app-shell"
           inert={opening}
           data-color={ritual.visibleColorId}
+          data-appearance={appearance}
           data-statusbar-inset={systemInset ? "system" : "web"}
           style={
             {
@@ -115,6 +120,6 @@ export default function App() {
           />
         )}
       </AnimatePresence>
-    </>
+    </AppearanceContext.Provider>
   );
 }

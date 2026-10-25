@@ -39,18 +39,19 @@ export function Settings() {
             <Palette size={19} />
             <h3>外観テーマ</h3>
           </div>
-          <p className="theme-note">夜空の明るさを選べます</p>
+          <p className="theme-note">昼の青空・夜の空を切り替えます</p>
           <div className="theme-selector">
             {(
               [
-                ["light", "Light"],
-                ["dark", "Dark"],
-                ["system", "System"],
+                ["light", "昼の空"],
+                ["dark", "夜の空"],
+                ["system", "端末に合わせる"],
               ] as [ThemeChoice, string][]
             ).map(([value, label]) => (
               <button
                 key={value}
                 className={settings.theme === value ? "selected" : ""}
+                aria-pressed={settings.theme === value}
                 onClick={() => updateSettings({ theme: value })}
               >
                 {label}

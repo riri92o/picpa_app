@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { SKY_BOKEH, SKY_DECOR_BUBBLES, SKY_STARS } from "../constants/sky";
 import { LIQUID_MOTION } from "../constants/liquidMotion";
 
-/** Persistent across tabs, so the night sky never restarts on navigation. */
+/** Persistent across tabs, so the sky never restarts on navigation. */
 export function LiquidBackdrop({
   busy = false,
   ambient = false,

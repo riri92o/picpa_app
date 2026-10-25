@@ -10,18 +10,6 @@
   color-scheme: dark;
   transition: background-color 0.8s ease;
 }
-[data-theme="dark"] {
-  --sky-page: #0a1126;
-  --sky-surface: #17213a;
-  --sky-bottom: #1d1b32;
-}
-@media (prefers-color-scheme: dark) {
-  [data-theme="system"] {
-    --sky-page: #0a1126;
-    --sky-surface: #17213a;
-    --sky-bottom: #1d1b32;
-  }
-}
 html,
 body {
   min-height: 100%;

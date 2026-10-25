@@ -46,23 +46,25 @@ export function accentTokens(
     white = "#ffffff";
   const neutral = !revealed;
   const vivid = neutral ? accent : vividAccent(accent);
-  const page = neutral
-    ? darkMode
+  const page = darkMode
+    ? neutral
       ? "#0a1126"
-      : "#10172f"
-    : mixHex(darkMode ? "#0a1126" : "#10172f", vivid, 0.025);
-  const surface = neutral
-    ? darkMode
+      : mixHex("#0a1126", vivid, 0.025)
+    : "#a8d6f8";
+  const surface = darkMode
+    ? neutral
       ? "#17213a"
-      : "#202a43"
-    : mixHex(darkMode ? "#152039" : "#1c2841", vivid, 0.045);
-  const bottom = neutral
-    ? darkMode
+      : mixHex("#152039", vivid, 0.045)
+    : "#f3faff";
+  const bottom = darkMode
+    ? neutral
       ? "#1d1b32"
-      : "#26223c"
-    : mixHex(darkMode ? "#131b32" : "#1b213c", vivid, 0.14);
+      : mixHex("#131b32", vivid, 0.14)
+    : "#f4fbff";
   const fill = selectedFill(vivid, dark);
   return {
+    "--text": darkMode ? "#f8f4fb" : "#193957",
+    "--muted": darkMode ? "#b7c0d3" : "#38536b",
     "--accent": accent,
     "--accent-soft": fill,
     "--control-highlight": mixHex(fill, white, 0.17),
@@ -76,8 +78,12 @@ export function accentTokens(
     "--sky-page": page,
     "--sky-surface": surface,
     "--sky-bottom": bottom,
-    "--accent-readable-light": readableAccent(accent, "#faf9fc", dark),
-    "--accent-readable-dark": readableAccent(accent, surface, white),
+    "--accent-readable-light": readableAccent(accent, "#a8d6f8", dark),
+    "--accent-readable-dark": readableAccent(
+      accent,
+      darkMode ? surface : "#17213a",
+      white,
+    ),
   };
 }
 

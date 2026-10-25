@@ -213,16 +213,24 @@ for (const color of PALETTE) {
       );
     assert.ok(
       contrastRatio(
-        tokens["--accent-readable-dark"],
+        tokens[darkMode ? "--accent-readable-dark" : "--accent-readable-light"],
         tokens["--sky-surface"],
       ) >= 5.2,
-      `Unreadable accent on night sky: ${color.id} / ${darkMode}`,
+      `Unreadable accent on sky: ${color.id} / ${darkMode}`,
     );
     assert.ok(
-      contrastRatio("#f8f4fb", tokens["--sky-surface"]) >= 4.5,
+      contrastRatio(tokens["--text"], tokens["--sky-surface"]) >= 4.5,
       `Unreadable surface text: ${color.id} / ${darkMode}`,
     );
   }
+  const day = accentTokens(color.hex, true, false);
+  const night = accentTokens(color.hex, true, true);
+  assert.ok(
+    contrastRatio(day["--sky-page"], night["--sky-page"]) > 8,
+    "Day and night must visibly differ",
+  );
+  assert.ok(contrastRatio(day["--text"], day["--sky-page"]) >= 4.5, color.id);
+  assert.ok(contrastRatio(day["--muted"], day["--sky-page"]) >= 4.5, color.id);
   const tones = bubbleTones(color.hex);
   assert.ok(lightness(tones.shadow) < lightness(tones.body), color.id);
   assert.ok(lightness(tones.light) >= lightness(tones.body), color.id);
@@ -241,7 +249,7 @@ assert.equal(undrawn["--film-blue"], "#bfc8d7");
 const sceneSamples = Object.fromEntries(
   ["red", "leaf", "blue"].map((id) => {
     const color = PALETTE.find((item) => item.id === id);
-    return [id, accentTokens(color.hex, true)];
+    return [id, accentTokens(color.hex, true, true)];
   }),
 );
 assert.equal(
@@ -259,6 +267,12 @@ assert.equal(
 console.log(
   "38 daily colors: light/dark contrast, pastel lightness, bubble shading, neutral undrawn film, red/green/blue scenes: OK",
 );
+
+const { resolveAppearance } = load("src/ui/appearance.ts");
+assert.equal(resolveAppearance("light", true), "day");
+assert.equal(resolveAppearance("dark", false), "night");
+assert.equal(resolveAppearance("system", true), "night");
+assert.equal(resolveAppearance("system", false), "day");
 
 const { renderSoapFilm } = load("src/ui/soapFilm.ts");
 const filmSize = 64;
@@ -325,6 +339,24 @@ for (const color of PALETTE) {
 assert.notDeepEqual(
   filmPixel(renderSoapFilm(filmSize, "#A9D8AE", false, true), 0, 0),
   filmPixel(renderSoapFilm(filmSize, "#e0757e", false, true), 0, 0),
+);
+for (const color of PALETTE) {
+  const dayFilm = renderSoapFilm(filmSize, color.hex, false, true, true, "day");
+  assert.equal(dayFilm[3], 0, "Daytime film has transparent corners");
+  assert.ok(
+    filmPixel(dayFilm, 0, 0)[3] > 120 && filmPixel(dayFilm, 0, 0)[3] < 180,
+    color.id,
+  );
+  assert.notDeepEqual(
+    dayFilm,
+    renderSoapFilm(filmSize, color.hex, false, true, true, "night"),
+    "Reflection environment follows the theme",
+  );
+}
+assert.deepEqual(
+  renderSoapFilm(filmSize, "#f00", true, false, false, "day"),
+  renderSoapFilm(filmSize, "#0f0", true, false, false, "day"),
+  "Daytime neutral film does not reveal the result",
 );
 console.log(
   "Soap film: transparent air/corners, coherent light direction, neutral state and all 38 daily tints: OK",

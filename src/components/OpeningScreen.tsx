@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { BRAND_LOGO, OPENING_MOTION } from "../constants/branding";
+import {
+  BRAND_LOGO,
+  EXPORT_BRAND_LOGO,
+  OPENING_MOTION,
+} from "../constants/branding";
+import { useAppearance } from "../ui/AppearanceContext";
 import { BrandLogo } from "./BrandLogo";
 
 export function OpeningScreen({
@@ -11,24 +16,27 @@ export function OpeningScreen({
   onComplete: () => void;
 }) {
   const reduced = useReducedMotion();
+  const appearance = useAppearance();
+  const logoUrl = appearance === "day" ? EXPORT_BRAND_LOGO.url : BRAND_LOGO.url;
   const [held, setHeld] = useState(false);
-  const [artworkReady, setArtworkReady] = useState(false);
+  const [loadedLogo, setLoadedLogo] = useState<string | null>(null);
+  const artworkReady = loadedLogo === logoUrl;
   const started = useRef(performance.now());
   useEffect(() => {
     let active = true;
     const image = new Image();
     const loaded = () => {
-      if (active) setArtworkReady(true);
+      if (active) setLoadedLogo(logoUrl);
     };
     const timeout = window.setTimeout(loaded, OPENING_MOTION.artworkTimeout);
     image.onload = loaded;
     image.onerror = loaded;
-    image.src = BRAND_LOGO.url;
+    image.src = logoUrl;
     return () => {
       active = false;
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [logoUrl]);
   useEffect(() => {
     const duration = reduced
       ? OPENING_MOTION.reducedDuration
@@ -61,7 +69,7 @@ export function OpeningScreen({
         onClick={onComplete}
         aria-label="PicPa、オープニングをスキップ"
       >
-        <BrandLogo />
+        <BrandLogo variant={appearance === "day" ? "day" : "bubble"} />
       </button>
     </motion.div>
   );

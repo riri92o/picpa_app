@@ -1,4 +1,5 @@
 import { vividAccent } from "./theme";
+import type { Appearance } from "./appearance";
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 const rgb = (hex: string) =>
@@ -13,9 +14,13 @@ export function renderSoapFilm(
   neutral = false,
   revealed = false,
   emphasized = revealed,
+  appearance: Appearance = "night",
 ) {
   const pixels = new Uint8ClampedArray(size * size * 4);
-  const tint = rgb(neutral ? "#d8e2f0" : vividAccent(color));
+  const day = appearance === "day";
+  const tint = rgb(
+    neutral ? (day ? "#b4def9" : "#d8e2f0") : vividAccent(color),
+  );
   const radius = size * 0.47;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -56,19 +61,42 @@ export function renderSoapFilm(
       // Decorative bubbles keep the lighter film; both share the same reflections.
       const focused = revealed && emphasized && !neutral;
       const washAlpha =
-        (neutral ? 0.012 : focused ? 0.7 : revealed ? 0.38 : 0.16) *
+        (neutral
+          ? day
+            ? 0.1
+            : 0.012
+          : focused
+            ? day
+              ? 0.64
+              : 0.7
+            : revealed
+              ? 0.38
+              : day
+                ? 0.26
+                : 0.16) *
         (focused ? 0.8 + 0.2 * rr : revealed ? 0.5 + 0.5 * rr : 0.2 + 0.8 * rr);
       const specularAlpha = clamp(windowLight * 0.84 + windowBloom * 0.1);
       // Composite in premultiplied form, preserving real transparency in the PNG.
       let alpha = washAlpha;
       const channels = tint.map((channel) => channel * washAlpha);
-      const edgeColors = [181, 209, 228].map(
+      const edgeColors = (day ? [140, 179, 211] : [181, 209, 228]).map(
         (channel, c) =>
-          channel * (0.35 + 0.65 * interference[c]) + tint[c] * 0.14,
+          day
+            ? channel * (0.7 + 0.3 * interference[c]) + tint[c] * 0.12
+            : channel * (0.35 + 0.65 * interference[c]) + tint[c] * 0.14,
       );
       for (let c = 0; c < 3; c++)
         channels[c] = channels[c] * (1 - filmAlpha) + edgeColors[c] * filmAlpha;
       alpha = alpha * (1 - filmAlpha) + filmAlpha;
+      // Broad daylight fills the upper interior softly, beneath the same key light.
+      if (day) {
+        const skyReflection = 0.1 * (1 - rr) * clamp(0.6 - ny);
+        for (let c = 0; c < 3; c++)
+          channels[c] =
+            channels[c] * (1 - skyReflection) +
+            [233, 247, 255][c] * skyReflection;
+        alpha = alpha * (1 - skyReflection) + skyReflection;
+      }
       const reflectedWhite = [247, 250, 255];
       for (let c = 0; c < 3; c++)
         channels[c] =
@@ -90,8 +118,9 @@ export function soapFilmImage(
   neutral = false,
   revealed = false,
   emphasized = revealed,
+  appearance: Appearance = "night",
 ) {
-  const key = `${color.toLowerCase()}:${neutral}:${revealed}:${emphasized}`;
+  const key = `${color.toLowerCase()}:${neutral}:${revealed}:${emphasized}:${appearance}`;
   const cached = films.get(key);
   if (cached) {
     films.delete(key);
@@ -107,7 +136,9 @@ export function soapFilmImage(
     return `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100"><circle r="47" fill="#b8cbe4" fill-opacity=".08" stroke="#cdddf0" stroke-opacity=".3" stroke-width=".5"/><path d="M-37-18A41 41 0 0 1-11-39" fill="none" stroke="white" stroke-opacity=".6" stroke-width="1" stroke-linecap="round"/></svg>')}`;
   }
   const data = context.createImageData(size, size);
-  data.data.set(renderSoapFilm(size, color, neutral, revealed, emphasized));
+  data.data.set(
+    renderSoapFilm(size, color, neutral, revealed, emphasized, appearance),
+  );
   context.putImageData(data, 0, 0);
   const url = canvas.toDataURL("image/png");
   canvas.width = canvas.height = 0;

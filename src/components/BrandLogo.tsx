@@ -7,9 +7,24 @@ export function BrandLogo({
   variant = "bubble",
 }: {
   className?: string;
-  variant?: "bubble" | "white";
+  variant?: "bubble" | "white" | "day";
 }) {
   const id = `brand-${useId().replace(/:/g, "")}`;
+  if (variant === "day")
+    return (
+      <span
+        className={`brand-logo brand-logo-day ${className}`}
+        role="img"
+        aria-label="PicPa"
+      >
+        <span
+          style={{
+            maskImage: `url("${EXPORT_BRAND_LOGO.url}")`,
+            WebkitMaskImage: `url("${EXPORT_BRAND_LOGO.url}")`,
+          }}
+        />
+      </span>
+    );
   if (variant === "white")
     return (
       <img
