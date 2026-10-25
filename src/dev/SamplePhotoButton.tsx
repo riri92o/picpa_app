@@ -24,7 +24,7 @@ export function SamplePhotoButton() {
         }}
       >
         <ImagePlus size={16} />
-        {busy ? "追加中…" : "サンプル"}
+        {busy ? "追加中…" : "サンプル追加"}
       </button>
       <p className="sr-only">ペールグリーンの写真で空き枠を埋めます</p>
     </div>

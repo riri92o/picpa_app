@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import { LiquidColorScene } from "../components/LiquidColorScene";
 import type { ColorRitual } from "../ui/useColorRitual";
-import { LIQUID_MOTION } from "../constants/liquidMotion";
-import { BUBBLE_MOTION } from "../constants/config";
+import { HOME_MOTION, LIQUID_MOTION } from "../constants/liquidMotion";
 import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
@@ -73,6 +72,19 @@ export function Home({
   const fileRef = useRef<HTMLInputElement>(null);
   const [pickerMode, setPickerMode] = useState<"camera" | "library">("library");
   const randomChallenge = isRandomChallenge(today, settings);
+  const expanded = !today.colorId || ritual.busy;
+  const [workVisible, setWorkVisible] = useState(!!today.colorId);
+  useEffect(() => {
+    if (expanded) {
+      setWorkVisible(false);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setWorkVisible(true),
+      ritual.reduced ? 0 : HOME_MOTION.dock,
+    );
+    return () => window.clearTimeout(timer);
+  }, [expanded, ritual.reduced]);
   const color = colorById(today.colorId);
   const placement = today.photos.find((p) => p.id === editing);
   const openSource = (id?: string) => {
@@ -115,6 +127,7 @@ export function Home({
     <main
       ref={screenRef}
       className={`screen home-screen ${today.completedAt ? "completed-home" : ""}`}
+      data-stage={expanded ? "draw" : "collect"}
       aria-busy={ritual.busy}
     >
       <LiquidColorScene
@@ -122,6 +135,7 @@ export function Home({
         systemInset={systemInset}
         screenRef={screenRef}
         bubbleRef={bubbleRef}
+        expanded={expanded}
       />
       <section className="color-section">
         <button
@@ -141,120 +155,131 @@ export function Home({
             <span className="bubble-question">?</span>
           )}
         </button>
-        <AnimatePresence mode="wait">
-          <motion.div
-            className="color-copy"
-            role="status"
-            aria-live="polite"
-            key={ritual.busy ? "mixing" : (today.colorId ?? "undrawn")}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={ritual.reduced ? { duration: 0 } : BUBBLE_MOTION}
-          >
-            <h2 aria-hidden={!today.colorId || ritual.busy}>
-              {!ritual.busy && today.colorId ? color.name : ""}
-            </h2>
-            {!ritual.busy && today.colorId && <ColorHintButton color={color} />}
-          </motion.div>
-        </AnimatePresence>
+        <div
+          className={expanded ? "draw-copy" : "color-copy"}
+          role="status"
+          aria-live="polite"
+        >
+          {ritual.visibleColorId ? (
+            <>
+              <span className="daily-color-label">今日の色</span>
+              <h2>{color.name}</h2>
+            </>
+          ) : ritual.busy ? (
+            <span className="sr-only">今日の色を混ぜています</span>
+          ) : (
+            <p>タップして今日の色を引く</p>
+          )}
+        </div>
+        {!expanded && <ColorHintButton color={color} />}
       </section>
-      <section className="work-section" inert={ritual.busy}>
-        <div className="section-line">
-          <div>
-            {randomChallenge && today.colorId && (
-              <span className="helper-line">ランダム</span>
-            )}
-          </div>
-          <span className="progress-pill">
-            <Images size={14} />
-            {today.photos.length} / {today.count}
-          </span>
-        </div>
-        {randomChallenge ? (
-          <div className="challenge-count" aria-label="チャレンジの枚数">
-            {today.colorId ? `${today.count}枚` : "枚数は色を引いて決定"}
-          </div>
-        ) : (
-          <div className="count-selector" role="group" aria-label="写真の枚数">
-            <motion.span
-              aria-hidden="true"
-              className="liquid-selection"
-              animate={{
-                left: `calc(3px + ${([4, 6, 9].indexOf(today.count) * 100) / 3}% - ${[4, 6, 9].indexOf(today.count) / 3}px)`,
-              }}
-              transition={{
-                duration: ritual.reduced ? 0 : LIQUID_MOTION.selector,
-                ease: LIQUID_MOTION.ease,
-              }}
-            />
-            {([4, 6, 9] as GridCount[]).map((count) => (
-              <button
-                key={count}
-                className={today.count === count ? "selected" : ""}
-                onClick={() => chooseCount(count)}
-                disabled={!!today.completedAt || randomChallenge}
-                aria-pressed={today.count === count}
+      {!expanded && (
+        <motion.section
+          className="work-section"
+          inert={!workVisible}
+          aria-hidden={!workVisible}
+          initial={false}
+          animate={{ opacity: workVisible ? 1 : 0, y: workVisible ? 0 : 10 }}
+          transition={{ duration: ritual.reduced ? 0 : 0.3 }}
+        >
+          <div className="home-toolbar">
+            {randomChallenge ? (
+              <div className="challenge-count" aria-label="チャレンジの枚数">
+                <span>ランダム</span> {today.count}枚
+              </div>
+            ) : (
+              <div
+                className="count-selector"
+                role="group"
+                aria-label="写真の枚数"
               >
-                {count}
-                <span>枚</span>
-              </button>
-            ))}
+                <motion.span
+                  aria-hidden="true"
+                  className="liquid-selection"
+                  animate={{
+                    left: `calc(${([4, 6, 9].indexOf(today.count) * 100) / 3}% + ${3 - [4, 6, 9].indexOf(today.count) * 2}px)`,
+                  }}
+                  transition={{
+                    duration: ritual.reduced ? 0 : LIQUID_MOTION.selector,
+                    ease: LIQUID_MOTION.ease,
+                  }}
+                />
+                {([4, 6, 9] as GridCount[]).map((count) => (
+                  <button
+                    key={count}
+                    className={today.count === count ? "selected" : ""}
+                    onClick={() => chooseCount(count)}
+                    disabled={!!today.completedAt || randomChallenge}
+                    aria-pressed={today.count === count}
+                  >
+                    {count}
+                    <span>枚</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <SpacingSelector value={today.spacing} onChange={setSpacing} />
+            <span
+              className="progress-pill"
+              aria-label={`写真${today.count}枚中${today.photos.length}枚`}
+            >
+              <Images size={14} />
+              {today.photos.length} / {today.count}
+            </span>
           </div>
-        )}
-        <div className="home-tools">
-          <SpacingSelector value={today.spacing} onChange={setSpacing} />
-          <SamplePhotoButton />
-        </div>
-        {today.completedAt ? (
-          <HomeArtwork
-            day={today}
-            logo={settings.exportLogo}
-            getImageBlob={getImageBlob}
-          />
-        ) : (
-          <CollageStage
-            count={today.count}
-            spacing={today.spacing}
-            inactive={!today.colorId}
-          >
-            <CollageGrid
+          {today.completedAt ? (
+            <HomeArtwork
+              day={today}
+              logo={settings.exportLogo}
+              getImageBlob={getImageBlob}
+            />
+          ) : (
+            <CollageStage
               count={today.count}
               spacing={today.spacing}
-              photos={today.photos}
-              images={images}
-              locked={!today.colorId}
-              onAdd={() => openSource()}
-              onEdit={setEditing}
-              onReorder={reorderPhotos}
-            />
-          </CollageStage>
-        )}
-        {today.completedAt && (
-          <div className="home-score">
-            <ColorMatchBadge day={today} compact />
-          </div>
-        )}
-        {today.colorId && !today.completedAt && (
-          <p className="grid-hint">長押しで並べ替え · タップで編集</p>
-        )}
-        <button
-          className="primary-button complete-button"
-          disabled={
-            !today.colorId ||
-            !!today.completedAt ||
-            today.photos.length !== today.count
-          }
-          onClick={() => {
-            setPreviewReady(false);
-            setMemoDraft(today.memo ?? "");
-            setConfirm(true);
-          }}
-        >
-          {today.completedAt ? "完成済み" : "完成"}{" "}
-          {today.completedAt ? <Check size={20} /> : <ArrowRight size={20} />}
-        </button>
-      </section>
+              inactive={!today.colorId}
+            >
+              <CollageGrid
+                count={today.count}
+                spacing={today.spacing}
+                photos={today.photos}
+                images={images}
+                locked={!today.colorId}
+                onAdd={() => openSource()}
+                onEdit={setEditing}
+                onReorder={reorderPhotos}
+              />
+            </CollageStage>
+          )}
+          {today.completedAt && (
+            <div className="home-score">
+              <ColorMatchBadge day={today} compact />
+            </div>
+          )}
+          {today.colorId && !today.completedAt && (
+            <div className="home-grid-tools">
+              <p className="grid-hint">長押しで並べ替え · タップで編集</p>
+              <SamplePhotoButton />
+            </div>
+          )}
+          <button
+            className="primary-button complete-button"
+            disabled={
+              !today.colorId ||
+              !!today.completedAt ||
+              today.photos.length !== today.count
+            }
+            onClick={() => {
+              setPreviewReady(false);
+              setMemoDraft(today.memo ?? "");
+              setConfirm(true);
+            }}
+          >
+            {today.completedAt ? "完成済み" : "完成する"}{" "}
+            {today.completedAt ? <Check size={20} /> : <ArrowRight size={20} />}
+          </button>
+        </motion.section>
+      )}
       <input
         ref={fileRef}
         className="hidden-input"

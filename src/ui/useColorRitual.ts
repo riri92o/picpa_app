@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { LIQUID_MOTION } from "../constants/liquidMotion";
+import { HOME_MOTION, LIQUID_MOTION } from "../constants/liquidMotion";
 import type { DayRecord } from "../domain/types";
 
-export type RitualPhase = "idle" | "gather" | "swirl" | "settle";
+export type RitualPhase = "idle" | "gather" | "swirl" | "settle" | "reveal";
 interface RitualSession {
   date: string;
   colorId: string;
@@ -63,17 +63,19 @@ export function useColorRitual(today: DayRecord, draw: () => DayRecord) {
     const { gather, swirl, settle } = LIQUID_MOTION;
     at(gather, "swirl");
     at(gather + swirl, "settle");
-    timers.current.push(
-      window.setTimeout(
-        () => {
-          cancel();
-          setSession(null);
-        },
-        gather + swirl + settle,
-      ),
-    );
+    at(gather + swirl + settle, "reveal");
   }, [today.colorId, draw, reduced, cancel]);
   const active = session?.date === today.date ? session : null;
+  useEffect(() => {
+    if (active?.phase !== "reveal") return;
+    // Start the hold after the result has committed, even on a busy device.
+    const timer = window.setTimeout(() => {
+      cancel();
+      setSession(null);
+    }, HOME_MOTION.reveal);
+    timers.current.push(timer);
+    return () => window.clearTimeout(timer);
+  }, [active?.phase, active?.date, cancel]);
   return {
     start,
     reduced,
@@ -81,7 +83,8 @@ export function useColorRitual(today: DayRecord, draw: () => DayRecord) {
     phase: active?.phase ?? ("idle" as RitualPhase),
     startedAt: active?.startedAt ?? 0,
     resultId: active?.colorId ?? today.colorId,
-    visibleColorId: active ? undefined : today.colorId,
+    visibleColorId:
+      active && active.phase !== "reveal" ? undefined : today.colorId,
   };
 }
 export type ColorRitual = ReturnType<typeof useColorRitual>;

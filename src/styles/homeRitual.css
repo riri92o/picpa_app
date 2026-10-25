@@ -1,0 +1,274 @@
+/* Home's draw and collection states share one bubble, moving only after mixing. */
+.app-shell:has(.home-screen)::before {
+  background:
+    radial-gradient(ellipse at 45% 43%, #2a467525, transparent 52%),
+    linear-gradient(
+      165deg,
+      var(--sky-page),
+      color-mix(in srgb, var(--sky-page) 88%, #1c4164) 70%,
+      color-mix(in srgb, var(--sky-bottom) 35%, var(--sky-page))
+    );
+}
+.app-shell:has(.home-screen) .sky-haze {
+  opacity: 0.16;
+}
+.app-shell:has(.home-screen) .sky-bokeh {
+  opacity: 0.12;
+}
+.app-shell:has(.home-screen) .sky-bubble-speck {
+  opacity: 0.28 !important;
+}
+.home-screen {
+  --draw-bubble-size: clamp(140px, 44vw, 184px);
+  padding: calc(var(--safe-top) + 20px) 18px calc(var(--nav-space) + 18px);
+  gap: 12px;
+}
+.home-screen .color-section {
+  height: 76px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 44px;
+  gap: 12px;
+  align-items: center;
+}
+.home-screen .color-bubble {
+  width: 64px;
+  height: 64px;
+  transition: none;
+}
+.home-screen .color-copy {
+  min-width: 0;
+  display: block;
+  padding: 0;
+  text-align: left;
+}
+.daily-color-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 3px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.home-screen .color-copy h2 {
+  font-size: clamp(16px, 4.6vw, 21px);
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.home-screen .color-hint-button {
+  width: 44px;
+  height: 44px;
+  background: #ffffff05;
+}
+.home-screen[data-stage="draw"] .color-section {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  place-items: center;
+  gap: 0;
+}
+.home-screen[data-stage="draw"] .color-bubble {
+  width: var(--draw-bubble-size);
+  height: var(--draw-bubble-size);
+}
+.home-screen .bubble-question {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: calc(var(--draw-bubble-size) * 0.47);
+  font-weight: 400;
+  line-height: 1;
+  color: #f1f4ff;
+}
+.draw-copy {
+  position: absolute;
+  top: calc(50% + var(--draw-bubble-size) * 1.03);
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--text);
+}
+.draw-copy p {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.025em;
+}
+.draw-copy h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.5;
+}
+.home-screen .work-section,
+.completed-home.home-screen .work-section {
+  grid-template-areas: "toolbar" "collage" "hint" "finish";
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 44px minmax(0, 1fr) 32px 48px;
+  gap: 10px;
+}
+.completed-home.home-screen .work-section {
+  grid-template-rows: 44px minmax(0, 1fr) 32px 48px;
+}
+.home-toolbar {
+  grid-area: toolbar;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 94px 46px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.home-toolbar .count-selector,
+.home-toolbar .challenge-count {
+  grid-area: auto;
+  height: 44px;
+  min-width: 0;
+}
+.home-toolbar .count-selector {
+  gap: 0;
+}
+.home-toolbar .count-selector button {
+  padding: 0 2px;
+  font-size: 14px;
+  font-weight: 550;
+}
+.home-toolbar .count-selector button span {
+  font-size: 10px;
+  margin-left: 2px;
+}
+.home-toolbar .liquid-selection {
+  width: calc((100% - 6px) / 3);
+  box-shadow: inset 0 0 0 1px #ffffff55;
+}
+.home-toolbar .spacing-selector.spacing-pictograms {
+  height: 44px;
+  padding: 2px;
+}
+.home-toolbar .spacing-pictograms button {
+  width: 44px;
+  min-height: 38px;
+}
+.home-toolbar .spacing-pictograms svg {
+  width: 27px;
+  height: 25px;
+}
+.home-toolbar .progress-pill {
+  padding: 0;
+  gap: 4px;
+  justify-content: end;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.home-toolbar .progress-pill svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+.home-toolbar .challenge-count {
+  gap: 8px;
+  font-size: 15px;
+}
+.home-toolbar .challenge-count span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.home-screen .collage-frame {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+.home-screen .collage-grid.spacing-separated {
+  background: transparent;
+}
+.home-screen .spacing-separated .empty-tile,
+.home-screen .spacing-joined .empty-tile {
+  background: #c9d7ef06;
+  border: 1px dashed #b7c6e144;
+  color: #a7b6d2;
+}
+.home-grid-tools {
+  grid-area: hint;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.home-grid-tools .sample-tools {
+  flex: none;
+}
+.home-grid-tools .grid-hint {
+  text-align: left;
+}
+.home-screen .grid-hint {
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+.home-screen .complete-button {
+  min-height: 48px;
+  font-weight: 600;
+  font-size: 16px;
+}
+.home-screen .complete-button:disabled {
+  background: #c2cfea30;
+  color: #b7c0d3b3;
+  border: 1px solid #d8e6ff15;
+  box-shadow: none;
+}
+@media (max-width: 350px) {
+  .home-screen {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .home-toolbar {
+    gap: 5px;
+    grid-template-columns: minmax(0, 1fr) 90px 43px;
+  }
+  .home-toolbar .spacing-pictograms button {
+    width: 42px;
+  }
+  .home-toolbar .count-selector button {
+    font-size: 12px;
+  }
+  .home-screen .color-section {
+    grid-template-columns: 56px minmax(0, 1fr) 44px;
+    gap: 9px;
+  }
+  .home-screen .color-bubble {
+    width: 56px;
+    height: 56px;
+  }
+}
+@media (max-height: 680px) {
+  .home-screen {
+    padding-top: calc(var(--safe-top) + 12px);
+    padding-bottom: calc(var(--nav-space) + 12px);
+    gap: 8px;
+  }
+  .home-screen .color-section {
+    height: 62px;
+  }
+  .home-screen .work-section,
+  .completed-home.home-screen .work-section {
+    gap: 7px;
+  }
+  .draw-copy p {
+    font-size: 12px;
+  }
+}
+@media (max-height: 480px) {
+  .home-screen[data-stage="collect"] {
+    height: auto;
+    min-height: 600px;
+  }
+  .home-screen[data-stage="draw"] {
+    --draw-bubble-size: 104px;
+    min-height: 380px;
+  }
+  .draw-copy {
+    top: calc(50% + var(--draw-bubble-size) * 0.96);
+  }
+}

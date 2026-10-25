@@ -1,7 +1,8 @@
 import type { CollageSpacing, GridCount } from "./types";
 
 export const COLLAGE_EDGE = 16;
-export const COLLAGE_GAP = 7;
+// Still visible when the full collage is fitted to a small mobile screen.
+export const COLLAGE_GAP = 28;
 
 export function gridDimensions(count: GridCount): [number, number] {
   return count === 9 ? [3, 3] : count === 4 ? [2, 2] : [2, 3];

@@ -4,7 +4,7 @@ import {
   DEFAULT_ARTWORK_STYLE,
   BUBBLE_FRAME,
 } from "../constants/artwork";
-import { collageLayout } from "./collageLayout";
+import { COLLAGE_GAP, collageLayout } from "./collageLayout";
 import type {
   ArtworkStyle,
   CollageSpacing,
@@ -53,11 +53,7 @@ export function artworkLayout(
           : 0
       : palette
         ? 44
-        : plain
-          ? 12
-          : bubble
-            ? 24
-            : 20;
+        : COLLAGE_GAP;
   const cellWidth = (ARTWORK_WIDTH - pad * 2 - gap * (columns - 1)) / columns;
   const cellHeight = bubble
     ? cellWidth

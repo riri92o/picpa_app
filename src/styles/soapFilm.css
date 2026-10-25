@@ -1,0 +1,11 @@
+/* Use the same reflected environment for background, navigation and completion. */
+.app-shell .sky-bubble,
+.app-shell .nav-bubble,
+.app-shell .finish-bubble {
+  background: var(--soap-film-image) center / 100% 100% no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+.app-shell[data-color] .nav-bubble {
+  box-shadow: none;
+}

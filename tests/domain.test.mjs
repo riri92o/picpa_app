@@ -260,6 +260,76 @@ console.log(
   "38 daily colors: light/dark contrast, pastel lightness, bubble shading, neutral undrawn film, red/green/blue scenes: OK",
 );
 
+const { renderSoapFilm } = load("src/ui/soapFilm.ts");
+const filmSize = 64;
+const filmPixel = (pixels, nx, ny) => {
+  const x = Math.floor(filmSize / 2 + nx * filmSize * 0.47);
+  const y = Math.floor(filmSize / 2 + ny * filmSize * 0.47);
+  return Array.from(
+    pixels.slice((y * filmSize + x) * 4, (y * filmSize + x) * 4 + 4),
+  );
+};
+const clearFilm = renderSoapFilm(filmSize, "#bdc1c5", true);
+assert.equal(clearFilm[3], 0, "The material must preserve transparent corners");
+assert.ok(
+  filmPixel(clearFilm, 0, 0)[3] < 20,
+  "Air at the center must stay transparent, not become an opaque marble",
+);
+assert.ok(
+  filmPixel(clearFilm, -0.5, -0.58)[3] >
+    filmPixel(clearFilm, 0.5, 0.58)[3] + 100,
+  "One shared upper-left light, without an equally bright opposing sticker",
+);
+assert.deepEqual(
+  clearFilm,
+  renderSoapFilm(filmSize, "#ff0000", true),
+  "Undrawn film must not leak the chosen hue",
+);
+for (const color of PALETTE) {
+  const film = renderSoapFilm(filmSize, color.hex, false, true);
+  assert.equal(film.length, filmSize * filmSize * 4);
+  assert.equal(film[3], 0);
+  assert.ok(
+    filmPixel(film, 0, 0)[3] >= 140 && filmPixel(film, 0, 0)[3] < 180,
+    `${color.id}: selected hue stays visible while the film remains translucent`,
+  );
+  const ambient = renderSoapFilm(filmSize, color.hex, false, true, false);
+  assert.ok(
+    filmPixel(ambient, 0, 0)[3] < 60,
+    `${color.id}: decorative bubbles keep their lighter material`,
+  );
+  const selectedCenter = filmPixel(film, 0, 0);
+  const ambientCenter = filmPixel(ambient, 0, 0);
+  const background = [16, 23, 47];
+  const composite = (pixel) =>
+    background.map(
+      (channel, c) =>
+        channel * (1 - pixel[3] / 255) + (pixel[c] * pixel[3]) / 255,
+    );
+  const selectedRgb = composite(selectedCenter);
+  const ambientRgb = composite(ambientCenter);
+  const target = [1, 3, 5].map((i) =>
+    parseInt(vividAccent(color.hex).slice(i, i + 2), 16),
+  );
+  const distance = (value) =>
+    Math.hypot(...value.map((channel, c) => channel - target[c]));
+  assert.ok(
+    distance(selectedRgb) < distance(ambientRgb) * 0.65,
+    `${color.id}: selected bubble must more clearly represent the chosen color over navy`,
+  );
+  assert.ok(
+    filmPixel(film, -0.5, -0.58)[3] > 100,
+    `${color.id}: preserve the common reflection`,
+  );
+}
+assert.notDeepEqual(
+  filmPixel(renderSoapFilm(filmSize, "#A9D8AE", false, true), 0, 0),
+  filmPixel(renderSoapFilm(filmSize, "#e0757e", false, true), 0, 0),
+);
+console.log(
+  "Soap film: transparent air/corners, coherent light direction, neutral state and all 38 daily tints: OK",
+);
+
 const { hasSystemStatusBarInset, floatingBubblePosition } =
   load("src/ui/viewport.ts");
 const iosViewport = {
@@ -295,6 +365,34 @@ for (const height of [568, 812, 844]) {
 }
 console.log(
   "iOS native status-bar detection, browser/zoom exclusions and complete bubble contours: OK",
+);
+
+const { drawBubbleOrigins } = load("src/ui/viewport.ts");
+for (const [width, height, size] of [
+  [320, 568, 140],
+  [390, 844, 172],
+  [460, 932, 184],
+]) {
+  const origins = drawBubbleOrigins(
+    { width, height, x: width / 2, y: height * 0.45, size },
+    true,
+  );
+  assert.equal(
+    origins.length,
+    FLOATING_BUBBLES.length,
+    "Keep all spring-linked mixing sources",
+  );
+  assert.equal(origins.filter((origin) => origin.color).length, 5);
+  origins.forEach((origin, i) => {
+    assert.ok(origin.x - origin.r >= 0 && origin.x + origin.r <= width);
+    assert.ok(
+      origin.y - origin.r * 1.12 - Math.abs(FLOATING_BUBBLES[i].dy) >= 12,
+    );
+    assert.ok(origin.y + origin.r <= height);
+  });
+}
+console.log(
+  "Draw companions: ten shared sources, five colors, mobile bounds and iOS top clearance: OK",
 );
 
 const { fluidHandoff, fluidFilmOpacity } = load("src/ui/fluidSurface.ts");
@@ -366,6 +464,30 @@ console.log(
   "Translucent fluid pixels, visible rims and complementary SVG/canvas handoffs: OK",
 );
 
+const companionBox = { width: 96, height: 180, x: 48, y: 81, size: 40 };
+createFluidMix(filmCanvas, companionBox, "#A9D8AE", "pale-green")(200);
+const legacySources = new Uint8ClampedArray(fluidPixels);
+const drawCompanions = createFluidMix(
+  filmCanvas,
+  companionBox,
+  "#A9D8AE",
+  "pale-green",
+  false,
+  drawBubbleOrigins(companionBox),
+);
+drawCompanions(200);
+assert.notDeepEqual(
+  fluidPixels,
+  legacySources,
+  "Canvas must gather from the new visible companions, not legacy edge positions",
+);
+assert.ok(fluidPixels.some((value, i) => i % 4 === 3 && value > 0));
+drawCompanions(ritualDuration);
+assert.ok(fluidPixels.every((value, i) => i % 4 !== 3 || value === 0));
+console.log(
+  "Companion source colors/geometry reach the actual canvas and hand back cleanly: OK",
+);
+
 const { collageBrandHeader } = load("src/domain/branding.ts");
 const { gridDimensions } = load("src/domain/image.ts");
 const { collageLayout } = load("src/domain/collageLayout.ts");
@@ -373,7 +495,7 @@ for (const count of [4, 6, 9]) {
   const [columns, rows] = gridDimensions(count);
   const cellWidth = count === 9 ? 340 : 510;
   const cellHeight = count === 9 ? 340 : count === 4 ? 455 : 408;
-  for (const gap of [0, 7]) {
+  for (const gap of [0, 28]) {
     const width = columns * cellWidth + (columns - 1) * gap;
     const height = rows * cellHeight + (rows - 1) * gap;
     const layout = collageLayout(count, gap ? "separated" : "joined");
@@ -451,6 +573,16 @@ for (const { id } of ARTWORK_STYLES) {
       const layout = artworkLayout(count, spacing, id);
       assert.equal(layout.slots.length, count);
       assert.equal(layout.width, 1200);
+      if (spacing === "separated") {
+        assert.ok(
+          (layout.gap / layout.width) * 288 >= 6,
+          "Separated photos remain visibly apart on a small mobile screen",
+        );
+        assert.ok(
+          layout.gap - artworkLayout(count, "joined", id).gap >= 20,
+          "The spacing control must visibly change the finished artwork",
+        );
+      }
       assert.ok(layout.height < 1900);
       const source = collageLayout(count, spacing);
       layout.slots.forEach((slot, i) => {

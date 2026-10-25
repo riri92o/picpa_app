@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BottomNav, type Tab } from "./components/BottomNav";
 import { Tutorial } from "./components/Tutorial";
@@ -12,6 +18,7 @@ import { useColorRitual } from "./ui/useColorRitual";
 import { useViewportGuard } from "./ui/useViewportGuard";
 import { accentTokens } from "./ui/theme";
 import { OpeningScreen } from "./components/OpeningScreen";
+import { soapFilmImage } from "./ui/soapFilm";
 
 export default function App() {
   const { ready, error, clearError, today, settings, drawToday } = useApp();
@@ -28,6 +35,11 @@ export default function App() {
   const themeAccent = revealScene
     ? colorById(ritual.visibleColorId ?? ritual.resultId).hex
     : "#bdc1c5";
+  const filmImage = useMemo(
+    () =>
+      `url("${soapFilmImage(themeAccent, !revealScene, revealScene, false)}")`,
+    [themeAccent, revealScene],
+  );
   const dark =
     settings.theme === "dark" || (settings.theme === "system" && systemDark);
   const tokens = accentTokens(themeAccent, revealScene, dark);
@@ -58,6 +70,7 @@ export default function App() {
             {
               ...tokens,
               "--tint": ritual.visibleColorId ? color.tint : "#f4f6f5",
+              "--soap-film-image": filmImage,
             } as CSSProperties
           }
         >

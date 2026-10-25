@@ -1,7 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
-  useId,
+  useMemo,
   useRef,
   useState,
   type RefObject,
@@ -12,12 +12,13 @@ import { colorById } from "../constants/palette";
 import {
   FLOATING_BUBBLES,
   FLUID_SURFACE,
+  HOME_MOTION,
   LIQUID_MOTION,
 } from "../constants/liquidMotion";
-import { BubbleSurface } from "./BubbleSurface";
+import { SoapBubbleSurface } from "./SoapBubbleSurface";
 import { createFluidMix, type FluidBox } from "../ui/fluidMix";
 import { fluidHandoff } from "../ui/fluidSurface";
-import { floatingBubblePosition } from "../ui/viewport";
+import { drawBubbleOrigins, type BubbleOrigin } from "../ui/viewport";
 import type { ColorRitual } from "../ui/useColorRitual";
 
 function FluidLayer({
@@ -27,6 +28,7 @@ function FluidLayer({
   startedAt,
   systemInset,
   mainOpacity,
+  origins,
 }: {
   box: FluidBox;
   result: string;
@@ -34,6 +36,7 @@ function FluidLayer({
   startedAt: number;
   systemInset: boolean;
   mainOpacity: MotionValue<number>;
+  origins: BubbleOrigin[];
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -44,6 +47,7 @@ function FluidLayer({
       result,
       colorId,
       systemInset,
+      origins,
     );
     let frame = 0;
     const tick = (now: number) => {
@@ -54,7 +58,7 @@ function FluidLayer({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [box, result, colorId, startedAt, systemInset, mainOpacity]);
+  }, [box, result, colorId, startedAt, systemInset, mainOpacity, origins]);
   return (
     <canvas ref={canvas} className="liquid-color-scene" aria-hidden="true" />
   );
@@ -65,9 +69,11 @@ export function LiquidColorScene({
   screenRef,
   bubbleRef,
   systemInset,
+  expanded,
 }: {
   ritual: ColorRitual;
   systemInset: boolean;
+  expanded: boolean;
   screenRef: RefObject<HTMLElement | null>;
   bubbleRef: RefObject<HTMLButtonElement | null>;
 }) {
@@ -76,15 +82,8 @@ export function LiquidColorScene({
     setHost(document.getElementById("color-scene-root"));
   }, []);
   const sceneRef = useRef<HTMLDivElement>(null);
-  const materialId = useId().replace(/:/g, "");
-  const [box, setBox] = useState<FluidBox>({
-    width: 390,
-    height: 844,
-    x: 195,
-    y: 100,
-    size: 98,
-  });
-  useEffect(() => {
+  const [box, setBox] = useState<FluidBox | null>(null);
+  useLayoutEffect(() => {
     const screen = screenRef.current,
       bubble = bubbleRef.current,
       scene = sceneRef.current;
@@ -100,6 +99,7 @@ export function LiquidColorScene({
         size: b.width,
       };
       setBox((prev) =>
+        prev &&
         Object.keys(next).every(
           (key) => prev[key as keyof FluidBox] === next[key as keyof FluidBox],
         )
@@ -112,8 +112,7 @@ export function LiquidColorScene({
     observer.observe(screen);
     observer.observe(scene);
     observer.observe(bubble);
-    // The screen slides during tab changes while this backdrop stays fixed.
-    // Follow those style updates so the visible surface and its tap target agree.
+    // The screen slides during tab changes while the drawing layer stays fixed.
     const transitionObserver = new MutationObserver(measure);
     if (screen.parentElement)
       transitionObserver.observe(screen.parentElement, {
@@ -128,113 +127,120 @@ export function LiquidColorScene({
       window.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("resize", measure);
     };
-  }, [screenRef, bubbleRef, host]);
+  }, [screenRef, bubbleRef, host, expanded]);
   const { phase, busy, reduced } = ritual;
   const mainOpacity = useMotionValue(1);
   useLayoutEffect(() => {
-    if (!busy || reduced) mainOpacity.set(1);
-  }, [busy, reduced, mainOpacity]);
+    if (!busy || reduced || phase === "reveal") mainOpacity.set(1);
+  }, [busy, reduced, phase, mainOpacity]);
+  const origins = useMemo(
+    () => (box ? drawBubbleOrigins(box, systemInset) : []),
+    [box, systemInset],
+  );
   const result = colorById(ritual.resultId).hex;
   const mainColor =
     ritual.visibleColorId || phase === "settle" ? result : "#bdc1c5";
   const neutral = !ritual.visibleColorId && phase !== "settle";
   if (!host) return null;
   return createPortal(
-    // Draw outside the animated, safe-area-padded screen. The measured layer is
-    // also the canvas coordinate system, so mixing still lands on the button.
     <div ref={sceneRef} className="color-scene-viewport" aria-hidden="true">
-      <svg
-        className="liquid-color-scene"
-        data-phase={phase}
-        viewBox={`0 0 ${box.width} ${box.height}`}
-        aria-hidden="true"
-      >
-        {FLOATING_BUBBLES.map((blob, i) => {
-          const { x, y } = floatingBubblePosition(
-            blob,
-            box.width,
-            box.height,
-            systemInset,
-          );
-          return (
+      {box && (
+        <>
+          <svg
+            className="liquid-color-scene"
+            data-phase={phase}
+            viewBox={`0 0 ${box.width} ${box.height}`}
+            aria-hidden="true"
+          >
+            {origins.map((origin, i) => {
+              const blob = FLOATING_BUBBLES[i];
+              return (
+                <motion.g
+                  key={i}
+                  initial={false}
+                  animate={{ opacity: busy || !expanded ? 0 : 1 }}
+                  transition={{
+                    duration: reduced ? 0 : FLUID_SURFACE.entrance / 1000,
+                  }}
+                >
+                  <motion.g
+                    initial={false}
+                    animate={{
+                      x: reduced
+                        ? origin.x
+                        : [
+                            origin.x,
+                            origin.x + blob.dx,
+                            origin.x - blob.dx * 0.4,
+                            origin.x,
+                          ],
+                      y: reduced
+                        ? origin.y
+                        : [
+                            origin.y,
+                            origin.y + blob.dy,
+                            origin.y - blob.dy * 0.3,
+                            origin.y,
+                          ],
+                      scale: origin.r / 47,
+                      opacity: origin.color ? 0.94 : 0.55,
+                    }}
+                    transition={{
+                      duration: reduced ? 0 : blob.period,
+                      repeat: reduced ? 0 : Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <SoapBubbleSurface
+                      color={origin.color ?? "#bdc1c5"}
+                      neutral={!origin.color}
+                    />
+                  </motion.g>
+                </motion.g>
+              );
+            })}
             <motion.g
-              key={i}
               initial={false}
-              animate={{ opacity: busy ? 0 : 1 }}
+              animate={{ x: box.x, y: box.y, scale: box.size / 100 }}
               transition={{
-                duration: reduced
-                  ? 0
-                  : busy
-                    ? FLUID_SURFACE.entrance / 1000
-                    : LIQUID_MOTION.backgroundReveal,
-                delay:
-                  reduced || busy
-                    ? 0
-                    : (i % 5) * LIQUID_MOTION.backgroundStagger,
-                ease: busy ? FLUID_SURFACE.handoffEase : "easeInOut",
+                duration: reduced || busy ? 0 : HOME_MOTION.dock / 1000,
+                ease: LIQUID_MOTION.ease,
               }}
             >
-              <motion.g
-                initial={false}
-                animate={{
-                  x: reduced ? x : [x, x + blob.dx, x - blob.dx * 0.4, x],
-                  y: reduced ? y : [y, y + blob.dy, y - blob.dy * 0.3, y],
-                  scale: blob.r / 47,
-                  opacity: i < 2 ? 0.46 : 0.7,
-                }}
-                transition={{
-                  duration: reduced ? 0 : blob.period,
-                  repeat: reduced ? 0 : Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <BubbleSurface
-                  id={`${materialId}-ambient-${i}`}
-                  color={mainColor}
-                  neutral={neutral}
-                  reduced={reduced}
-                  period={blob.period * 0.77}
-                />
+              <motion.g style={{ opacity: mainOpacity }}>
+                <motion.g
+                  animate={
+                    reduced
+                      ? { scale: 1, y: 0 }
+                      : { scale: [1, 1.017, 0.993, 1], y: [0, -2, 1, 0] }
+                  }
+                  transition={{
+                    duration: reduced ? 0 : LIQUID_MOTION.breathe,
+                    repeat: reduced ? 0 : Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <SoapBubbleSurface
+                    color={mainColor}
+                    neutral={neutral}
+                    revealed={!neutral}
+                  />
+                </motion.g>
               </motion.g>
             </motion.g>
-          );
-        })}
-        <g transform={`translate(${box.x} ${box.y}) scale(${box.size / 100})`}>
-          <motion.g style={{ opacity: mainOpacity }}>
-            <motion.g
-              animate={
-                reduced
-                  ? { scale: 1, y: 0 }
-                  : {
-                      scale: [1, 1.017, 0.993, 1],
-                      y: [0, -2, 1, 0],
-                    }
-              }
-              transition={{
-                duration: reduced ? 0 : LIQUID_MOTION.breathe,
-                repeat: reduced ? 0 : Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <BubbleSurface
-                id={`${materialId}-main`}
-                color={mainColor}
-                neutral={neutral}
-                reduced={reduced}
-              />
-            </motion.g>
-          </motion.g>
-        </g>
-      </svg>
-      {busy && !reduced && (
-        <FluidLayer
-          box={box}
-          result={result}
-          colorId={colorById(ritual.resultId).id}
-          startedAt={ritual.startedAt}
-          systemInset={systemInset}
-          mainOpacity={mainOpacity}
-        />
+          </svg>
+          {busy && phase !== "reveal" && !reduced && (
+            <FluidLayer
+              box={box}
+              result={result}
+              colorId={colorById(ritual.resultId).id}
+              startedAt={ritual.startedAt}
+              systemInset={systemInset}
+              mainOpacity={mainOpacity}
+              origins={origins}
+            />
+          )}
+        </>
       )}
     </div>,
     host,

@@ -5,7 +5,7 @@ import {
 } from "../constants/liquidMotion";
 
 import { fluidFilmOpacity, fluidHandoff } from "./fluidSurface";
-import { floatingBubblePosition } from "./viewport";
+import { floatingBubblePosition, type BubbleOrigin } from "./viewport";
 import { ingredientForBubble, recipeForColor } from "../constants/mixRecipes";
 import { vividAccent } from "./theme";
 
@@ -50,6 +50,7 @@ export function createFluidMix(
   resultHex: string,
   colorId: string,
   systemInset = false,
+  origins?: BubbleOrigin[],
 ) {
   const scale = Math.min(LIQUID_MOTION.fieldScale, 384 / box.width);
   const width = Math.ceil(box.width * scale),
@@ -78,19 +79,26 @@ export function createFluidMix(
       ) / totalWeight,
   ) as RGB;
   const groups = FLOATING_BUBBLES.map((b, i) => {
-    const start = floatingBubblePosition(b, box.width, box.height, systemInset);
+    const start =
+      origins?.[i] ??
+      floatingBubblePosition(b, box.width, box.height, systemInset);
+    const radius = origins?.[i]?.r ?? b.r;
+    const initialHex = origins?.[i]?.color;
+    const initialColor = initialHex ? rgb(initialHex) : gray;
     return {
       startX: start.x,
       startY: start.y,
       angle: (i % 2) * Math.PI + (Math.floor(i / 2) - 2) * 0.2,
       color: rgb(vividAccent(ingredientForBubble(recipe, i).hex)),
+      initialColor,
+      radius,
       nodes: Array.from({ length: 4 }, (_, j): Node => ({
         x: start.x,
         y: start.y,
         vx: 0,
         vy: 0,
-        radius: b.r * [0.86, 0.52, 0.3, 0.13][j],
-        color: gray,
+        radius: radius * [0.86, 0.52, 0.3, 0.13][j],
+        color: initialColor,
         strength: 0,
       })),
     };
@@ -160,7 +168,7 @@ export function createFluidMix(
         }
       }
       group.nodes.forEach((node, j) => {
-        const base = FLOATING_BUBBLES[i].r * [0.86, 0.52, 0.3, 0.13][j];
+        const base = group.radius * [0.86, 0.52, 0.3, 0.13][j];
         const moving = box.size * [0.18, 0.125, 0.074, 0.031][j];
         const knead =
           1 +
@@ -172,7 +180,7 @@ export function createFluidMix(
         node.strength =
           mix(i < 2 ? 0.46 : 0.7, 1, gatherU) * (1 - smooth(settling));
         node.color = blend(
-          gray,
+          group.initialColor,
           blend(group.color, result, finalMix),
           neutralToColor,
         );

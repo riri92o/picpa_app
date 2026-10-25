@@ -36,10 +36,13 @@ export const LIQUID_MOTION = {
   marksReveal: 0.6,
 };
 
+/** Reveal the result at the mixing location before docking the daily-color header. */
+export const HOME_MOTION = { reveal: 650, dock: 850 } as const;
+
 /** Material and handoff controls; the spring motion and ritual timings stay separate. */
 export const FLUID_SURFACE = {
-  interiorOpacity: 0.68,
-  rimOpacity: 0.93,
+  interiorOpacity: 0.38,
+  rimOpacity: 0.84,
   contourThreshold: 0.92,
   contourFeather: 0.16,
   rimStart: 0.98,
