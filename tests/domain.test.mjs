@@ -688,21 +688,6 @@ console.log(
   "Opening float: gentle continuous drift and visible travel during launch: OK",
 );
 
-const { COLOR_HINTS } = load("src/constants/colorHints.ts");
-assert.deepEqual(
-  Object.keys(COLOR_HINTS).sort(),
-  PALETTE.map((color) => color.id).sort(),
-);
-for (const color of PALETTE) {
-  const hint = COLOR_HINTS[color.id];
-  assert.ok(hint.description.trim(), `Missing color description: ${color.id}`);
-  assert.equal(
-    new Set(hint.examples).size,
-    3,
-    `Need three distinct examples: ${color.id}`,
-  );
-  assert.ok(hint.examples.every((example) => example.trim()));
-}
 const { withArtworkMemo, memoLength, MEMO_MAX_LENGTH } =
   load("src/domain/memo.ts");
 const memoSource = {
@@ -743,5 +728,5 @@ assert.equal(
   "The memo limit must not split emoji surrogate pairs",
 );
 console.log(
-  "38 color hints; legacy, completed, cleared and Unicode memos preserve photos and scores: OK",
+  "Legacy, completed, cleared and Unicode memos preserve photos and scores: OK",
 );

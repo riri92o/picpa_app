@@ -20,7 +20,6 @@ import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
 import { HomeArtwork } from "../components/HomeArtwork";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
-import { ColorHintButton } from "../components/ColorHintButton";
 import { ArtworkMemo } from "../components/ArtworkMemo";
 import { ArtworkMemoField } from "../components/ArtworkMemoField";
 import { MEMO_MAX_LENGTH, memoLength } from "../domain/memo";
@@ -171,7 +170,6 @@ export function Home({
             <p>タップして今日の色を引く</p>
           )}
         </div>
-        {!expanded && <ColorHintButton color={color} />}
       </section>
       {!expanded && (
         <motion.section

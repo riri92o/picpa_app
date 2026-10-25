@@ -27,7 +27,7 @@
   height: 76px;
   padding: 0;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 44px;
+  grid-template-columns: 64px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
 }
@@ -57,11 +57,6 @@
   letter-spacing: 0.015em;
   font-weight: 650;
   overflow-wrap: anywhere;
-}
-.home-screen .color-hint-button {
-  width: 44px;
-  height: 44px;
-  background: #ffffff05;
 }
 .home-screen[data-stage="draw"] .color-section {
   flex: 1;
@@ -234,7 +229,7 @@
     font-size: 12px;
   }
   .home-screen .color-section {
-    grid-template-columns: 56px minmax(0, 1fr) 44px;
+    grid-template-columns: 56px minmax(0, 1fr);
     gap: 9px;
   }
   .home-screen .color-bubble {
