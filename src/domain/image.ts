@@ -36,8 +36,14 @@ async function resize(
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(image.width * ratio);
   canvas.height = Math.round(image.height * ratio);
-  canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
-  return canvasBlob(canvas, "image/jpeg", quality);
+  try {
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("画像を準備できませんでした");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return await canvasBlob(canvas, "image/jpeg", quality);
+  } finally {
+    canvas.width = canvas.height = 0;
+  }
 }
 export async function preparePhoto(file: File): Promise<PhotoAsset> {
   if (!file.type.startsWith("image/"))
@@ -46,8 +52,10 @@ export async function preparePhoto(file: File): Promise<PhotoAsset> {
   try {
     return {
       id: crypto.randomUUID(),
-      full: await resize(image, 1800, 0.88),
-      thumb: await resize(image, 360, 0.78),
+      // Preserve crop resolution; reduce storage through JPEG quality instead.
+      // Applies only at import, never recompressing existing stored photographs.
+      full: await resize(image, 1800, 0.78),
+      thumb: await resize(image, 360, 0.72),
       width: image.width,
       height: image.height,
       createdAt: new Date().toISOString(),
