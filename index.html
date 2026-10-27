@@ -6,7 +6,6 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#a8d6f8" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
@@ -14,16 +13,81 @@
       content="black-translucent"
     />
     <meta name="apple-mobile-web-app-title" content="PicPa" />
+    <meta name="theme-color" content="#0a1126" />
+    <meta name="color-scheme" content="dark" />
+    <script>
+      /* Set a stable night color before CSS/React/IndexedDB load. Old appearance
+       * preferences are intentionally ignored; stored application data is untouched. */
+      (function () {
+        // Keep this color in sync with ui/theme.ts and manifest.webmanifest.
+        var color = "#0a1126";
+        var root = document.documentElement;
+        var ios =
+          /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        var standalone = window.matchMedia("(display-mode: standalone)");
+        function sync(forceMeta) {
+          root.dataset.appearance = "night";
+          root.dataset.iosStandalone = String(
+            ios && (standalone.matches || navigator.standalone === true),
+          );
+          root.style.setProperty("--browser-chrome-color", color);
+          root.style.setProperty("--sky-page", color);
+          root.style.backgroundColor = color;
+          root.style.colorScheme = "dark";
+          if (document.body) document.body.style.backgroundColor = color;
+          var previous = document.querySelector('meta[name="theme-color"]');
+          if (forceMeta || !previous || previous.content !== color) {
+            var meta = document.createElement("meta");
+            meta.name = "theme-color";
+            meta.content = color;
+            if (previous) previous.replaceWith(meta);
+            else document.head.appendChild(meta);
+          }
+        }
+        window.PicPaChrome = Object.freeze({
+          sync: function () {
+            sync(false);
+          },
+        });
+        sync(false);
+        document.addEventListener("DOMContentLoaded", function () {
+          sync(false);
+        });
+        window.addEventListener("pageshow", function () {
+          sync(true);
+        });
+        document.addEventListener("visibilitychange", function () {
+          if (!document.hidden) sync(true);
+        });
+        standalone.addEventListener("change", function () {
+          sync(false);
+        });
+      })();
+    </script>
     <link
       rel="preload"
       as="image"
-      href="%BASE_URL%branding/picpa-white-logo.svg"
+      href="%BASE_URL%branding/picpa-logo-source.png"
     />
     <style>
       html,
       body {
         margin: 0;
-        background: #a8d6f8;
+        background-color: var(--browser-chrome-color, #0a1126);
+        transition: none;
+      }
+      #pwa-status-bar-surface {
+        display: none;
+      }
+      html[data-ios-standalone="true"] #pwa-status-bar-surface {
+        display: block;
+        position: fixed;
+        inset: 0 0 auto;
+        height: max(var(--safe-top, env(safe-area-inset-top, 0px)), 8px);
+        background-color: var(--browser-chrome-color, #0a1126);
+        z-index: 1000;
+        pointer-events: none;
       }
     </style>
     <link
@@ -42,10 +106,14 @@
       href="%BASE_URL%icons/picpa-icon-180.png?v=20261009-bubble"
       sizes="180x180"
     />
-    <link rel="manifest" href="%BASE_URL%manifest.webmanifest?v=20261025-sky" />
+    <link
+      rel="manifest"
+      href="%BASE_URL%manifest.webmanifest?v=20261027-night"
+    />
     <title>PicPa</title>
   </head>
   <body>
+    <div id="pwa-status-bar-surface" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

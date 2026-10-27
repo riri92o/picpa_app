@@ -1,3 +1,5 @@
+/** Keep the initial HTML and manifest chrome colors in sync with this value. */
+export const NIGHT_SKY_COLOR = "#0a1126";
 type RGB = [number, number, number];
 const rgb = (hex: string): RGB =>
   [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as RGB;
@@ -37,34 +39,17 @@ function selectedFill(accent: string, ink: string) {
   return mixHex(accent, "#ffffff", 0.6);
 }
 // Presentation only: the stored daily palette color never changes.
-export function accentTokens(
-  accent: string,
-  revealed = false,
-  darkMode = false,
-) {
+export function accentTokens(accent: string, revealed = false) {
   const dark = "#142039",
     white = "#ffffff";
   const neutral = !revealed;
   const vivid = neutral ? accent : vividAccent(accent);
-  const page = darkMode
-    ? neutral
-      ? "#0a1126"
-      : mixHex("#0a1126", vivid, 0.025)
-    : "#a8d6f8";
-  const surface = darkMode
-    ? neutral
-      ? "#17213a"
-      : mixHex("#152039", vivid, 0.045)
-    : "#f3faff";
-  const bottom = darkMode
-    ? neutral
-      ? "#1d1b32"
-      : mixHex("#131b32", vivid, 0.14)
-    : "#f4fbff";
+  const surface = neutral ? "#17213a" : mixHex("#152039", vivid, 0.045);
+  const bottom = neutral ? "#1d1b32" : mixHex("#131b32", vivid, 0.14);
   const fill = selectedFill(vivid, dark);
   return {
-    "--text": darkMode ? "#f8f4fb" : "#193957",
-    "--muted": darkMode ? "#b7c0d3" : "#38536b",
+    "--text": "#f8f4fb",
+    "--muted": "#b7c0d3",
     "--accent": accent,
     "--accent-soft": fill,
     "--control-highlight": mixHex(fill, white, 0.17),
@@ -75,15 +60,10 @@ export function accentTokens(
     "--scene-vivid": neutral ? "#bdc1c5" : vivid,
     "--scene-shadow": neutral ? "#646e85" : mixHex(vivid, "#0b1025", 0.48),
     "--scene-glow": neutral ? "#c7cfdb" : mixHex(vivid, white, 0.23),
-    "--sky-page": page,
+    "--sky-page": NIGHT_SKY_COLOR,
     "--sky-surface": surface,
     "--sky-bottom": bottom,
-    "--accent-readable-light": readableAccent(accent, "#a8d6f8", dark),
-    "--accent-readable-dark": readableAccent(
-      accent,
-      darkMode ? surface : "#17213a",
-      white,
-    ),
+    "--accent-readable-dark": readableAccent(accent, surface, white),
   };
 }
 

@@ -51,6 +51,7 @@ export interface PhotoSummary {
   thumbBytes: number;
 }
 export interface AppSettings {
+  /** Legacy setting retained for stored-record compatibility; the UI is always night. */
   theme: ThemeChoice;
   randomCount: boolean;
   exportLogo: boolean;

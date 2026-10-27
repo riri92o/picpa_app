@@ -11,7 +11,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--sky-page, #10172f);
+  background: var(--sky-background, #0a1126);
   color: #f8f4fb;
   isolation: isolate;
 }

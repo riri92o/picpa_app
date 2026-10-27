@@ -7,8 +7,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#a8d6f8",
-  "theme_color": "#a8d6f8",
+  "background_color": "#0a1126",
+  "theme_color": "#0a1126",
   "icons": [
     {
       "src": "icons/picpa-icon-192.png?v=20261009-bubble",

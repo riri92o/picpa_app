@@ -5,14 +5,12 @@ import {
   Database,
   Info,
   LockKeyhole,
-  Palette,
   Share2,
   Shuffle,
   Trash2,
 } from "lucide-react";
 import { Modal } from "../components/Modal";
 import { isChallengeLocked, isRandomChallenge } from "../domain/challenge";
-import type { ThemeChoice } from "../domain/types";
 import { useApp } from "../state/AppContext";
 
 export function Settings() {
@@ -34,31 +32,6 @@ export function Settings() {
         <h2>設定</h2>
       </div>
       <div className="settings-list">
-        <section className="settings-card">
-          <div className="settings-title">
-            <Palette size={19} />
-            <h3>外観テーマ</h3>
-          </div>
-          <p className="theme-note">昼の青空・夜の空を切り替えます</p>
-          <div className="theme-selector">
-            {(
-              [
-                ["light", "昼の空"],
-                ["dark", "夜の空"],
-                ["system", "端末に合わせる"],
-              ] as [ThemeChoice, string][]
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                className={settings.theme === value ? "selected" : ""}
-                aria-pressed={settings.theme === value}
-                onClick={() => updateSettings({ theme: value })}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </section>
         <section className="settings-card">
           <div className="settings-row">
             <span className="setting-icon">

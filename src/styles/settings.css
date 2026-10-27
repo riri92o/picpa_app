@@ -23,27 +23,6 @@
   margin: 0;
   letter-spacing: -0.04em;
 }
-.theme-selector {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background: var(--surface-soft);
-  border-radius: 23px 28px 24px 21px;
-  padding: 4px;
-  gap: 3px;
-}
-.theme-selector button {
-  border: 0;
-  border-radius: 21px 24px 20px 23px;
-  padding: 10px 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.theme-selector button.selected {
-  background: var(--accent);
-  color: var(--control-ink);
-}
 .settings-row {
   display: flex;
   align-items: center;

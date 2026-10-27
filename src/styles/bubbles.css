@@ -2,13 +2,27 @@
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --sky-page: #10172f;
-  --sky-surface: #202a43;
-  --sky-bottom: #26223c;
+  --sky-page: #0a1126;
+  --sky-surface: #17213a;
+  --sky-bottom: #1d1b32;
+  --text: #f8f4fb;
+  --muted: #b7c0d3;
+  --scene-vivid: #bdc1c5;
+  --sky-background:
+    radial-gradient(
+      ellipse at 8% 28%,
+      color-mix(in srgb, var(--scene-vivid) 8%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 95% 100%,
+      color-mix(in srgb, var(--scene-vivid) 28%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(172deg, var(--sky-page) 20%, var(--sky-bottom));
   background: var(--sky-page);
   color: #f8f4fb;
   color-scheme: dark;
-  transition: background-color 0.8s ease;
 }
 html,
 body {
@@ -51,18 +65,7 @@ body {
   transform: translateX(-50%);
   pointer-events: none;
   z-index: -1;
-  background:
-    radial-gradient(
-      ellipse at 8% 8%,
-      color-mix(in srgb, var(--scene-vivid) 8%, transparent),
-      transparent 38%
-    ),
-    radial-gradient(
-      ellipse at 95% 100%,
-      color-mix(in srgb, var(--scene-vivid) 28%, transparent),
-      transparent 65%
-    ),
-    linear-gradient(172deg, var(--page) 20%, var(--sky-bottom));
+  background: var(--sky-background);
 }
 .screen {
   padding-top: calc(var(--safe-top) + 12px);
@@ -514,22 +517,6 @@ body {
   background: #ffffff05;
   border: 1px solid #ffffff20;
   border-radius: 22px;
-}
-.theme-selector {
-  border-radius: 999px;
-  border: 1px solid #ffffff1c;
-}
-.theme-selector button {
-  border-radius: 999px;
-}
-.theme-selector button.selected {
-  background: var(--accent-soft);
-  color: var(--control-ink);
-}
-.theme-note {
-  font-size: 11px;
-  color: var(--muted);
-  margin: -7px 0 14px;
 }
 .setting-icon,
 .source-actions button span {

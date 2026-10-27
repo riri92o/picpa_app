@@ -1,14 +1,4 @@
 /* Home's draw and collection states share one bubble, moving only after mixing. */
-.app-shell:has(.home-screen)::before {
-  background:
-    radial-gradient(ellipse at 45% 43%, #2a467525, transparent 52%),
-    linear-gradient(
-      165deg,
-      var(--sky-page),
-      color-mix(in srgb, var(--sky-page) 88%, #1c4164) 70%,
-      color-mix(in srgb, var(--sky-bottom) 35%, var(--sky-page))
-    );
-}
 .app-shell:has(.home-screen) .sky-haze {
   opacity: 0.16;
 }
