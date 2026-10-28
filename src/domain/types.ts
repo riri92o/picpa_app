@@ -3,6 +3,7 @@ export type CollageSpacing = "joined" | "separated";
 export type ArtworkStyle =
   "specimen" | "bubble-window" | "palette" | "black-frame" | "white-frame";
 export type ThemeChoice = "light" | "dark" | "system";
+export type PhotoQuality = "compact" | "standard" | "high";
 export interface PhotoPlacement {
   id: string;
   zoom: number;
@@ -56,6 +57,8 @@ export interface AppSettings {
   randomCount: boolean;
   exportLogo: boolean;
   tutorialSeen: boolean;
+  /** Applies only to future imports; missing legacy values use standard. */
+  photoQuality?: PhotoQuality;
 }
 export interface ColorDefinition {
   id: string;

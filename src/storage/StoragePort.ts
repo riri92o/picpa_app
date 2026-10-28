@@ -4,6 +4,7 @@ import type {
   PhotoAsset,
   PhotoSummary,
 } from "../domain/types";
+import type { BackupMergeResult, BackupSnapshot } from "../domain/backup";
 export interface StoragePort {
   getDays(): Promise<DayRecord[]>;
   putDay(day: DayRecord): Promise<void>;
@@ -14,4 +15,10 @@ export interface StoragePort {
   putAsset(asset: PhotoAsset): Promise<void>;
   deleteAsset(id: string): Promise<void>;
   clearProgress(): Promise<void>;
+  getBackupSnapshot(dates?: string[]): Promise<BackupSnapshot>;
+  mergeBackup(
+    snapshot: BackupSnapshot,
+    restoreSettings: boolean,
+  ): Promise<BackupMergeResult>;
+  deleteDays(dates: string[]): Promise<void>;
 }

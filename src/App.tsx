@@ -22,7 +22,15 @@ import { soapFilmImage } from "./ui/soapFilm";
 import { syncBrowserChrome } from "./ui/browserChrome";
 
 export default function App() {
-  const { ready, error, clearError, today, drawToday } = useApp();
+  const {
+    ready,
+    error,
+    clearError,
+    today,
+    drawToday,
+    dataBusy,
+    reloadRequired,
+  } = useApp();
   const { probeRef, systemInset } = useViewportGuard(ready);
   const [tab, setTab] = useState<Tab>("home");
   const [opening, setOpening] = useState(true);
@@ -87,12 +95,40 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
           <div id="modal-root" />
-          <BottomNav tab={tab} onChange={setTab} disabled={ritual.busy} />
-          {error && (
-            <div className="error-toast" role="alert">
-              {error}
-              <button onClick={clearError}>閉じる</button>
+          <BottomNav
+            tab={tab}
+            onChange={setTab}
+            disabled={ritual.busy || dataBusy}
+          />
+          {reloadRequired ? (
+            <div
+              className="data-recovery-backdrop"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="表示の再読み込みが必要です"
+            >
+              <div className="data-recovery-card">
+                <h2>表示を更新してください</h2>
+                <p>{error}</p>
+                <button
+                  autoFocus
+                  className="primary-button"
+                  onClick={() => window.location.reload()}
+                  onKeyDown={(event) => {
+                    if (event.key === "Tab") event.preventDefault();
+                  }}
+                >
+                  再読み込み
+                </button>
+              </div>
             </div>
+          ) : (
+            error && (
+              <div className="error-toast" role="alert">
+                {error}
+                <button onClick={clearError}>閉じる</button>
+              </div>
+            )
           )}
           {!opening && <Tutorial />}
         </div>

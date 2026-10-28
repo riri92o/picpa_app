@@ -4,6 +4,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   randomCount: false,
   exportLogo: true,
   tutorialSeen: false,
+  photoQuality: "standard",
 };
 export const DEFAULT_COUNT: GridCount = 6;
 export const NAV_MOTION = {

@@ -33,17 +33,21 @@ const slides = [
 ];
 export function Tutorial() {
   const { settings, updateSettings } = useApp();
-  const [page, setPage] = useState(0);
   if (settings.tutorialSeen) return null;
+  return (
+    <TutorialGuide onComplete={() => updateSettings({ tutorialSeen: true })} />
+  );
+}
+
+function TutorialGuide({ onComplete }: { onComplete: () => void }) {
+  const [page, setPage] = useState(0);
   const slide = slides[page];
   return (
     <div className="tutorial-overlay">
       <div className="tutorial-card">
         <div className="tutorial-top">
           <span>PicPa</span>
-          <button onClick={() => updateSettings({ tutorialSeen: true })}>
-            スキップ
-          </button>
+          <button onClick={onComplete}>スキップ</button>
         </div>
         <AnimatePresence mode="wait">
           <motion.div
@@ -74,11 +78,7 @@ export function Tutorial() {
           </div>
           <button
             className="primary-button tutorial-next"
-            onClick={() =>
-              page === 3
-                ? updateSettings({ tutorialSeen: true })
-                : setPage(page + 1)
-            }
+            onClick={() => (page === 3 ? onComplete() : setPage(page + 1))}
           >
             {page === 3 ? "はじめる" : "次へ"}{" "}
             {page === 3 ? <Check size={18} /> : <ArrowRight size={18} />}

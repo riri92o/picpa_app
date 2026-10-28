@@ -4,7 +4,12 @@ import type {
   GridCount,
   CollageSpacing,
   ArtworkStyle,
+  PhotoQuality,
 } from "./types";
+import {
+  PHOTO_QUALITY_OPTIONS,
+  resolvePhotoQuality,
+} from "../constants/photoQuality";
 import { ARTWORK_STYLES } from "../constants/artwork";
 import { artworkLayout, resolveArtworkStyle } from "./artworkLayout";
 import { drawArtwork, type ArtworkPhoto } from "./artworkCanvas";
@@ -45,17 +50,23 @@ async function resize(
     canvas.width = canvas.height = 0;
   }
 }
-export async function preparePhoto(file: File): Promise<PhotoAsset> {
+export async function preparePhoto(
+  file: File,
+  photoQuality: PhotoQuality = "standard",
+): Promise<PhotoAsset> {
   if (!file.type.startsWith("image/"))
     throw new Error("画像ファイルを選んでください");
   const image = await createImageBitmap(file);
+  const quality = PHOTO_QUALITY_OPTIONS.find(
+    (option) => option.id === resolvePhotoQuality(photoQuality),
+  )!;
   try {
     return {
       id: crypto.randomUUID(),
       // Preserve crop resolution; reduce storage through JPEG quality instead.
       // Applies only at import, never recompressing existing stored photographs.
-      full: await resize(image, 1800, 0.78),
-      thumb: await resize(image, 360, 0.72),
+      full: await resize(image, 1800, quality.fullQuality),
+      thumb: await resize(image, 360, quality.thumbQuality),
       width: image.width,
       height: image.height,
       createdAt: new Date().toISOString(),
