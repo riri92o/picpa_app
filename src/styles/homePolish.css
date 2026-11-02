@@ -1,0 +1,232 @@
+/* Approved Home refinements only. Calendar keeps its existing presentation. */
+.app-shell:has(.home-screen[data-stage="collect"]) .night-sky {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000,
+    #0000 18px,
+    #0000 calc(100% - 18px),
+    #000
+  );
+  mask-image: linear-gradient(
+    90deg,
+    #000,
+    #0000 18px,
+    #0000 calc(100% - 18px),
+    #000
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.home-screen .work-section {
+  grid-template-rows: 50px minmax(0, 1fr) 36px 48px;
+  gap: 10px;
+}
+.home-screen .home-toolbar .count-selector,
+.home-screen .home-toolbar .challenge-count,
+.home-screen .home-toolbar .spacing-selector.spacing-pictograms {
+  height: 50px;
+  padding: 2px;
+}
+.home-screen .home-toolbar .count-selector button,
+.home-screen .home-toolbar .spacing-pictograms button {
+  min-height: 44px;
+}
+.home-screen .home-toolbar .count-selector button {
+  font-weight: 600;
+}
+.home-screen .grid-hint {
+  font-size: 11px;
+  line-height: 1.45;
+}
+.home-screen .sample-button {
+  font-weight: 550;
+  min-height: 36px;
+  border-radius: 18px;
+}
+.home-screen .complete-button {
+  border-radius: 24px;
+  font-weight: 650;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+.home-screen .complete-button:disabled {
+  background: #c2cfea19;
+  color: var(--muted);
+  border-color: #d8e6ff20;
+}
+.home-screen .completion-pulse {
+  animation: home-completion-ready 650ms ease-out 1;
+}
+@keyframes home-completion-ready {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 #ffffff00;
+  }
+  40% {
+    box-shadow: inset 0 0 0 2px #ffffff80;
+  }
+}
+.completed-home.home-screen .color-section {
+  grid-template-columns: 64px minmax(0, 1fr) 44px;
+  height: 76px;
+  padding-bottom: 0;
+}
+.home-artwork-menu {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid #ffffff18;
+  justify-self: end;
+}
+.home-artwork-date {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.completed-home.home-screen .work-section {
+  grid-template-areas: "collage" "memo" "finish" "notice";
+  grid-template-rows: minmax(0, 1fr) auto 48px auto;
+  gap: 12px;
+}
+.home-artwork-memo {
+  grid-area: memo;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 5.1em;
+  overflow: auto;
+  text-align: center;
+  color: var(--text);
+}
+.home-artwork-actions {
+  grid-area: finish;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+.home-artwork-actions button {
+  min-height: 48px;
+  min-width: 0;
+  border-radius: 24px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.home-artwork-actions .home-share-button {
+  background: #ffffff03;
+  border: 1px solid #d5deef77;
+  color: var(--text);
+}
+.home-artwork-actions button:disabled {
+  opacity: 0.55;
+}
+.home-artwork-notice {
+  grid-area: notice;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.home-artwork-option-group + .home-artwork-option-group {
+  border-top: 1px solid #ffffff18;
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.home-artwork-option-group h3 {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+.home-artwork-options .spacing-pictograms button {
+  min-width: 48px;
+  min-height: 44px;
+}
+.home-artwork-options .artwork-styles {
+  margin-top: 0;
+}
+.home-artwork-options .color-match {
+  margin: 0;
+}
+.app-shell:has(:is(.home-screen, .settings-screen))
+  :is(
+    .primary-button,
+    .secondary-button,
+    .count-selector button,
+    .spacing-pictograms button,
+    .sample-button,
+    .home-artwork-menu,
+    .settings-link-row,
+    .settings-back
+  ) {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    transform 120ms ease,
+    filter 120ms ease;
+}
+.app-shell:has(:is(.home-screen, .settings-screen))
+  :is(
+    .primary-button,
+    .secondary-button,
+    .count-selector button,
+    .spacing-pictograms button,
+    .sample-button,
+    .home-artwork-menu,
+    .settings-link-row,
+    .settings-back
+  ):not(:disabled):active {
+  transform: scale(0.98);
+  filter: brightness(0.94);
+}
+@media (max-width: 350px) {
+  .completed-home.home-screen .color-section {
+    grid-template-columns: 56px minmax(0, 1fr) 44px;
+  }
+  .home-artwork-actions {
+    gap: 8px;
+  }
+  .home-artwork-actions button {
+    font-size: 13px;
+    padding: 0 8px;
+  }
+}
+@media (max-height: 680px) {
+  .home-screen .work-section {
+    gap: 7px;
+  }
+  .completed-home.home-screen .work-section {
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell:has(:is(.home-screen, .settings-screen))
+    :is(
+      .primary-button,
+      .secondary-button,
+      .count-selector button,
+      .spacing-pictograms button,
+      .sample-button,
+      .home-artwork-menu,
+      .settings-link-row,
+      .settings-back
+    ):not(:disabled):active {
+    transform: none;
+    filter: none;
+  }
+  .home-screen .completion-pulse {
+    animation: none;
+  }
+}
