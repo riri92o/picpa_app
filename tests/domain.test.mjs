@@ -541,18 +541,42 @@ assert.equal(resolveArtworkStyle("future-style"), DEFAULT_ARTWORK_STYLE);
 assert.equal(DEFAULT_ARTWORK_STYLE, "black-frame");
 // Explicit choices survive a change to the default for unstyled/older records.
 assert.equal(resolveArtworkStyle("bubble-window"), "bubble-window");
-const { waterFilm } = load("src/domain/waterMaterial.ts");
-const { WATER_MATERIAL } = load("src/constants/artwork.ts");
+const { renderPhotoBubbleFilm } = load("src/domain/photoBubbleFilm.ts");
 for (const color of PALETTE) {
-  assert.equal(
-    waterFilm(color.hex).body,
-    color.hex,
-    "The translucent film must preserve every daily color, including pastels",
+  const size = 96,
+    pixels = renderPhotoBubbleFilm(size, color.hex);
+  let translucent = 0;
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const r = Math.hypot(
+        (x + 0.5 - size / 2) / (size / 2),
+        (y + 0.5 - size / 2) / (size / 2),
+      );
+      const alpha = pixels[(y * size + x) * 4 + 3];
+      if (r < 0.6 || r >= 1)
+        assert.equal(
+          alpha,
+          0,
+          "Photo centers and outside the circle remain untouched",
+        );
+      if (alpha > 0 && alpha < 255) translucent++;
+    }
+  assert.ok(
+    translucent > 100,
+    `${color.id}: a transparent film is visible at the rim`,
   );
 }
+const redFilm = renderPhotoBubbleFilm(96, "#db665b");
+const blueFilm = renderPhotoBubbleFilm(96, "#548bcb");
+const rimPixel = (48 * 96 + 94) * 4;
 assert.ok(
-  WATER_MATERIAL.baseOpacity > 0 && WATER_MATERIAL.baseOpacity < 1,
-  "The frame remains translucent",
+  redFilm[rimPixel] > blueFilm[rimPixel] + 40,
+  "The daily color visibly tints the rim",
+);
+assert.ok(blueFilm[rimPixel + 2] > redFilm[rimPixel + 2] + 40);
+assert.ok(
+  redFilm[(17 * 96 + 20) * 4 + 3] > redFilm[(78 * 96 + 75) * 4 + 3] + 80,
+  "Reflection has one consistent upper-left light source",
 );
 for (const { id } of ARTWORK_STYLES) {
   assert.equal(resolveArtworkStyle(id), id);
@@ -589,9 +613,23 @@ for (const { id } of ARTWORK_STYLES) {
       const source = collageLayout(count, spacing);
       layout.slots.forEach((slot, i) => {
         if (id === "bubble-window") {
-          assert.equal(slot.width, slot.height, "Bubble photos are square");
-          assert.equal(slot.width, layout.slots[0].width);
-          assert.equal(slot.height, layout.slots[0].height);
+          assert.equal(
+            slot.width,
+            slot.height,
+            "Circular masks must not stretch photos",
+          );
+        } else if (id === "palette" && spacing === "joined") {
+          assert.equal(
+            slot.y,
+            Math.round(slot.y),
+            "Joined seams align to output pixels",
+          );
+          assert.ok(
+            Math.abs(
+              slot.height - (slot.width * source.cellHeight) / source.cellWidth,
+            ) <= 0.5,
+            "Pixel alignment changes the crop height by at most half a pixel",
+          );
         } else {
           assert.ok(
             Math.abs(
@@ -599,11 +637,11 @@ for (const { id } of ARTWORK_STYLES) {
             ) < 1e-10,
           );
         }
-        assert.ok(slot.x >= 0 && slot.x + slot.width <= layout.width);
+        assert.ok(slot.x >= 0 && slot.x + slot.width <= layout.width + 1e-8);
         assert.ok(
           slot.y + slot.height + layout.stripHeight <= layout.footer.y + 1e-8,
         );
-        if (i % layout.columns)
+        if (id !== "bubble-window" && i % layout.columns)
           assert.ok(
             layout.slots[i - 1].x + layout.slots[i - 1].width <= slot.x + 1e-8,
           );
@@ -612,14 +650,74 @@ for (const { id } of ARTWORK_STYLES) {
         assert.ok(
           new Set(
             layout.slots.map((slot) => Math.round(slot.width * slot.height)),
-          ).size === 1,
-          "Bubble windows must all have equal areas",
+          ).size > 1,
+          "Bubbles have modest size differences, like a naturally gathered cluster",
         );
+        const reached = new Set([0]);
+        for (let round = 0; round < count; round++)
+          for (let i = 0; i < count; i++)
+            for (let j = i + 1; j < count; j++) {
+              const a = layout.slots[i],
+                b = layout.slots[j];
+              const distance = Math.hypot(
+                a.x + a.width / 2 - b.x - b.width / 2,
+                a.y + a.height / 2 - b.y - b.height / 2,
+              );
+              const sum = (a.width + b.width) / 2;
+              if (spacing === "separated")
+                assert.ok(
+                  distance - sum >= 25,
+                  "Separated circles have a visible gap on mobile",
+                );
+              else {
+                assert.ok(
+                  distance >= sum * 0.85,
+                  "Overlap stays at the edges, keeping photos readable",
+                );
+                if (
+                  distance <= sum + 1e-8 &&
+                  (reached.has(i) || reached.has(j))
+                ) {
+                  reached.add(i);
+                  reached.add(j);
+                }
+              }
+            }
+        if (spacing === "joined")
+          assert.equal(
+            reached.size,
+            count,
+            "Every joined bubble belongs to the same touching cluster",
+          );
         assert.deepEqual(
           artworkLayout(count, spacing, id),
           layout,
           "The composition must be stable between preview and save",
         );
+      }
+      if (id === "palette" && spacing === "joined") {
+        assert.equal(layout.gap, 0);
+        assert.ok(
+          layout.stripHeight > 0,
+          "Joined mode retains every photo's three-color palette",
+        );
+        layout.slots.forEach((slot, i) => {
+          if (i % layout.columns)
+            assert.ok(
+              Math.abs(
+                layout.slots[i - 1].x + layout.slots[i - 1].width - slot.x,
+              ) < 1e-8,
+            );
+          if (i >= layout.columns)
+            assert.ok(
+              Math.abs(
+                layout.slots[i - layout.columns].y +
+                  layout.slots[i - layout.columns].height -
+                  slot.y +
+                  layout.stripHeight,
+              ) < 1e-8,
+            );
+        });
       }
       assert.ok(layout.logo.y - layout.logo.height / 2 > layout.footer.y);
       assert.ok(layout.logo.y + layout.logo.height / 2 < layout.height);
@@ -656,7 +754,7 @@ assert.deepEqual(
   new Set(["#dc3c28", "#1e8cd2", "#f0dca0"]),
 );
 console.log(
-  "5 artwork styles × 4/6/9 × spacing: black default, equal rounded-square windows, 38 colored water tints, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
+  "5 artwork styles × 4/6/9 × spacing: joined photo-and-palette tiles, circular bubble clusters, clear photo centers, 38 daily-color films, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
 );
 
 const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");

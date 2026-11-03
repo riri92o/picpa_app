@@ -1,8 +1,7 @@
 import { artworkLayout, type ArtworkRect } from "./artworkLayout";
 import { drawCollageLogo } from "./branding";
 import { drawPlacement } from "./photoCanvas";
-import { waterFilm } from "./waterMaterial";
-import { BUBBLE_FRAME, WATER_MATERIAL } from "../constants/artwork";
+import { renderPhotoBubbleFilm } from "./photoBubbleFilm";
 import type {
   ArtworkStyle,
   CollageSpacing,
@@ -20,38 +19,16 @@ type Layout = ReturnType<typeof artworkLayout>;
 const NIGHT = "#061322";
 const TAU = Math.PI * 2;
 
-/** Matching rounded squares keep the photo sizes equal and the rim soft. */
-export function bubbleWindowPath(rect: ArtworkRect) {
+/** The photograph is clipped, never warped or refracted. */
+export function bubbleWindowPath(rect: ArtworkRect, inset = 0) {
   const path = new Path2D();
-  path.roundRect(
-    rect.x,
-    rect.y,
-    rect.width,
-    rect.height,
-    Math.min(rect.width, rect.height) * BUBBLE_FRAME.cornerRatio,
+  path.arc(
+    rect.x + rect.width / 2,
+    rect.y + rect.height / 2,
+    rect.width / 2 - inset,
+    0,
+    TAU,
   );
-  return path;
-}
-
-/** A continuous rounded outer edge, with no scallops between windows. */
-function bubbleFrameGeometry(layout: Layout) {
-  const inset = BUBBLE_FRAME.outerInset;
-  const radius =
-    Math.min(layout.cellWidth, layout.cellHeight) * BUBBLE_FRAME.cornerRatio +
-    layout.pad -
-    inset;
-  return {
-    x: inset,
-    y: inset,
-    width: layout.width - inset * 2,
-    height: layout.height - inset * 2,
-    radius,
-  };
-}
-function bubbleOutline(layout: Layout) {
-  const { x, y, width, height, radius } = bubbleFrameGeometry(layout);
-  const path = new Path2D();
-  path.roundRect(x, y, width, height, radius);
   return path;
 }
 
@@ -120,71 +97,32 @@ function drawBead(
   ctx.restore();
 }
 
-/** A translucent colored film with feathered edge reflections; no raised surface shading. */
-function drawLiquidWater(
-  ctx: CanvasRenderingContext2D,
-  layout: Layout,
-  outline: Path2D,
-  color: string,
-) {
-  const film = new Path2D(outline);
-  layout.slots.forEach((rect) => film.addPath(bubbleWindowPath(rect)));
-  const palette = waterFilm(color);
-  ctx.save();
-  // Keep the export transparent around the rim and let the photographs fill its openings.
-  ctx.clip(film, "evenodd");
-  const body = ctx.createLinearGradient(
-    0,
-    0,
-    layout.width * 0.22,
-    layout.height,
-  );
-  body.addColorStop(0, palette.light);
-  body.addColorStop(0.32, palette.body);
-  body.addColorStop(0.68, palette.shade);
-  body.addColorStop(1, palette.light);
-  ctx.globalAlpha = WATER_MATERIAL.baseOpacity;
-  ctx.fillStyle = body;
-  ctx.fillRect(0, 0, layout.width, layout.height);
-
-  const reflection = ctx.createLinearGradient(
-    0,
-    0,
-    layout.width,
-    layout.height,
-  );
-  reflection.addColorStop(0, palette.reflection);
-  reflection.addColorStop(0.36, mixHex(color, "#ffffff", 0.6));
-  reflection.addColorStop(0.64, mixHex(color, "#ffffff", 0.48));
-  reflection.addColorStop(1, palette.reflection);
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.strokeStyle = reflection;
-  ctx.globalAlpha = WATER_MATERIAL.softEdgeOpacity;
-  ctx.lineWidth = WATER_MATERIAL.edgeWidth;
-  ctx.shadowColor = palette.reflection;
-  ctx.shadowBlur = WATER_MATERIAL.softEdgeBlur;
-  ctx.stroke(film);
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = WATER_MATERIAL.edgeOpacity;
-  ctx.lineWidth = WATER_MATERIAL.edgeWidth;
-  ctx.stroke(film);
-  ctx.restore();
-}
-
 function drawBubbleFrame(
   ctx: CanvasRenderingContext2D,
   layout: Layout,
   photos: ArtworkPhoto[],
   color: string,
 ) {
-  drawLiquidWater(ctx, layout, bubbleOutline(layout), color);
-  layout.slots.forEach((rect, index) => {
-    ctx.save();
-    ctx.clip(bubbleWindowPath(rect));
-    drawPhoto(ctx, photos[index], rect);
-    ctx.restore();
-  });
+  const film = document.createElement("canvas");
+  const size = Math.ceil(Math.max(...layout.slots.map((slot) => slot.width)));
+  film.width = film.height = size;
+  try {
+    const brush = film.getContext("2d")!;
+    const image = brush.createImageData(size, size);
+    image.data.set(renderPhotoBubbleFilm(size, color));
+    brush.putImageData(image, 0, 0);
+    layout.slots.forEach((rect, index) => {
+      ctx.save();
+      // A fine translucent rim sits outside the photo, so it can catch light
+      // against both a dark screen and a transparent exported background.
+      ctx.clip(bubbleWindowPath(rect, rect.width * 0.006));
+      drawPhoto(ctx, photos[index], rect);
+      ctx.restore();
+      ctx.drawImage(film, rect.x, rect.y, rect.width, rect.height);
+    });
+  } finally {
+    film.width = film.height = 0;
+  }
 }
 
 function trackedText(
@@ -305,7 +243,7 @@ export async function drawArtwork(
     layout.slots.forEach((rect, index) => {
       const photo = photos[index];
       ctx.save();
-      if (style === "palette") {
+      if (style === "palette" && spacing !== "joined") {
         ctx.beginPath();
         ctx.roundRect(
           rect.x,
@@ -317,13 +255,19 @@ export async function drawArtwork(
         ctx.clip();
       }
       drawPhoto(ctx, photo, rect);
-      if (style === "palette") {
+      if (style === "palette" && layout.stripHeight > 0) {
         photo.swatches.forEach((swatch, i) => {
           ctx.fillStyle = swatch;
+          const left = rect.x + (i * rect.width) / 3;
+          const right = rect.x + ((i + 1) * rect.width) / 3;
+          // Joined tiles also need opaque, pixel-aligned swatch boundaries:
+          // fractional fills can otherwise reveal the backdrop between colors.
           ctx.fillRect(
-            rect.x + (i * rect.width) / 3,
+            spacing === "joined" ? Math.round(left) : left,
             rect.y + rect.height,
-            rect.width / 3 + 0.5,
+            spacing === "joined"
+              ? Math.round(right) - Math.round(left)
+              : rect.width / 3 + 0.5,
             layout.stripHeight,
           );
         });

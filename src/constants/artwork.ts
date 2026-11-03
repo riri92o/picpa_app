@@ -14,17 +14,7 @@ export const ARTWORK_STYLES: {
 export const DEFAULT_ARTWORK_STYLE: ArtworkStyle = "black-frame";
 export const ARTWORK_WIDTH = 1200;
 
-export const WATER_MATERIAL = {
-  baseOpacity: 0.62,
-  softEdgeBlur: 12,
-  softEdgeOpacity: 0.6,
-  edgeWidth: 2.8,
-  edgeOpacity: 0.8,
-} as const;
-
-/** Rounded, equally sized windows with a continuous translucent water rim. */
+/** Clear circular photographs, with room for the thin film at the canvas edge. */
 export const BUBBLE_FRAME = {
-  padding: 56,
-  outerInset: 14,
-  cornerRatio: 0.16,
+  padding: 40,
 } as const;
