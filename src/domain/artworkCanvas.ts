@@ -2,6 +2,7 @@ import { artworkLayout, type ArtworkRect } from "./artworkLayout";
 import { drawCollageLogo } from "./branding";
 import { drawPlacement } from "./photoCanvas";
 import { renderPhotoBubbleFilm } from "./photoBubbleFilm";
+import type { ArtworkImage } from "./artworkImage";
 import type {
   ArtworkStyle,
   CollageSpacing,
@@ -11,7 +12,7 @@ import type {
 import { contrastRatio, mixHex, vividAccent } from "../ui/theme";
 
 export interface ArtworkPhoto {
-  image: ImageBitmap;
+  image: ArtworkImage["source"];
   placement: PhotoPlacement;
   swatches: [string, string, string];
 }

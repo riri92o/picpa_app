@@ -22,7 +22,7 @@ export function ExportedCollage({
   onStyleChange: (style: ArtworkStyle) => void;
   viewOnly?: boolean;
 }) {
-  const render = useCollageExport(day, logo, getImageBlob);
+  const render = useCollageExport(day, logo, getImageBlob, !viewOnly);
   const { image } = render;
   const extension = image?.blob.type === "image/png" ? "png" : "jpg";
   const [busy, setBusy] = useState(false);

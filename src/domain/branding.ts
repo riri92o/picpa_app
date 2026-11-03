@@ -1,14 +1,19 @@
 import { EXPORT_BRAND_LOGO } from "../constants/branding";
+import { waitForImageTask } from "./imageTask";
 
 let logoImage: Promise<HTMLImageElement> | undefined;
 function loadLogoImage(): Promise<HTMLImageElement> {
   if (!logoImage) {
-    logoImage = new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("ロゴを読み込めませんでした"));
-      image.src = EXPORT_BRAND_LOGO.url;
-    }).catch((error) => {
+    const image = new Image();
+    logoImage = waitForImageTask(
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("ロゴを読み込めませんでした"));
+        image.src = EXPORT_BRAND_LOGO.url;
+      }),
+    ).catch((error) => {
+      image.onload = image.onerror = null;
+      image.removeAttribute("src");
       logoImage = undefined;
       throw error;
     });

@@ -38,7 +38,9 @@ export function Calendar() {
   const selectedDay = days.find((day) => day.date === selected);
   const viewingArtwork = !!selectedDay?.completedAt && !editing;
   useEffect(() => {
-    if (selectedDay)
+    // Completed artworks read their source blobs directly. Full-size editor
+    // URLs are needed only for an unfinished day; avoid a second parallel load.
+    if (selectedDay && !selectedDay.completedAt)
       void ensureFullImages(selectedDay.photos.map((photo) => photo.id));
   }, [selectedDay, ensureFullImages]);
   const selectedColor = colorById(selectedDay?.colorId);

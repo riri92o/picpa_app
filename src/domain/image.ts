@@ -15,6 +15,8 @@ import { artworkLayout, resolveArtworkStyle } from "./artworkLayout";
 import { drawArtwork, type ArtworkPhoto } from "./artworkCanvas";
 import { drawPlacement } from "./photoCanvas";
 import { photoPalette } from "./photoPalette";
+import { loadArtworkImage } from "./artworkImage";
+import { waitForImageTask } from "./imageTask";
 export { drawPlacement } from "./photoCanvas";
 export { gridDimensions } from "./collageLayout";
 
@@ -22,14 +24,20 @@ function canvasBlob(
   canvas: HTMLCanvasElement,
   type = "image/jpeg",
   quality = 0.86,
+  signal?: AbortSignal,
 ): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) =>
-        blob ? resolve(blob) : reject(new Error("画像を変換できませんでした")),
-      type,
-      quality,
+  return waitForImageTask(
+    new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (blob) =>
+          blob
+            ? resolve(blob)
+            : reject(new Error("画像を変換できませんでした")),
+        type,
+        quality,
+      ),
     ),
+    signal,
   );
 }
 async function resize(
@@ -85,6 +93,21 @@ const checkAbort = (signal?: AbortSignal) => {
   if (signal?.aborted) throw new DOMException("Export cancelled", "AbortError");
 };
 
+async function readArtworkBlob(
+  id: string,
+  getBlob: (id: string) => Promise<Blob | undefined>,
+  signal?: AbortSignal,
+) {
+  try {
+    return await waitForImageTask(getBlob(id), signal);
+  } catch (error) {
+    // Retry an aborted read once. It is independent of our own view cleanup.
+    if (!signal?.aborted && (error as Error).name === "AbortError")
+      return waitForImageTask(getBlob(id), signal);
+    throw error;
+  }
+}
+
 async function loadArtworkPhotos(
   count: GridCount,
   placements: PhotoPlacement[],
@@ -93,6 +116,8 @@ async function loadArtworkPhotos(
 ) {
   if (placements.length !== count) throw new Error("写真が揃っていません");
   const photos: ArtworkPhoto[] = [];
+  const releases: (() => void)[] = [];
+  let preferElement = false;
   const sample = document.createElement("canvas");
   sample.width = 64;
   sample.height = Math.round(
@@ -102,57 +127,46 @@ async function loadArtworkPhotos(
   try {
     for (const placement of placements) {
       checkAbort(signal);
-      const blob = await getBlob(placement.id);
+      const blob = await readArtworkBlob(placement.id, getBlob, signal);
       if (!blob) throw new Error("写真を読み込めませんでした");
-      let image = await createImageBitmap(blob);
       // Keep only the resolution needed for a 1200px collage and the chosen crop.
       const maxSide = Math.min(
         1800,
         Math.ceil(900 * Math.max(1, placement.zoom)),
       );
-      if (Math.max(image.width, image.height) > maxSide) {
-        const ratio = maxSide / Math.max(image.width, image.height);
-        try {
-          const scaled = await createImageBitmap(image, {
-            resizeWidth: Math.round(image.width * ratio),
-            resizeHeight: Math.round(image.height * ratio),
-            resizeQuality: "high",
-          });
-          image.close();
-          image = scaled;
-        } catch {
-          // Older WebViews may omit bitmap resize options; the source still renders.
-        }
-      }
-      try {
-        ctx.clearRect(0, 0, sample.width, sample.height);
-        drawPlacement(
-          ctx,
-          image,
-          image.width,
-          image.height,
-          placement,
-          0,
-          0,
-          sample.width,
-          sample.height,
-        );
-        photos.push({
-          image,
-          placement,
-          swatches: photoPalette(
-            ctx.getImageData(0, 0, sample.width, sample.height).data,
-          ),
-        });
-      } catch (error) {
-        image.close();
-        throw error;
-      }
+      const decoded = await loadArtworkImage(
+        blob,
+        maxSide,
+        signal,
+        preferElement,
+      );
+      preferElement ||= decoded.usedElement;
+      releases.push(decoded.release);
+      const image = decoded.source;
+      ctx.clearRect(0, 0, sample.width, sample.height);
+      drawPlacement(
+        ctx,
+        image,
+        image.width,
+        image.height,
+        placement,
+        0,
+        0,
+        sample.width,
+        sample.height,
+      );
+      photos.push({
+        image,
+        placement,
+        swatches: photoPalette(
+          ctx.getImageData(0, 0, sample.width, sample.height).data,
+        ),
+      });
     }
     checkAbort(signal);
-    return photos;
+    return { photos, release: () => releases.forEach((release) => release()) };
   } catch (error) {
-    photos.forEach(({ image }) => image.close());
+    releases.forEach((release) => release());
     throw error;
   } finally {
     sample.width = 0;
@@ -170,12 +184,13 @@ async function renderArtworkStyles(
   styles: ArtworkStyle[],
   options: ArtworkExportOptions,
 ) {
-  const photos = await loadArtworkPhotos(
+  const loaded = await loadArtworkPhotos(
     count,
     placements,
     getBlob,
     options.signal,
   );
+  const { photos } = loaded;
   const canvas = document.createElement("canvas");
   const result: Partial<Record<ArtworkStyle, Blob>> = {};
   try {
@@ -186,29 +201,33 @@ async function renderArtworkStyles(
       canvas.height = layout.height;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("画像を準備できませんでした");
-      await drawArtwork(
-        context,
-        count,
-        spacing,
-        style,
-        photos,
-        color,
-        options.colorLabel ?? "",
-        options.date ?? "",
-        logo,
+      await waitForImageTask(
+        drawArtwork(
+          context,
+          count,
+          spacing,
+          style,
+          photos,
+          color,
+          options.colorLabel ?? "",
+          options.date ?? "",
+          logo,
+        ),
+        options.signal,
       );
       checkAbort(options.signal);
       result[style] = await canvasBlob(
         canvas,
         style === "bubble-window" ? "image/png" : "image/jpeg",
         0.94,
+        options.signal,
       );
       // Yield between complete designs, keeping mobile selection and close controls responsive.
       await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     }
     return result;
   } finally {
-    photos.forEach(({ image }) => image.close());
+    loaded.release();
     canvas.width = 0;
     canvas.height = 0;
   }
