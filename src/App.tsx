@@ -12,6 +12,7 @@ import { colorById } from "./constants/palette";
 import { Calendar } from "./screens/Calendar";
 import { Home } from "./screens/Home";
 import { Settings } from "./screens/Settings";
+import { ColorCollection } from "./screens/ColorCollection";
 import { useApp } from "./state/AppContext";
 import { LiquidBackdrop } from "./components/LiquidBackdrop";
 import { useColorRitual } from "./ui/useColorRitual";
@@ -33,6 +34,11 @@ export default function App() {
   } = useApp();
   const { probeRef, systemInset } = useViewportGuard(ready);
   const [tab, setTab] = useState<Tab>("home");
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const changeTab = (next: Tab) => {
+    setCollectionOpen(false);
+    setTab(next);
+  };
   const [opening, setOpening] = useState(true);
   const finishOpening = useCallback(() => setOpening(false), []);
   const ritual = useColorRitual(today, drawToday);
@@ -45,6 +51,10 @@ export default function App() {
     () =>
       `url("${soapFilmImage(themeAccent, !revealScene, revealScene, false)}")`,
     [themeAccent, revealScene],
+  );
+  const collectionFilm = useMemo(
+    () => `url("${soapFilmImage("#bdc1c5", true)}")`,
+    [],
   );
   const tokens = useMemo(
     () => accentTokens(themeAccent, revealScene),
@@ -70,6 +80,7 @@ export default function App() {
               ...tokens,
               "--tint": ritual.visibleColorId ? color.tint : "#f4f6f5",
               "--soap-film-image": filmImage,
+              "--collection-film-image": collectionFilm,
             } as CSSProperties
           }
         >
@@ -78,7 +89,7 @@ export default function App() {
           <div id="color-scene-root" aria-hidden="true" />
           <AnimatePresence mode="wait">
             <motion.div
-              key={tab}
+              key={tab === "home" && collectionOpen ? "collection" : tab}
               className="tab-content"
               initial={{ opacity: 0, y: ritual.reduced ? 0 : 9 }}
               animate={{ opacity: 1, y: 0 }}
@@ -86,7 +97,15 @@ export default function App() {
               transition={{ duration: ritual.reduced ? 0 : 0.22 }}
             >
               {tab === "home" ? (
-                <Home ritual={ritual} systemInset={systemInset} />
+                collectionOpen ? (
+                  <ColorCollection onBack={() => setCollectionOpen(false)} />
+                ) : (
+                  <Home
+                    ritual={ritual}
+                    systemInset={systemInset}
+                    onOpenCollection={() => setCollectionOpen(true)}
+                  />
+                )
               ) : tab === "calendar" ? (
                 <Calendar />
               ) : (
@@ -97,7 +116,7 @@ export default function App() {
           <div id="modal-root" />
           <BottomNav
             tab={tab}
-            onChange={setTab}
+            onChange={changeTab}
             disabled={ritual.busy || dataBusy}
           />
           {reloadRequired ? (

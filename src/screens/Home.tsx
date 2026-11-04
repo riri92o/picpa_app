@@ -8,6 +8,7 @@ import {
   Ellipsis,
   ImagePlus,
   Images,
+  Palette,
   RotateCw,
   Trash2,
   Upload,
@@ -20,6 +21,7 @@ import { colorById } from "../constants/palette";
 import { CollageGrid } from "../components/CollageGrid";
 import { CollageStage } from "../components/CollageStage";
 import { HomeArtwork } from "../components/HomeArtwork";
+import { ColorCollectionCard } from "../components/ColorCollectionCard";
 import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { ArtworkMemo } from "../components/ArtworkMemo";
 import { ArtworkMemoField } from "../components/ArtworkMemoField";
@@ -38,9 +40,11 @@ import { useApp } from "../state/AppContext";
 export function Home({
   ritual,
   systemInset,
+  onOpenCollection,
 }: {
   ritual: ColorRitual;
   systemInset: boolean;
+  onOpenCollection: () => void;
 }) {
   const {
     today,
@@ -161,6 +165,17 @@ export function Home({
         bubbleRef={bubbleRef}
         expanded={expanded}
       />
+      {!today.completedAt && (
+        <button
+          className="icon-button home-collection-shortcut"
+          onClick={onOpenCollection}
+          disabled={dataBusy || ritual.busy}
+          aria-label="色のコレクションを開く"
+          title="色のコレクション"
+        >
+          <Palette size={21} aria-hidden="true" />
+        </button>
+      )}
       <section className="color-section">
         <button
           ref={bubbleRef}
@@ -226,17 +241,20 @@ export function Home({
           transition={{ duration: ritual.reduced ? 0 : 0.3 }}
         >
           {today.completedAt ? (
-            <HomeArtwork
-              day={today}
-              logo={settings.exportLogo}
-              getImageBlob={getImageBlob}
-              optionsOpen={artworkOptionsOpen}
-              onOptionsClose={() => setArtworkOptionsOpen(false)}
-              onStyleChange={(style) => setArtworkStyle(style, today.date)}
-              onSpacingChange={(spacing) => setSpacing(spacing, today.date)}
-              onMemoSave={(memo) => setMemo(today.date, memo)}
-              disabled={dataBusy}
-            />
+            <>
+              <HomeArtwork
+                day={today}
+                logo={settings.exportLogo}
+                getImageBlob={getImageBlob}
+                optionsOpen={artworkOptionsOpen}
+                onOptionsClose={() => setArtworkOptionsOpen(false)}
+                onStyleChange={(style) => setArtworkStyle(style, today.date)}
+                onSpacingChange={(spacing) => setSpacing(spacing, today.date)}
+                onMemoSave={(memo) => setMemo(today.date, memo)}
+                disabled={dataBusy}
+              />
+              <ColorCollectionCard onOpen={onOpenCollection} />
+            </>
           ) : (
             <>
               <div className="home-toolbar" inert={dataBusy}>

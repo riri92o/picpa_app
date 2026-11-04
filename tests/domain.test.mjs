@@ -156,7 +156,7 @@ assert.equal(
   undefined,
 );
 console.log(
-  "38 recipes, subject saliency, hue, neutral backgrounds, tiny patches, competing colors and cache invalidation: OK",
+  `${PALETTE.length} recipes, subject saliency, hue, neutral backgrounds, tiny patches, competing colors and cache invalidation: OK`,
 );
 
 const { isChallengeLocked, isRandomChallenge } = load(
@@ -259,7 +259,7 @@ assert.equal(
   accentTokens("#bdc1c5", false)["--sky-page"],
 );
 console.log(
-  "38 daily colors: night-sky contrast, pastel lightness, bubble shading, neutral undrawn film, red/green/blue scenes: OK",
+  `${PALETTE.length} daily colors: night-sky contrast, pastel lightness, bubble shading, neutral undrawn film, red/green/blue scenes: OK`,
 );
 
 const { renderSoapFilm } = load("src/ui/soapFilm.ts");
@@ -329,7 +329,7 @@ assert.notDeepEqual(
   filmPixel(renderSoapFilm(filmSize, "#e0757e", false, true), 0, 0),
 );
 console.log(
-  "Soap film: transparent air/corners, coherent light direction, neutral state and all 38 daily tints: OK",
+  `Soap film: transparent air/corners, coherent light direction, neutral state and all ${PALETTE.length} daily tints: OK`,
 );
 
 const { hasSystemStatusBarInset, floatingBubblePosition } =
@@ -754,7 +754,7 @@ assert.deepEqual(
   new Set(["#dc3c28", "#1e8cd2", "#f0dca0"]),
 );
 console.log(
-  "5 artwork styles × 4/6/9 × spacing: joined photo-and-palette tiles, circular bubble clusters, clear photo centers, 38 daily-color films, crop ratios, footer bounds, locked photos/scores, real swatches: OK",
+  `5 artwork styles × 4/6/9 × spacing: joined photo-and-palette tiles, circular bubble clusters, clear photo centers, ${PALETTE.length} daily-color films, crop ratios, footer bounds, locked photos/scores, real swatches: OK`,
 );
 
 const { OPENING_BUBBLES, OPENING_MOTION } = load("src/constants/branding.ts");
