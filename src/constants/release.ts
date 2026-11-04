@@ -1,6 +1,15 @@
-export const APP_VERSION = "0.3.0";
+export const APP_VERSION = "0.3.1";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-04",
+    version: "0.3.1",
+    title: "色のコレクションの表示を整理",
+    changes: [
+      "選んだ色のそばに、色名と作品数の吹き出しを表示するようにしました。作品一覧はパレットの下で引き続き見られます。",
+      "制作中のボタンを「完成する」に統一し、残り枚数の文言を外しました。",
+    ],
+  },
   {
     date: "2026-11-04",
     version: "0.3.0",

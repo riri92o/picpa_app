@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -44,6 +45,48 @@ export function ColorCollection({ onBack }: { onBack: () => void }) {
   );
   const titleRef = useRef<HTMLHeadingElement>(null);
   const screenRef = useRef<HTMLElement>(null);
+  const colorsRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const grid = colorsRef.current;
+    const label = labelRef.current;
+    const selected = grid?.querySelector<HTMLButtonElement>(
+      '.collection-color[aria-pressed="true"]',
+    );
+    if (!grid || !label || !selected) return;
+    const position = () => {
+      const bounds = grid.getBoundingClientRect();
+      const target = selected.getBoundingClientRect();
+      const box = label.getBoundingClientRect();
+      const center = target.left - bounds.left + target.width / 2;
+      const left = Math.max(
+        0,
+        Math.min(center - box.width / 2, bounds.width - box.width),
+      );
+      const above =
+        target.top - bounds.top >= box.height + 8 &&
+        target.top >= box.height + 8;
+      label.style.left = `${left}px`;
+      label.style.top = `${above ? target.top - bounds.top - box.height - 8 : target.bottom - bounds.top + 8}px`;
+      label.style.setProperty(
+        "--collection-label-anchor",
+        `${center - left}px`,
+      );
+      label.dataset.side = above ? "above" : "below";
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(grid);
+    observer.observe(label);
+    window.addEventListener("scroll", position, {
+      passive: true,
+      capture: true,
+    });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", position, true);
+    };
+  }, [entry?.color.id, entry?.days.length]);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
     titleRef.current?.focus({ preventScroll: true });
@@ -81,6 +124,7 @@ export function ColorCollection({ onBack }: { onBack: () => void }) {
         </p>
       </section>
       <div
+        ref={colorsRef}
         className="collection-colors"
         role="group"
         aria-label="色ごとの完成作品"
@@ -97,16 +141,22 @@ export function ColorCollection({ onBack }: { onBack: () => void }) {
             <span className="collection-color-surface" aria-hidden="true" />
           </button>
         ))}
+        {entry && (
+          <div
+            ref={labelRef}
+            className="collection-color-label"
+            aria-hidden="true"
+          >
+            <span>{entry.color.name}</span>
+            <span>{entry.days.length}作品</span>
+          </div>
+        )}
       </div>
       {entry && (
         <section
           className="collection-works"
           aria-label={`${entry.color.name}の作品`}
         >
-          <div className="collection-works-heading">
-            <h3>{entry.color.name}</h3>
-            <span>{entry.days.length}作品</span>
-          </div>
           {entry.days.length ? (
             <CollectionGallery
               key={entry.color.id}

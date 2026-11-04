@@ -337,11 +337,7 @@ export function Home({
                 }}
               >
                 <span aria-live="polite">
-                  {dataBusy
-                    ? "写真を追加中…"
-                    : remaining
-                      ? `あと${remaining}枚で完成`
-                      : "完成する"}
+                  {dataBusy ? "写真を追加中…" : "完成する"}
                 </span>
                 {canComplete && <ArrowRight size={20} aria-hidden="true" />}
               </button>
