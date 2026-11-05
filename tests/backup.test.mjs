@@ -20,8 +20,15 @@ function load(file) {
   );
   return exports;
 }
-const { createBackup, readBackup, planBackupMerge, assetsForDeletedDays } =
-  load("src/domain/backup.ts");
+const {
+  createBackup,
+  readBackup,
+  planBackupMerge,
+  assetsForDeletedDays,
+  copyBackupImage,
+  isBackupImageReadable,
+} = load("src/domain/backup.ts");
+const { backupPhotoRepairCandidates } = load("src/domain/backupRepair.ts");
 const png = new Blob(
   [
     Buffer.from(
@@ -91,6 +98,44 @@ const snapshot = {
 };
 const file = await createBackup(snapshot);
 const decoded = await readBackup(file);
+// Model a selected file whose slices lose their owner after the picker closes.
+const backed = new Blob([await file.arrayBuffer()]);
+const slice = backed.slice.bind(backed);
+let released = false;
+backed.slice = (...args) => {
+  const part = slice(...args),
+    read = part.arrayBuffer.bind(part);
+  part.arrayBuffer = () =>
+    released
+      ? Promise.reject(
+          new DOMException("Selected file released", "NotReadableError"),
+        )
+      : read();
+  return part;
+};
+const detached = await readBackup(backed);
+released = true;
+for (const asset of detached.assets)
+  for (const blob of [asset.full, asset.thumb])
+    assert.deepEqual(
+      new Uint8Array(await blob.arrayBuffer()),
+      new Uint8Array(await png.arrayBuffer()),
+      "Imported photos own their bytes after the selected file is released",
+    );
+const wrongRange = new Blob([await png.arrayBuffer()], { type: png.type });
+wrongRange.arrayBuffer = () => file.arrayBuffer();
+await assert.rejects(() => copyBackupImage(wrongRange), /破損/);
+assert.equal(
+  await isBackupImageReadable(wrongRange),
+  false,
+  "A stored slice returning the whole archive is not a readable image",
+);
+assert.equal(await isBackupImageReadable(undefined), false);
+assert.equal(
+  await isBackupImageReadable(new Blob(["broken"], { type: "image/jpeg" })),
+  false,
+);
+assert.equal(await isBackupImageReadable(png), true);
 assert.deepEqual(decoded.days, snapshot.days);
 assert.deepEqual(decoded.settings, settings);
 assert.equal(
@@ -263,6 +308,65 @@ assert.deepEqual(
   "Merge never mutates the preview snapshot",
 );
 assert.equal(current[0].memo, "Keep this device's record");
+const currentCapture = {
+  ...plan.days[0],
+  memo: "Keep recent memo",
+  artworkStyle: "palette",
+  spacing: "separated",
+};
+const repairSourceBefore = structuredClone(currentCapture);
+const repairs = backupPhotoRepairCandidates(decoded, [currentCapture]);
+assert.deepEqual(
+  repairs.map((p) => p.id),
+  plan.days[0].photos.map((p) => p.id),
+);
+assert.deepEqual(
+  repairs.map((p) => p.source.id),
+  day.photos.map((p) => p.id),
+);
+assert.deepEqual(
+  currentCapture,
+  repairSourceBefore,
+  "Repair eligibility never changes presentation, memo or record fields",
+);
+assert.equal(
+  backupPhotoRepairCandidates(decoded, [
+    { ...currentCapture, completedAt: "2026-10-01T13:00:00.000Z" },
+  ]).length,
+  0,
+  "Another completion on the same date is not the same capture",
+);
+assert.equal(
+  backupPhotoRepairCandidates(decoded, [
+    {
+      ...currentCapture,
+      photos: currentCapture.photos.map((p, i) => (i ? p : { ...p, x: 0 })),
+    },
+  ]).length,
+  0,
+  "Different editing values are not matched by position alone",
+);
+const otherSource = {
+  ...day,
+  date: "2026-10-03",
+  completedAt: "2026-10-03T12:00:00.000Z",
+  photos: day.photos.map((p, i) => (i ? p : { ...p, id: assets[4].id })),
+};
+const ambiguous = backupPhotoRepairCandidates(
+  { ...decoded, days: [day, otherSource] },
+  [
+    currentCapture,
+    {
+      ...currentCapture,
+      date: otherSource.date,
+      completedAt: otherSource.completedAt,
+    },
+  ],
+);
+assert.ok(
+  !ambiguous.some((p) => p.id === currentCapture.photos[0].id),
+  "Conflicting shared-asset mappings are never guessed",
+);
 const stale = structuredClone(decoded);
 stale.days[0].colorMatch.signature = "outdated-cache";
 assert.equal(
@@ -292,5 +396,5 @@ assert.deepEqual(
   new Set(photos.map((p) => p.id)),
 );
 console.log(
-  "Backup: byte-exact binary roundtrip, legacy/quality settings, metadata/score preservation, corrupt/version/schema rejection, conflict-safe merge, shared-photo deletion: OK",
+  "Backup: byte-exact binary roundtrip, detached file ranges, invalid range rejection, safe repair matching, legacy/quality settings, metadata/score preservation, corrupt/version/schema rejection, conflict-safe merge, shared-photo deletion: OK",
 );

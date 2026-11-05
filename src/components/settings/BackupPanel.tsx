@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ArchiveRestore, Download, FileCheck2, FolderOpen } from "lucide-react";
 import { readBackup, type BackupSnapshot } from "../../domain/backup";
+import { backupPhotoRepairCandidates } from "../../domain/backupRepair";
 import { useApp } from "../../state/AppContext";
 import {
   backupFilename,
@@ -34,6 +35,9 @@ export function BackupPanel({
     pending?.snapshot.days.filter((day) => !existingDates.has(day.date))
       .length ?? 0;
   const conflicts = (pending?.snapshot.days.length ?? 0) - additions;
+  const repairCandidates = pending
+    ? backupPhotoRepairCandidates(pending.snapshot, days).length
+    : 0;
   const start = (next: "export" | "read" | "restore") => {
     setOperation(next);
     onBusyChange(true);
@@ -77,9 +81,23 @@ export function BackupPanel({
     try {
       const result = await restoreBackup(pending.snapshot, restoreSettings);
       setPending(null);
-      setMessage(
-        `${result.addedDays}日分の記録と${result.addedPhotos}枚の写真を復元しました。${result.skippedDays ? `同じ日付の${result.skippedDays}日分は、この端末の記録を残しました。` : ""}${restoreSettings ? "設定も復元しました。" : ""}`,
-      );
+      const messages = [];
+      if (result.addedDays)
+        messages.push(
+          `${result.addedDays}日分の記録と${result.addedPhotos}枚の写真を復元しました。`,
+        );
+      if (result.repairedPhotos)
+        messages.push(
+          `読み込めなかった写真${result.repairedPhotos}枚を修復しました。`,
+        );
+      if (!result.addedDays && !result.repairedPhotos)
+        messages.push("追加・修復が必要なデータはありませんでした。");
+      if (result.skippedDays)
+        messages.push(
+          `同じ日付の${result.skippedDays}日分は、この端末の記録・編集内容を残しました。`,
+        );
+      if (restoreSettings) messages.push("設定も復元しました。");
+      setMessage(messages.join(""));
     } catch (cause) {
       setError(
         errorMessage(
@@ -166,11 +184,19 @@ export function BackupPanel({
                 <dt>追加する記録</dt>
                 <dd>{additions}日分</dd>
               </div>
+              {repairCandidates > 0 && (
+                <div>
+                  <dt>写真の修復確認</dt>
+                  <dd>{repairCandidates}枚</dd>
+                </div>
+              )}
             </dl>
             <p className="settings-small-note">
               {conflicts
                 ? `同じ日付の${conflicts}日分は、この端末の記録を残します。`
                 : "この端末にある記録はそのまま残します。"}
+              {repairCandidates > 0 &&
+                " 同じ作品で読み込めない写真がある場合だけ、バックアップから修復します。表示できる写真は置き換えません。"}
             </p>
             <label className="settings-check-row">
               <input
@@ -199,7 +225,9 @@ export function BackupPanel({
               </button>
               <button
                 className="primary-button"
-                disabled={busy || (!additions && !restoreSettings)}
+                disabled={
+                  busy || (!additions && !repairCandidates && !restoreSettings)
+                }
                 onClick={restore}
               >
                 {operation === "restore" ? "復元中…" : "確認して復元"}

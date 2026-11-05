@@ -11,10 +11,12 @@ import { isChallengeLocked } from "../domain/challenge";
 import { localDateKey } from "../domain/date";
 import {
   assetsForDeletedDays,
+  isBackupImageReadable,
   planBackupMerge,
   validateBackupSnapshot,
   type BackupSnapshot,
 } from "../domain/backup";
+import { backupPhotoRepairCandidates } from "../domain/backupRepair";
 
 interface SettingsRow {
   id: string;
@@ -165,6 +167,35 @@ export const localStorageRepository: StoragePort = {
     // File parsing/checksums complete before this method. No external async work
     // belongs inside the IndexedDB transaction, so every insert commits together.
     validateBackupSnapshot(snapshot);
+    const repairs: {
+      id: string;
+      source: PhotoAsset;
+      summary?: PhotoSummary;
+      body?: AssetBody;
+      full: boolean;
+      thumb: boolean;
+    }[] = [];
+    for (const candidate of backupPhotoRepairCandidates(
+      snapshot,
+      await db.days.toArray(),
+    )) {
+      const [summary, body] = await Promise.all([
+        db.assets.get(candidate.id),
+        db.assetBodies.get(candidate.id),
+      ]);
+      const [fullReadable, thumbReadable] = await Promise.all([
+        isBackupImageReadable(body?.full),
+        isBackupImageReadable(summary?.thumb),
+      ]);
+      if (!summary || !fullReadable || !thumbReadable)
+        repairs.push({
+          ...candidate,
+          summary,
+          body,
+          full: !fullReadable,
+          thumb: !thumbReadable,
+        });
+    }
     return db.transaction(
       "rw",
       db.days,
@@ -174,10 +205,57 @@ export const localStorageRepository: StoragePort = {
       async () => {
         const days = await db.days.toArray();
         const existingIds = new Set<string>([
+          ...days.flatMap((day) => day.photos.map((photo) => photo.id)),
           ...(await db.assets.toCollection().primaryKeys()),
           ...(await db.assetBodies.toCollection().primaryKeys()),
         ]);
         const plan = planBackupMerge(snapshot, days, existingIds);
+        // Recheck the record and storage metadata after the asynchronous checks.
+        const eligible = new Map(
+          backupPhotoRepairCandidates(snapshot, days).map((entry) => [
+            entry.id,
+            entry,
+          ]),
+        );
+        let repairedPhotos = 0;
+        for (const repair of repairs) {
+          if (eligible.get(repair.id)?.source.id !== repair.source.id) continue;
+          const [summary, body] = await Promise.all([
+            db.assets.get(repair.id),
+            db.assetBodies.get(repair.id),
+          ]);
+          const sameBlob = (a?: Blob, b?: Blob) =>
+            a?.size === b?.size && a?.type === b?.type;
+          if (
+            !sameBlob(body?.full, repair.body?.full) ||
+            !sameBlob(summary?.thumb, repair.summary?.thumb) ||
+            summary?.createdAt !== repair.summary?.createdAt ||
+            summary?.width !== repair.summary?.width ||
+            summary?.height !== repair.summary?.height ||
+            summary?.fullBytes !== repair.summary?.fullBytes ||
+            summary?.thumbBytes !== repair.summary?.thumbBytes
+          )
+            continue;
+          if (repair.full)
+            await db.assetBodies.put({
+              id: repair.id,
+              full: repair.source.full,
+            });
+          await db.assets.put({
+            ...(summary ?? {
+              id: repair.id,
+              width: repair.source.width,
+              height: repair.source.height,
+              createdAt: repair.source.createdAt,
+            }),
+            thumb: repair.thumb ? repair.source.thumb : summary!.thumb,
+            fullBytes: repair.full ? repair.source.full.size : body!.full.size,
+            thumbBytes: repair.thumb
+              ? repair.source.thumb.size
+              : summary!.thumb.size,
+          });
+          repairedPhotos++;
+        }
         await db.assets.bulkAdd(
           plan.assets.map((asset) => ({
             id: asset.id,
@@ -207,7 +285,9 @@ export const localStorageRepository: StoragePort = {
             await db.days.put({ ...existingToday, randomChallenge: true });
           await db.settings.put({ id: "app", value: restoredSettings });
         }
-        return plan.result;
+        return repairedPhotos
+          ? { ...plan.result, repairedPhotos }
+          : plan.result;
       },
     );
   },

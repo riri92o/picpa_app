@@ -1,4 +1,6 @@
 import { PALETTE } from "../constants/palette";
+import { loadArtworkImage } from "./artworkImage";
+import { waitForImageTask } from "./imageTask";
 import type {
   AppSettings,
   ColorMatchResult,
@@ -16,6 +18,7 @@ export interface BackupMergeResult {
   addedDays: number;
   skippedDays: number;
   addedPhotos: number;
+  repairedPhotos?: number;
 }
 interface ImageEntry {
   size: number;
@@ -253,13 +256,36 @@ async function imageSignature(blob: Blob, decode: boolean) {
         : webp)
   )
     throw invalid();
-  if (decode && typeof createImageBitmap === "function") {
+  if (
+    decode &&
+    (typeof createImageBitmap === "function" || typeof Image === "function")
+  ) {
     try {
-      const bitmap = await createImageBitmap(blob);
-      bitmap.close();
+      const image = await loadArtworkImage(blob, 1);
+      image.release();
     } catch {
       throw invalid();
     }
+  }
+}
+
+/** Some WebKit versions retain the entire selected file behind a stored slice.
+ * Own the exact bytes before persistence, rather than retaining a File range. */
+export async function copyBackupImage(blob: Blob): Promise<Blob> {
+  const bytes = await waitForImageTask(blob.arrayBuffer());
+  if (bytes.byteLength !== blob.size) throw invalid();
+  return new Blob([bytes], { type: blob.type });
+}
+
+/** Read outside the write transaction. A readable photo is never replaced. */
+export async function isBackupImageReadable(blob?: Blob): Promise<boolean> {
+  if (!(blob instanceof Blob) || !blob.size || !imageTypes.has(blob.type))
+    return false;
+  try {
+    await imageSignature(await copyBackupImage(blob), true);
+    return true;
+  } catch {
+    return false;
   }
 }
 /** One manifest plus original binary parts; no base64 copy or photo recompression. */
@@ -368,7 +394,9 @@ export async function readBackup(file: Blob): Promise<BackupSnapshot> {
   const assets: PhotoAsset[] = [];
   for (const asset of manifest.assets) {
     const read = async (entry: ImageEntry) => {
-      const blob = file.slice(offset, offset + entry.size, entry.type);
+      const blob = await copyBackupImage(
+        file.slice(offset, offset + entry.size, entry.type),
+      );
       offset += entry.size;
       if ((await hash(blob)) !== entry.sha256) throw invalid();
       await imageSignature(blob, true);
