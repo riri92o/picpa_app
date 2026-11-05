@@ -1,6 +1,15 @@
-export const APP_VERSION = "0.3.2";
+export const APP_VERSION = "0.3.3";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-05",
+    version: "0.3.3",
+    title: "アイコンを丸いPicPaロゴに統一",
+    changes: [
+      "ホーム画面・ブラウザータブ・起動画面を、夜空と丸いバブルのPicPaロゴに揃えました。",
+      "元画像のバブルの中心に余白を合わせ、すべてのサイズを同じマスターから書き出しました。",
+    ],
+  },
   {
     date: "2026-11-05",
     version: "0.3.2",

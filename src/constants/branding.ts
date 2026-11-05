@@ -1,9 +1,9 @@
-/** Use the approved artwork directly; the UI and canvas share the same crop. */
+/** The opening uses the same centered master as the installed app icon. */
 export const BRAND_LOGO = {
-  url: "./branding/picpa-logo-source.png",
-  sourceWidth: 1536,
+  url: "./icons/picpa-icon-1024.png?v=20261105-circle",
+  sourceWidth: 1024,
   sourceHeight: 1024,
-  crop: { x: 265, y: 247, width: 1006, height: 508 },
+  crop: { x: 64, y: 64, width: 896, height: 896 },
 } as const;
 
 /** The supplied white artwork rendered as an alpha mask, with no dark backing. */

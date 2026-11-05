@@ -169,7 +169,7 @@ src/
 
 ## ロゴとオープニング
 
-オープニングのカプセル型ロゴは `public/branding/picpa-logo-source.png` に同梱しています。元の文字と虹色の縁をそのまま描画し、位置を固定します。完成画像では添付された白ロゴを `picpa-white-logo-source.png` として保持し、`picpa-white-logo.svg` の描画マスクで暗い背景だけを透明にします。文字形は描き直しません。SVGの再生成は `python3 scripts/export-white-logo.py` で行えます。
+オープニングはアプリアイコンと同じ `public/icons/picpa-icon-1024.png` の中央896px角を1:1で使い、夜空と丸いバブルのPicPaロゴを中央に表示します。文字と反射は提供画像をそのまま使い、バブルの外側の余白だけを円形のマスクで夜空になじませます。完成画像では添付された白ロゴを `picpa-white-logo-source.png` として保持し、`picpa-white-logo.svg` の描画マスクで暗い背景だけを透明にします。文字形は描き直しません。SVGの再生成は `python3 scripts/export-white-logo.py` で行えます。
 
 完成画像のロゴは、色の標本・今日のパレットではフッター右下、バブルの窓では最後のバブルの下、黒枠・白枠では下部中央に小さく配置します。白枠では同じ形を黒色で描きます。ロゴOFFでは画像に含めず、バブルの窓・黒枠・白枠の下部余白も縮めます。写真の位置は変えません。ロゴや縁は色マッチ度の採点に含めません。ホームの空き枠は四角で、「すき間なし」の境目は点線です。
 
@@ -213,9 +213,9 @@ Homeとカレンダーのメニュー内の点数は計算結果をそのまま�
 
 ## アプリアイコン
 
-虹色のバブルに山と湖の風景を映した角丸アイコンを登録しました。`index.html` にfavicon・apple-touch-icon・Web App Manifestを指定しています。ホーム画面追加時の名前はPicPa、表示はstandaloneです。相対URLなので同じビルドをサブディレクトリでも読み込めます。
+ユーザー提供の、夜空と透明な丸いバブル・白いPicPa文字のアイコンへ統一しました（v0.3.3 / 2026-11-05）。`index.html` にfavicon・apple-touch-icon・Web App Manifestを指定しています。ホーム画面追加時の名前はPicPa、表示はstandaloneです。相対URLなので同じビルドをサブディレクトリでも読み込めます。
 
-`public/icons/` に16・32・48・180・192・512・1024pxのPNG（Web用は角の透過を維持、180/1024pxは不透明）、`public/favicon.ico` に16/32/48pxのICOを保存しています。将来のCapacitorアプリ化では1024px版をアイコン生成の入力に使えます。編集元・生成プロンプトは `assets/branding/` に、サイズを書き出すスクリプトは `scripts/export-icons.py` にあります。再生成にはPillowが必要ですが、アプリ実行にPythonは不要です。
+`public/icons/` に16・32・48・180・192・512・1024pxの不透明PNG、`public/favicon.ico` に16/32/48pxのICOを保存しています。元画像のバブル中心に合わせて外側の暗い余白だけを1229px角に整え、全サイズと起動画面で同じマスターを使います。画像の文字・形・反射は描き直しません。角丸はOSの表示に任せます。将来のCapacitorアプリ化では1024px版を入力に使えます。編集元と切り出し位置は `assets/branding/`、書き出しスクリプトは `scripts/export-icons.py` にあります。再出力にはPillowが必要ですが、アプリ実行にPythonは不要です。HTML・Manifest・起動ロゴの参照には共通の版キーを付けています。
 
 Web用の登録方式: [MDN manifest icons](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons)、[Apple Web Clip icons](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html)。端末へのホーム画面追加はSafariなどのブラウザーから行ってください。
 

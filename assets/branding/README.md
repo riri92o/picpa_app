@@ -1,15 +1,13 @@
 # PicPa app icon
 
-採用デザイン: 虹色にマーブル状に混ざるバブル、山と湖、小屋、周囲の泡と星。ユーザー提供画像をbuilt-in image_genで角丸の正方形に整えました。
+採用デザイン（2026-11-05）：ユーザー提供の、夜空・透明な丸いバブル・白いPicPa文字。文字や反射を生成し直さず、提供画像をそのまま編集元に保持しています。
 
-- picpa-icon-source.png: 角丸の編集元（角の外側は透過）。
-- public/iconsの16/32/48/192/512px: 角の透過を維持。
-- 180px: Appleホーム画面用。不透明背景に変換し、OSの角丸表示に対応。
-- 1024px: 将来のネイティブアプリ用。不透明マスター。
-- favicon.ico: 16/32/48px。
+- `picpa-icon-source.png`：添付とバイト単位で同一の1254×1254px・不透明RGB画像。
+- 元のバブル中心はおよそ(621.3, 614.5)。画像の中央(627, 627)とは少し異なるため、暗い外周余白だけを `(7, 0, 1236, 1229)` の1229px角に切り出します。切り出しの中心は(621.5, 614.5)です。
+- 文字とバブルの相対配置、形、反射は維持し、全サイズを同じ切り出しから等比縮小します。
+- `public/icons/`：16・32・48・180・192・512・1024pxの不透明PNG。角丸はOSの表示に任せます。
+- `public/favicon.ico`：同じマスターから16・32・48pxを収録。
+- 起動画面も`public/icons/picpa-icon-1024.png`を使用し、中央の896px角を1:1で使い、バブルより外側だけを円形のマスクでなじませて中央に表示します。
+- 完成画像用の横長の白い署名は`public/branding/picpa-white-logo.svg`で管理します。
 
-再出力: `python3 scripts/export-icons.py`（Pillow必要）。画像生成後はサイズ・フォーマット変換とApple用の透過背景補完のみ。イラストは再描画しません。
-
-## Final prompt (built-in image_gen)
-
-Use case: precise-object-edit, background-extraction. Edit target: the attached image. Extract its central rounded-square app icon and prepare it as a square PNG app icon. Remove the large purple rectangular outer backdrop and all exterior margins. The rounded square tile should fill the square canvas, with only genuinely transparent corner cutouts outside its rounded edges (corner radius about 20% of width). Preserve the original illustration as faithfully as possible: midnight navy to dark purple tile, luminous pastel pink/cyan/yellow/lavender marbled soap bubble, mountain lake landscape and tiny cabin inside, surrounding small bubbles and sparkles. Keep the landscape, color palette, soft illustrated texture, relative placement, and mood unchanged. Make the tile geometrically square (the input tile is slightly wide), without stretching the circular bubble. No new objects, no text, no mockup, no white border, no additional shadow. Produce one tightly framed square rounded-corner icon with true transparent corners.
+再出力：`python3 scripts/export-icons.py`（Pillow必要）。提供された画像の外周余白整理とリサイズのみで、新しい画像生成や文字の描き直しはしていません。

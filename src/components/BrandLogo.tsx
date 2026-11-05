@@ -29,9 +29,24 @@ export function BrandLogo({
       aria-label="PicPa"
     >
       <defs>
-        <clipPath id={id}>
-          <rect width={crop.width} height={crop.height} rx={crop.height / 2} />
-        </clipPath>
+        <radialGradient id={`${id}-edge`}>
+          <stop offset="90%" stopColor="white" />
+          <stop offset="100%" stopColor="black" />
+        </radialGradient>
+        <mask
+          id={id}
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width={crop.width}
+          height={crop.height}
+        >
+          <rect
+            width={crop.width}
+            height={crop.height}
+            fill={`url(#${id}-edge)`}
+          />
+        </mask>
       </defs>
       <image
         href={url}
@@ -39,7 +54,7 @@ export function BrandLogo({
         y={-crop.y}
         width={sourceWidth}
         height={sourceHeight}
-        clipPath={`url(#${id})`}
+        mask={`url(#${id})`}
       />
     </svg>
   );
