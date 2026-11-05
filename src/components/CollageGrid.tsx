@@ -73,6 +73,7 @@ export function CollageGrid({
   onEdit,
   onReorder,
   mini = false,
+  showEmpty = true,
   spacing = "separated",
 }: {
   count: GridCount;
@@ -83,6 +84,7 @@ export function CollageGrid({
   onEdit?: (id: string) => void;
   onReorder?: (active: string, over: string) => void;
   mini?: boolean;
+  showEmpty?: boolean;
   spacing?: CollageSpacing;
 }) {
   const {
@@ -98,6 +100,7 @@ export function CollageGrid({
   );
   const tiles = Array.from({ length: count }, (_, index) => {
     const placement = photos[index];
+    if (!placement && !showEmpty) return null;
     if (placement && (locked || mini))
       return (
         <StaticPhotoTile

@@ -166,6 +166,9 @@
   border-radius: 0;
   overflow: hidden;
 }
+.detail-collage .collage-grid {
+  background: transparent;
+}
 .detail-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

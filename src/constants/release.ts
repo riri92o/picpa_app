@@ -1,6 +1,15 @@
-export const APP_VERSION = "0.3.1";
+export const APP_VERSION = "0.3.2";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-05",
+    version: "0.3.2",
+    title: "未完成の日の記録を整理",
+    changes: [
+      "カレンダーの未完成日は、色名と「未完成」を表示し、写真がある場合だけ登録済みの写真を表示するようにしました。",
+      "空の写真枠と、制作中・枚数・保存共有の案内を外しました。登録済みの写真と編集内容はそのまま残ります。",
+    ],
+  },
   {
     date: "2026-11-04",
     version: "0.3.1",

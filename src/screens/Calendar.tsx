@@ -185,7 +185,7 @@ export function Calendar() {
                   <h3>{selectedColor.name}</h3>
                 </div>
                 <span className="detail-state">
-                  {selectedDay.completedAt ? "完成" : "制作中"}
+                  {selectedDay.completedAt ? "完成" : "未完成"}
                 </span>
               </div>
             )}
@@ -223,23 +223,18 @@ export function Calendar() {
                   </>
                 )}
               </ExportedCollage>
-            ) : (
-              <>
-                <div className="detail-collage">
-                  <CollageGrid
-                    count={selectedDay.count}
-                    spacing={selectedDay.spacing}
-                    photos={selectedDay.photos}
-                    images={images}
-                    locked
-                  />
-                </div>
-                <p className="modal-footnote">
-                  {selectedDay.photos.length} / {selectedDay.count}枚 ·
-                  完成するとここから保存・共有できます。
-                </p>
-              </>
-            )}
+            ) : selectedDay.photos.length > 0 ? (
+              <div className="detail-collage">
+                <CollageGrid
+                  count={selectedDay.count}
+                  spacing={selectedDay.spacing}
+                  photos={selectedDay.photos}
+                  images={images}
+                  locked
+                  showEmpty={false}
+                />
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="empty-day">
