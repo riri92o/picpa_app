@@ -117,22 +117,47 @@
   object-fit: cover;
   display: block;
 }
-.editor-controls {
-  display: grid;
-  gap: 14px;
-  margin: 23px 0;
-}
-.editor-controls label {
-  display: grid;
-  grid-template-columns: 43px 1fr;
+.editor-gesture-tools {
+  display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  font-weight: 700;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0 18px;
 }
-.editor-controls input {
-  width: 100%;
-  accent-color: var(--accent);
+.editor-zoom-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.editor-gesture-tools button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+}
+.editor-zoom-buttons output {
+  min-width: 48px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.editor-gesture-tools .editor-reset {
+  padding: 0 14px;
+  font-size: 12px;
+}
+.crop-view.editable {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.crop-view.editable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 .editor-actions {
   display: grid;

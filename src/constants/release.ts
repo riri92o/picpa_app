@@ -1,6 +1,16 @@
-export const APP_VERSION = "0.3.4";
+export const APP_VERSION = "0.3.5";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-10",
+    version: "0.3.5",
+    title: "写真を指で拡大縮小",
+    changes: [
+      "写真編集を、1本指で移動・2本指で拡大縮小できる操作に変更しました。",
+      "拡大・左右・上下のスライダーを外し、補助の＋・−ボタンと調整のリセットをまとめました。",
+      "既存の写真・トリミング・回転・完成記録を引き継ぎます。",
+    ],
+  },
   {
     date: "2026-11-05",
     version: "0.3.4",

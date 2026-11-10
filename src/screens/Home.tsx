@@ -8,7 +8,9 @@ import {
   Ellipsis,
   ImagePlus,
   Images,
+  Minus,
   Palette,
+  Plus,
   RotateCw,
   Trash2,
   Upload,
@@ -35,6 +37,7 @@ import { SamplePhotoButton } from "../dev/SamplePhotoButton";
 import { isRandomChallenge } from "../domain/challenge";
 import { dateFromKey } from "../domain/date";
 import type { GridCount } from "../domain/types";
+import { MIN_CROP_ZOOM, MAX_CROP_ZOOM } from "../domain/cropGesture";
 import { useApp } from "../state/AppContext";
 
 export function Home({
@@ -391,55 +394,70 @@ export function Home({
           <>
             <div className="editor-preview">
               <CroppedPhoto
+                key={placement.id}
                 src={images[placement.id]?.full ?? images[placement.id]?.thumb}
                 placement={placement}
                 alt="編集中の写真"
-                onPan={(x, y) => updatePlacement(placement.id, { x, y })}
+                onTransform={
+                  dataBusy
+                    ? undefined
+                    : (patch) => updatePlacement(placement.id, patch)
+                }
               />
             </div>
-            <p className="modal-footnote centered">ドラッグして位置を調整</p>
-            <div className="editor-controls">
-              <label>
-                拡大{" "}
-                <input
-                  type="range"
-                  min="1"
-                  max="2.4"
-                  step=".01"
-                  value={placement.zoom}
-                  onChange={(e) =>
+            <p className="modal-footnote centered">
+              1本指で移動・2本指で拡大縮小
+            </p>
+            <div className="editor-gesture-tools">
+              <div
+                className="editor-zoom-buttons"
+                role="group"
+                aria-label="写真の拡大率"
+              >
+                <button
+                  type="button"
+                  aria-label="写真を縮小"
+                  disabled={dataBusy || placement.zoom <= MIN_CROP_ZOOM}
+                  onClick={() =>
                     updatePlacement(placement.id, {
-                      zoom: Number(e.target.value),
+                      zoom: Math.max(MIN_CROP_ZOOM, placement.zoom - 0.1),
                     })
                   }
-                />
-              </label>
-              <label>
-                左右{" "}
-                <input
-                  type="range"
-                  min="-1"
-                  max="1"
-                  step=".01"
-                  value={placement.x}
-                  onChange={(e) =>
-                    updatePlacement(placement.id, { x: Number(e.target.value) })
+                >
+                  <Minus size={17} aria-hidden="true" />
+                </button>
+                <output aria-label="拡大率">
+                  {Math.round(placement.zoom * 100)}%
+                </output>
+                <button
+                  type="button"
+                  aria-label="写真を拡大"
+                  disabled={dataBusy || placement.zoom >= MAX_CROP_ZOOM}
+                  onClick={() =>
+                    updatePlacement(placement.id, {
+                      zoom: Math.min(MAX_CROP_ZOOM, placement.zoom + 0.1),
+                    })
                   }
-                />
-              </label>
-              <label>
-                上下{" "}
-                <input
-                  type="range"
-                  min="-1"
-                  max="1"
-                  step=".01"
-                  value={placement.y}
-                  onChange={(e) =>
-                    updatePlacement(placement.id, { y: Number(e.target.value) })
-                  }
-                />
-              </label>
+                >
+                  <Plus size={17} aria-hidden="true" />
+                </button>
+              </div>
+              <button
+                type="button"
+                className="editor-reset"
+                aria-label="写真の調整をリセット"
+                disabled={dataBusy}
+                onClick={() =>
+                  updatePlacement(placement.id, {
+                    zoom: 1,
+                    x: 0,
+                    y: 0,
+                    rotation: 0,
+                  })
+                }
+              >
+                リセット
+              </button>
             </div>
             <div className="editor-actions">
               <button
