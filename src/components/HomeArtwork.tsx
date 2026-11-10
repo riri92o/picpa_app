@@ -97,7 +97,7 @@ export function HomeArtwork({
           <ColorMatchBadge day={day} showComment />
         </section>
         <p className="modal-footnote">
-          写真・並び・トリミング・枚数は完成時のまま固定されています。
+          写真・並び・トリミング・フィルター・枚数は完成時のまま固定されています。
         </p>
       </Modal>
     </>

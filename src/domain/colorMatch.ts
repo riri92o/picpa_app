@@ -1,6 +1,7 @@
 import { COLOR_MATCH } from "../constants/colorMatch";
 import { colorById } from "../constants/palette";
 import { drawPlacement } from "./image";
+import { photoPlacementSignature } from "./photoFilter";
 import type { ColorMatchResult, DayRecord } from "./types";
 import {
   colorFamily,
@@ -139,7 +140,7 @@ export function colorMatchSignature(day: DayRecord): string {
   return JSON.stringify([
     day.count,
     day.colorId,
-    day.photos.map((p) => [p.id, p.x, p.y, p.zoom, p.rotation]),
+    day.photos.map(photoPlacementSignature),
   ]);
 }
 export function validColorMatch(day: DayRecord): ColorMatchResult | undefined {

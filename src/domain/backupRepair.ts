@@ -1,5 +1,6 @@
 import type { BackupSnapshot } from "./backup";
 import type { DayRecord } from "./types";
+import { resolvePhotoFilter } from "./photoFilter";
 
 /** Match the original capture, even after restore remapped its asset IDs.
  * Presentation/memo changes remain this device's own values. */
@@ -27,7 +28,9 @@ export function backupPhotoRepairCandidates(
           previous.zoom === photo.zoom &&
           previous.x === photo.x &&
           previous.y === photo.y &&
-          previous.rotation === photo.rotation
+          previous.rotation === photo.rotation &&
+          resolvePhotoFilter(previous.filter) ===
+            resolvePhotoFilter(photo.filter)
         );
       }) ||
       !(

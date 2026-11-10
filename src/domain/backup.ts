@@ -1,6 +1,7 @@
 import { PALETTE } from "../constants/palette";
 import { loadArtworkImage } from "./artworkImage";
 import { waitForImageTask } from "./imageTask";
+import { isPhotoFilter, photoPlacementSignature } from "./photoFilter";
 import type {
   AppSettings,
   ColorMatchResult,
@@ -99,7 +100,8 @@ function placement(value: unknown): asserts value is PhotoPlacement {
     !number(value.x, -1, 1) ||
     !number(value.y, -1, 1) ||
     ![0, 90, 180, 270].includes(Number(value.rotation)) ||
-    typeof value.rotation !== "number"
+    typeof value.rotation !== "number" ||
+    (value.filter !== undefined && !isPhotoFilter(value.filter))
   )
     throw invalid();
 }
@@ -418,7 +420,7 @@ const signature = (day: DayRecord) =>
   JSON.stringify([
     day.count,
     day.colorId,
-    day.photos.map((p) => [p.id, p.x, p.y, p.zoom, p.rotation]),
+    day.photos.map(photoPlacementSignature),
   ]);
 /** Pure planning is synchronous so Dexie can run it within its atomic transaction. */
 export function planBackupMerge(

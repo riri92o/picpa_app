@@ -32,6 +32,7 @@ import { SpacingSelector } from "../components/SpacingSelector";
 import { CompletionPreview } from "../components/CompletionPreview";
 import { ExportedCollage } from "../components/ExportedCollage";
 import { CroppedPhoto } from "../components/CroppedPhoto";
+import { PhotoFilterSelector } from "../components/PhotoFilterSelector";
 import { Modal } from "../components/Modal";
 import { SamplePhotoButton } from "../dev/SamplePhotoButton";
 import { isRandomChallenge } from "../domain/challenge";
@@ -445,6 +446,7 @@ export function Home({
               <button
                 type="button"
                 className="editor-reset"
+                title="位置・大きさ・回転をリセット"
                 aria-label="写真の調整をリセット"
                 disabled={dataBusy}
                 onClick={() =>
@@ -459,6 +461,12 @@ export function Home({
                 リセット
               </button>
             </div>
+            <PhotoFilterSelector
+              src={images[placement.id]?.thumb}
+              placement={placement}
+              disabled={dataBusy}
+              onChange={(filter) => updatePlacement(placement.id, { filter })}
+            />
             <div className="editor-actions">
               <button
                 onClick={() =>
@@ -542,7 +550,8 @@ export function Home({
           <ArtworkMemoField value={memoDraft} onChange={setMemoDraft} />
         </div>
         <p className="modal-description">
-          本当に完成でいいですか？ 完成後は写真や並び順を変更できません。
+          本当に完成でいいですか？
+          完成後は写真・並び順・フィルターを変更できません。
         </p>
         <div className="dialog-actions">
           <button

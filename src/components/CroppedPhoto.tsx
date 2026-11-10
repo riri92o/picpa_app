@@ -1,5 +1,6 @@
 import {
   useLayoutEffect,
+  useId,
   useRef,
   useState,
   type KeyboardEvent,
@@ -14,6 +15,10 @@ import {
   type CropPoint,
 } from "../domain/cropGesture";
 import type { PhotoPlacement } from "../domain/types";
+import {
+  PHOTO_FILTER_SVG_TABLES,
+  resolvePhotoFilter,
+} from "../domain/photoFilter";
 
 interface Size {
   width: number;
@@ -36,6 +41,9 @@ export function CroppedPhoto({
   const currentPlacement = useRef(placement);
   currentPlacement.current = placement;
   const editable = !!onTransform;
+  const filterId = `photo-filter-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const filter = resolvePhotoFilter(placement.filter);
+  const [red, green, blue] = PHOTO_FILTER_SVG_TABLES[filter];
   const [frame, setFrame] = useState<Size>({ width: 0, height: 0 });
   const [source, setSource] = useState<Size>({ width: 0, height: 0 });
 
@@ -199,6 +207,32 @@ export function CroppedPhoto({
       onLostPointerCapture={endGesture}
       onKeyDown={handleKeyDown}
     >
+      {filter !== "none" && (
+        <svg
+          className="photo-filter-definitions"
+          width="0"
+          height="0"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <defs>
+            <filter
+              id={filterId}
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              colorInterpolationFilters="sRGB"
+            >
+              <feComponentTransfer>
+                <feFuncR type="table" tableValues={red} />
+                <feFuncG type="table" tableValues={green} />
+                <feFuncB type="table" tableValues={blue} />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+        </svg>
+      )}
       {src && (
         <img
           src={src}
@@ -218,6 +252,7 @@ export function CroppedPhoto({
                   left: `calc(50% + ${geometry.panX}px)`,
                   top: `calc(50% + ${geometry.panY}px)`,
                   transform: `translate(-50%, -50%) rotate(${placement.rotation}deg)`,
+                  filter: filter === "none" ? undefined : `url(#${filterId})`,
                 }
               : undefined
           }

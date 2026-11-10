@@ -1,3 +1,5 @@
+import type { PhotoFilter } from "./photoFilter";
+
 export type GridCount = 4 | 6 | 9;
 export type CollageSpacing = "joined" | "separated";
 export type ArtworkStyle =
@@ -10,6 +12,8 @@ export interface PhotoPlacement {
   x: number;
   y: number;
   rotation: number;
+  /** Non-destructive per-photo grade; absent on legacy records means original. */
+  filter?: PhotoFilter;
 }
 export interface ColorMatchResult {
   version: number;
