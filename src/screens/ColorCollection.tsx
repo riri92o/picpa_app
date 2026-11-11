@@ -88,7 +88,7 @@ export function ColorCollection({ onBack }: { onBack: () => void }) {
     };
   }, [entry?.color.id, entry?.days.length]);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "auto" });
+    screenRef.current?.scrollTo({ top: 0, behavior: "auto" });
     titleRef.current?.focus({ preventScroll: true });
   }, []);
   const close = () => {

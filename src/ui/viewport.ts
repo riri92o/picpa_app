@@ -7,6 +7,26 @@ export interface ViewportMetrics {
   scale: number;
 }
 
+/** Keyboard-visible area in layout coordinates. Page zoom keeps its normal
+ * layout instead of shrinking the app a second time. */
+export function visibleViewportFrame(
+  layoutHeight: number,
+  visual?: { height: number; offsetTop: number; scale: number },
+) {
+  if (
+    !visual ||
+    Math.abs(visual.scale - 1) > 0.01 ||
+    !Number.isFinite(visual.height) ||
+    visual.height <= 0
+  )
+    return { height: layoutHeight, top: 0 };
+  const height = Math.min(layoutHeight, visual.height);
+  const top = Number.isFinite(visual.offsetTop)
+    ? Math.max(0, Math.min(layoutHeight - height, visual.offsetTop))
+    : 0;
+  return { height, top };
+}
+
 /** Some iOS Home Screen versions reserve a native status-bar rectangle while
  * reporting a zero top inset. No DOM layer can paint into that rectangle. */
 export function hasSystemStatusBarInset(metrics: ViewportMetrics): boolean {

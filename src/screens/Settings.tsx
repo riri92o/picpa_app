@@ -63,6 +63,7 @@ export function Settings() {
   const [resetError, setResetError] = useState("");
   const [challengeConfirmOpen, setChallengeConfirmOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const screenRef = useRef<HTMLElement>(null);
   const busy = dataBusy || panelBusy || resetting;
   const challengeLocked = isChallengeLocked(today, settings);
   const quality = PHOTO_QUALITY_OPTIONS.find(
@@ -73,7 +74,7 @@ export function Settings() {
     0,
   );
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "auto" });
+    screenRef.current?.scrollTo({ top: 0, behavior: "auto" });
     titleRef.current?.focus({ preventScroll: true });
   }, [page]);
   const go = (next: SettingsPage) => {
@@ -81,6 +82,7 @@ export function Settings() {
   };
   return (
     <main
+      ref={screenRef}
       className={`screen settings-screen ${page !== "main" ? "settings-detail-screen" : ""}`}
     >
       <div

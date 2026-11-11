@@ -332,8 +332,11 @@ console.log(
   `Soap film: transparent air/corners, coherent light direction, neutral state and all ${PALETTE.length} daily tints: OK`,
 );
 
-const { hasSystemStatusBarInset, floatingBubblePosition } =
-  load("src/ui/viewport.ts");
+const {
+  hasSystemStatusBarInset,
+  floatingBubblePosition,
+  visibleViewportFrame,
+} = load("src/ui/viewport.ts");
 const iosViewport = {
   iosStandalone: true,
   safeTop: 0,
@@ -343,6 +346,29 @@ const iosViewport = {
   scale: 1,
 };
 assert.equal(hasSystemStatusBarInset(iosViewport), true);
+assert.deepEqual(visibleViewportFrame(844), { height: 844, top: 0 });
+assert.deepEqual(
+  visibleViewportFrame(844, { height: 320, offsetTop: 24, scale: 1 }),
+  { height: 320, top: 24 },
+);
+assert.deepEqual(
+  visibleViewportFrame(844, { height: 320, offsetTop: 900, scale: 1 }),
+  { height: 320, top: 524 },
+);
+assert.deepEqual(
+  visibleViewportFrame(844, { height: 900, offsetTop: -20, scale: 1 }),
+  { height: 844, top: 0 },
+);
+assert.deepEqual(
+  visibleViewportFrame(844, { height: 400, offsetTop: 50, scale: 2 }),
+  { height: 844, top: 0 },
+  "Page zoom must not shrink/reposition the application layout",
+);
+for (const height of [0, NaN, Infinity])
+  assert.deepEqual(
+    visibleViewportFrame(844, { height, offsetTop: 0, scale: 1 }),
+    { height: 844, top: 0 },
+  );
 for (const change of [
   { iosStandalone: false },
   { safeTop: 59 },

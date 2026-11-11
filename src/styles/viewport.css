@@ -1,0 +1,95 @@
+/* The app owns the viewport; long content scrolls inside its screen or sheet.
+   Keep page zoom and native touch gestures available instead of cancelling them. */
+html,
+body {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  position: fixed;
+  inset: 0;
+  height: var(--app-height, 100dvh);
+}
+#root,
+.app-shell,
+.tab-content {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.screen,
+.home-screen[data-stage="draw"],
+.home-screen[data-stage="collect"] {
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+}
+.home-screen[data-stage="draw"],
+.calendar-screen {
+  overflow: hidden;
+}
+.home-screen {
+  overflow-anchor: none;
+}
+.bottom-nav {
+  bottom: auto;
+  top: calc(var(--app-height, 100dvh) - var(--nav-space));
+}
+.nav-items {
+  align-items: stretch;
+}
+.nav-shape,
+.nav-bubble {
+  pointer-events: none;
+}
+.app-shell::before,
+.night-sky,
+.color-scene-viewport {
+  height: calc(var(--app-height, 100dvh) + var(--safe-top));
+}
+.modal-backdrop,
+.finish-overlay {
+  inset: var(--visible-top, 0px) 0 auto;
+  height: var(--visible-height, 100dvh);
+  overscroll-behavior: none;
+}
+.modal-backdrop {
+  overflow: hidden;
+}
+.modal-sheet {
+  max-height: min(
+    calc(var(--visible-height, 100dvh) * 0.9),
+    calc(
+      var(--visible-height, 100dvh) -
+        max(12px, calc(var(--safe-top) - var(--visible-top, 0px)))
+    )
+  );
+}
+.modal-sheet,
+.finish-card,
+.home-artwork-memo,
+.tutorial-card {
+  overscroll-behavior-y: none;
+}
+.opening-screen,
+.tutorial-overlay {
+  bottom: auto;
+  height: var(--app-height, 100dvh);
+}
+.tutorial-card {
+  height: 100%;
+  overflow-y: auto;
+}
+@media (max-height: 480px) {
+  /* Preserve usable photos/actions on a short landscape screen, within Home. */
+  .home-screen[data-stage="collect"] .work-section {
+    flex: 0 0 400px;
+  }
+  .home-screen[data-stage="draw"] {
+    --draw-bubble-size: 96px;
+  }
+}

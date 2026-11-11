@@ -234,8 +234,7 @@ export function StoragePanel({
                         {day.colorId
                           ? colorById(day.colorId).name
                           : "色を引く前"}{" "}
-                        · {day.completedAt ? "完成" : "制作中"} ·{" "}
-                        {day.photos.length}枚
+                        · {day.photos.length}枚
                       </small>
                     </span>
                     <span className="settings-record-bytes">
