@@ -1,6 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { CalendarDays, House, Settings2 } from "lucide-react";
 import { NAV_MOTION } from "../constants/config";
+import { floatingNavGeometry } from "../ui/navGeometry";
 export type Tab = "home" | "calendar" | "settings";
 const tabs = [
   { id: "home" as Tab, label: "Home", Icon: House },
@@ -19,24 +21,93 @@ export function BottomNav({
   const reduced = useReducedMotion();
   const transition = reduced ? { duration: 0 } : NAV_MOTION;
   const index = tabs.findIndex((item) => item.id === tab);
-  const center = 65 + 130 * index;
-  const left = center - 51,
-    right = center + 51;
-  const d = `M 0 10 C ${left / 3} 4 ${(left * 2) / 3} -4 ${left} 0 C ${center - 37} 0 ${center - 37} 26 ${center - 20} 36 C ${center - 10} 44 ${center + 10} 44 ${center + 20} 36 C ${center + 37} 26 ${center + 37} 0 ${right} 0 C ${right + (390 - right) / 3} -4 ${right + ((390 - right) * 2) / 3} 4 390 10 V 96 H 0 Z`;
+  const nav = useRef<HTMLElement>(null);
+  const [frame, setFrame] = useState({
+    width: 360,
+    height: 64,
+    bubble: 56,
+    raise: 16,
+  });
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const filmId = `nav-film-${id}`;
+  const rimId = `nav-rim-${id}`;
+  useLayoutEffect(() => {
+    const element = nav.current;
+    if (!element) return;
+    const measure = () => {
+      const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const next = {
+        width: box.width,
+        height: box.height,
+        bubble: parseFloat(style.getPropertyValue("--nav-bubble-size")),
+        raise: parseFloat(style.getPropertyValue("--nav-raise")),
+      };
+      if (!next.width || !next.height) return;
+      setFrame((previous) =>
+        Object.entries(next).every(
+          ([key, value]) => previous[key as keyof typeof previous] === value,
+        )
+          ? previous
+          : next,
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const shape = floatingNavGeometry(
+    frame.width,
+    frame.height,
+    frame.bubble,
+    frame.raise,
+    index,
+  );
   const SelectedIcon = tabs[index].Icon;
   return (
-    <nav className="bottom-nav" aria-label="メインナビゲーション">
+    <nav ref={nav} className="bottom-nav" aria-label="メインナビゲーション">
       <svg
         className="nav-shape"
-        viewBox="0 0 390 96"
+        viewBox={`0 0 ${frame.width} ${frame.height}`}
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <motion.path animate={{ d }} transition={transition} />
+        <defs>
+          <linearGradient id={filmId} x1="0" y1="0" x2="0.8" y2="1">
+            <stop
+              offset="0"
+              stopColor="var(--accent-soft)"
+              stopOpacity="0.13"
+            />
+            <stop offset="0.5" stopColor="#e8f1ff" stopOpacity="0.045" />
+            <stop offset="1" stopColor="var(--accent)" stopOpacity="0.10" />
+          </linearGradient>
+          <linearGradient id={rimId} x1="0.05" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#dceeff" stopOpacity="0.65" />
+            <stop
+              offset="0.52"
+              stopColor="var(--accent-soft)"
+              stopOpacity="0.24"
+            />
+            <stop offset="1" stopColor="#badcff" stopOpacity="0.50" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          className="nav-membrane"
+          initial={{ d: shape.path }}
+          animate={{ d: shape.path }}
+          transition={transition}
+          fill={`url(#${filmId})`}
+          stroke={`url(#${rimId})`}
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
       </svg>
       <motion.div
         className="nav-bubble"
-        animate={{ left: `${((index + 0.5) / 3) * 100}%` }}
+        initial={false}
+        animate={{ left: shape.center }}
         transition={transition}
       >
         <SelectedIcon size={25} strokeWidth={2.4} />

@@ -345,6 +345,65 @@ const iosViewport = {
   portrait: true,
   scale: 1,
 };
+const { floatingNavGeometry } = load("src/ui/navGeometry.ts");
+for (const width of [260, 296, 322.5, 362.6875, 428]) {
+  for (const [height, bubble, raise] of [
+    [60, 52, 14],
+    [64, 56, 16],
+  ]) {
+    const shapes = [0, 1, 2].map((index) =>
+      floatingNavGeometry(width, height, bubble, raise, index),
+    );
+    const topology = shapes[0].path.replace(/[-\d.]+/g, "");
+    for (const [index, shape] of shapes.entries()) {
+      const values = shape.path.match(/-?\d+(?:\.\d+)?/g).map(Number);
+      assert.ok(shape.path.startsWith("M ") && shape.path.endsWith("Z"));
+      assert.equal(
+        shape.path.replace(/[-\d.]+/g, ""),
+        topology,
+        "Tabs retain the same morphable Bezier topology",
+      );
+      assert.ok(values.every(Number.isFinite));
+      assert.ok(
+        Math.abs(values[30] - (width * (index + 0.5)) / 3) < 0.001,
+        "The cavity and selected icon use the same center",
+      );
+      assert.ok(shape.left >= 2.9 && shape.right <= width - 2.9);
+      assert.ok(
+        shape.cy + shape.radius < height - 10,
+        "A thin membrane remains below the cavity",
+      );
+      for (const first of [24, 30]) {
+        for (let step = 0; step <= 20; step++) {
+          const t = step / 20,
+            u = 1 - t;
+          const xy = [0, 1].map(
+            (axis) =>
+              u ** 3 * values[first + axis] +
+              3 * u ** 2 * t * values[first + 2 + axis] +
+              3 * u * t ** 2 * values[first + 4 + axis] +
+              t ** 3 * values[first + 6 + axis],
+          );
+          assert.ok(
+            Math.hypot(xy[0] - shape.center, xy[1] - shape.cy) >=
+              bubble / 2 + 5.9,
+            "The rim wraps the bubble with clear air between them",
+          );
+        }
+      }
+      for (let i = 0; i < values.length; i += 2)
+        assert.ok(
+          values[i] >= 0 &&
+            values[i] <= width &&
+            values[i + 1] >= 0 &&
+            values[i + 1] <= height,
+        );
+    }
+  }
+}
+console.log(
+  "Floating navigation: closed waved contours, clear bubble cavities, responsive bounds and identical transition topology: OK",
+);
 assert.equal(hasSystemStatusBarInset(iosViewport), true);
 assert.deepEqual(visibleViewportFrame(844), { height: 844, top: 0 });
 assert.deepEqual(
