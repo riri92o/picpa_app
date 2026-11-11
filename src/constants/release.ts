@@ -1,6 +1,15 @@
-export const APP_VERSION = "0.3.8";
+export const APP_VERSION = "0.3.9";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-11",
+    version: "0.3.9",
+    title: "設定画面とナビの重なりを調整",
+    changes: [
+      "設定の一覧と詳細画面の表示範囲をナビの上に収め、項目が半透明の膜に重ならないよう調整しました。",
+      "最後の項目までスクロールできるよう余白を整え、小さい画面やセーフエリアにも対応しました。",
+    ],
+  },
   {
     date: "2026-11-11",
     version: "0.3.8",

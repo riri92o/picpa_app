@@ -32,6 +32,11 @@ body {
 .calendar-screen {
   overflow: hidden;
 }
+/* Settings stop above the raised bubble, so scrolling rows never show through
+   the floating navigation. Bottom padding still lets the final row clear it. */
+.screen.settings-screen {
+  height: calc(100% - var(--nav-space) - 16px);
+}
 .home-screen {
   overflow-anchor: none;
 }

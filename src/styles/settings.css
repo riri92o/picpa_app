@@ -31,7 +31,8 @@
   margin-top: 12px;
 }
 .settings-screen {
-  padding: calc(var(--safe-top) + 12px) 18px calc(var(--nav-space) + 20px);
+  padding: calc(var(--safe-top) + 12px) 18px 24px;
+  scroll-padding-block: 20px;
 }
 .settings-screen .settings-heading {
   min-height: 65px;
