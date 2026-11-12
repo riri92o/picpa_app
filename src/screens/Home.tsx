@@ -341,7 +341,7 @@ export function Home({
                 }}
               >
                 <span aria-live="polite">
-                  {dataBusy ? "写真を追加中…" : "完成する"}
+                  {dataBusy ? "写真を追加中…" : "デザインを選ぶ"}
                 </span>
                 {canComplete && <ArrowRight size={20} aria-hidden="true" />}
               </button>
@@ -533,7 +533,7 @@ export function Home({
       <Modal
         open={confirm}
         onClose={() => setConfirm(false)}
-        title="完成しますか？"
+        title="デザインと仕上がり"
         className="completion-with-memo"
       >
         <CompletionPreview
@@ -565,7 +565,7 @@ export function Home({
             onClick={handleFinish}
             disabled={!previewReady || memoTooLong}
           >
-            完成 <Check size={18} />
+            完成する <Check size={18} />
           </button>
         </div>
       </Modal>

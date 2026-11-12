@@ -360,6 +360,23 @@ const iosViewport = {
   scale: 1,
 };
 const { floatingNavGeometry } = load("src/ui/navGeometry.ts");
+const { navSlidePosition, navSlideIntent } = load("src/ui/navSlide.ts");
+for (const width of [260, 296, 362.6875, 428]) {
+  for (const index of [0, 1, 2]) {
+    const center = 18 + (width * (index + 0.5)) / 3;
+    assert.ok(Math.abs(navSlidePosition(center, 18, width) - index) < 1e-8);
+    assert.ok(
+      Math.abs(navSlidePosition(center + 12, 18, width, 12) - index) < 1e-8,
+    );
+  }
+  assert.equal(navSlidePosition(-999, 18, width), 0);
+  assert.equal(navSlidePosition(999, 18, width), 2);
+}
+assert.equal(navSlideIntent(9, 2), "pending");
+assert.equal(navSlideIntent(24, 4), "horizontal");
+assert.equal(navSlideIntent(-24, 4), "horizontal");
+assert.equal(navSlideIntent(4, -24), "vertical");
+assert.equal(navSlideIntent(12, 12), "vertical");
 for (const width of [260, 296, 322.5, 362.6875, 428]) {
   for (const [height, bubble, raise] of [
     [60, 52, 14],

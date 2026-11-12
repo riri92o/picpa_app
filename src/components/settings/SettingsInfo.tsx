@@ -217,7 +217,7 @@ export function UpdatesPanel() {
       {RELEASE_NOTES.map((release) => (
         <article
           className="settings-detail-card settings-release"
-          key={release.date}
+          key={`${release.date}-${"version" in release ? release.version : release.title}`}
         >
           <div className="settings-release-meta">
             <time dateTime={release.date}>

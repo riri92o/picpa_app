@@ -3,6 +3,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import { CalendarDays, House, Settings2 } from "lucide-react";
 import { NAV_MOTION } from "../constants/config";
 import { floatingNavGeometry } from "../ui/navGeometry";
+import { useNavSlide } from "../ui/useNavSlide";
 export type Tab = "home" | "calendar" | "settings";
 const tabs = [
   { id: "home" as Tab, label: "Home", Icon: House },
@@ -19,7 +20,6 @@ export function BottomNav({
   onChange: (tab: Tab) => void;
 }) {
   const reduced = useReducedMotion();
-  const transition = reduced ? { duration: 0 } : NAV_MOTION;
   const index = tabs.findIndex((item) => item.id === tab);
   const nav = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({
@@ -57,16 +57,32 @@ export function BottomNav({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  const slide = useNavSlide({
+    nav,
+    index,
+    disabled,
+    layoutKey: `${frame.width}/${frame.height}/${frame.bubble}/${frame.raise}`,
+    onSelect: (next) => onChange(tabs[next].id),
+  });
+  const previewIndex = slide.position ?? index;
+  const transition =
+    reduced || slide.position !== null ? { duration: 0 } : NAV_MOTION;
   const shape = floatingNavGeometry(
     frame.width,
     frame.height,
     frame.bubble,
     frame.raise,
-    index,
+    previewIndex,
   );
-  const SelectedIcon = tabs[index].Icon;
+  const SelectedIcon = tabs[Math.round(previewIndex)].Icon;
   return (
-    <nav ref={nav} className="bottom-nav" aria-label="メインナビゲーション">
+    <nav
+      ref={nav}
+      className="bottom-nav"
+      aria-label="メインナビゲーション"
+      data-dragging={slide.position !== null || undefined}
+      {...slide.handlers}
+    >
       <svg
         className="nav-shape"
         viewBox={`0 0 ${frame.width} ${frame.height}`}
@@ -116,7 +132,7 @@ export function BottomNav({
         {tabs.map((item) => (
           <button
             key={item.id}
-            className={`nav-item ${tab === item.id ? "active" : ""}`}
+            className={`nav-item ${tabs[Math.round(previewIndex)].id === item.id ? "active" : ""}`}
             disabled={disabled}
             onClick={() => onChange(item.id)}
             aria-label={item.label}

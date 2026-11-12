@@ -20,6 +20,12 @@
   width: auto;
   height: var(--nav-height);
   transform: none;
+  touch-action: pan-y pinch-zoom;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.bottom-nav[data-dragging="true"] .nav-item {
+  cursor: grabbing;
 }
 .bottom-nav .nav-shape {
   overflow: visible;
