@@ -1,6 +1,16 @@
-export const APP_VERSION = "0.3.9";
+export const APP_VERSION = "0.3.10";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-12",
+    version: "0.3.10",
+    title: "起動時の画面の高さを見直し",
+    changes: [
+      "iPhoneで画面下に帯が残る問題への対策として、CSSの表示領域を基準にし、画面全体を固定する処理を見直しました。",
+      "アプリへ戻ったときや画面の向きを変えた際も、表示領域を再確認します。",
+      "ヘルプの端末情報に表示サイズを追加しました。写真や記録は含まれません。",
+    ],
+  },
   {
     date: "2026-11-11",
     version: "0.3.9",

@@ -32,7 +32,7 @@ export default function App() {
     dataBusy,
     reloadRequired,
   } = useApp();
-  const { probeRef, systemInset } = useViewportGuard(ready);
+  const { probeRef, viewportRef, systemInset } = useViewportGuard(ready);
   const [tab, setTab] = useState<Tab>("home");
   const [collectionOpen, setCollectionOpen] = useState(false);
   const changeTab = (next: Tab) => {
@@ -85,6 +85,11 @@ export default function App() {
           }
         >
           <span ref={probeRef} className="safe-area-probe" aria-hidden="true" />
+          <span
+            ref={viewportRef}
+            className="viewport-height-probe"
+            aria-hidden="true"
+          />
           <LiquidBackdrop busy={ritual.busy} ambient />
           <div id="color-scene-root" aria-hidden="true" />
           <AnimatePresence mode="wait">

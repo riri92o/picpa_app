@@ -7,6 +7,12 @@ export interface ViewportMetrics {
   scale: number;
 }
 
+/** CSS describes the canvas we can paint. innerHeight may omit an iOS system
+ * inset, so it is only a fallback when the CSS measurement is unavailable. */
+export function layoutViewportHeight(innerHeight: number, cssHeight: number) {
+  return Number.isFinite(cssHeight) && cssHeight > 0 ? cssHeight : innerHeight;
+}
+
 /** Keyboard-visible area in layout coordinates. Page zoom keeps its normal
  * layout instead of shrinking the app a second time. */
 export function visibleViewportFrame(

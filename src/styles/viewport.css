@@ -1,16 +1,37 @@
 /* The app owns the viewport; long content scrolls inside its screen or sheet.
    Keep page zoom and native touch gestures available instead of cancelling them. */
+:root {
+  --app-css-height: 100vh;
+  --app-height: var(--app-css-height);
+}
+@supports (height: 100dvh) {
+  :root {
+    --app-css-height: 100dvh;
+  }
+}
+/* Installed iOS apps have no collapsing browser toolbar. Legacy vh can expose
+   the full canvas when dynamic/JS viewport values omit a system inset. */
+:root[data-ios-standalone="true"] {
+  --app-css-height: 100vh;
+}
 html,
 body {
-  height: 100%;
+  height: var(--app-css-height);
   min-height: 0;
   overflow: hidden;
   overscroll-behavior: none;
 }
 body {
-  position: fixed;
-  inset: 0;
-  height: var(--app-height, 100dvh);
+  position: relative;
+}
+.viewport-height-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: var(--app-css-height);
+  visibility: hidden;
+  pointer-events: none;
 }
 #root,
 .app-shell,

@@ -336,7 +336,21 @@ const {
   hasSystemStatusBarInset,
   floatingBubblePosition,
   visibleViewportFrame,
+  layoutViewportHeight,
 } = load("src/ui/viewport.ts");
+assert.equal(
+  layoutViewportHeight(793, 852),
+  852,
+  "An iOS innerHeight deficit must not shorten the CSS canvas",
+);
+assert.equal(
+  layoutViewportHeight(844, 568),
+  568,
+  "Use the current CSS height after a viewport resize",
+);
+assert.equal(layoutViewportHeight(844, 844.5), 844.5);
+for (const height of [0, -1, NaN, Infinity])
+  assert.equal(layoutViewportHeight(844, height), 844);
 const iosViewport = {
   iosStandalone: true,
   safeTop: 0,

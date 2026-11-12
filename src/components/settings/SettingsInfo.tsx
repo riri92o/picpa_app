@@ -16,6 +16,7 @@ import {
 import { dateFromKey } from "../../domain/date";
 import { useApp } from "../../state/AppContext";
 import { SettingsNotice, SettingsRow } from "./SettingsShared";
+import { viewportReport } from "../../ui/viewportReport";
 
 const FAQ = [
   [
@@ -100,7 +101,7 @@ export function HelpPanel({ onReplay }: { onReplay: () => void }) {
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState("");
   const copyReport = async () => {
-    const text = `PicPa ${APP_VERSION}\n端末・ブラウザ：${navigator.userAgent}\n起きたこと：\n操作した手順：`;
+    const text = `PicPa ${APP_VERSION}\n端末・ブラウザ：${navigator.userAgent}\n${viewportReport()}\n起きたこと：\n操作した手順：`;
     setReport(text);
     try {
       await navigator.clipboard.writeText(text);
