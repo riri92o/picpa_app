@@ -34,10 +34,12 @@ export function SpacingSelector({
   value = "separated",
   onChange,
   detail = false,
+  showLabels = false,
 }: {
   value?: CollageSpacing;
   onChange: (spacing: CollageSpacing) => void;
   detail?: boolean;
+  showLabels?: boolean;
 }) {
   return (
     <div
@@ -46,7 +48,13 @@ export function SpacingSelector({
       aria-label="写真の間隔"
     >
       {(["joined", "separated"] as const).map((spacing) => {
-        const label = spacing === "joined" ? "すき間なし" : "すき間あり";
+        const label = showLabels
+          ? spacing === "joined"
+            ? "くっつける"
+            : "はなす"
+          : spacing === "joined"
+            ? "すき間なし"
+            : "すき間あり";
         return (
           <button
             key={spacing}
@@ -57,6 +65,7 @@ export function SpacingSelector({
             onClick={() => onChange(spacing)}
           >
             <SpacingIllustration spacing={spacing} />
+            {showLabels && <span>{label}</span>}
           </button>
         );
       })}

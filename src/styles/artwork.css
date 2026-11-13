@@ -63,6 +63,31 @@
 .completion-memo {
   margin: 14px 0;
 }
+.completion-spacing {
+  margin-bottom: 14px;
+}
+.completion-spacing .spacing-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: auto;
+  padding: 3px;
+}
+.completion-spacing .spacing-pictograms button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-height: 44px;
+  padding: 7px 8px;
+  font-size: 12px;
+  font-weight: 550;
+}
+.completion-spacing .spacing-pictograms svg {
+  width: 24px;
+  height: 22px;
+  flex: none;
+}
 .completion-memo textarea {
   min-height: 68px;
   resize: vertical;

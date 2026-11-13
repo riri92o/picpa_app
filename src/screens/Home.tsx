@@ -293,9 +293,9 @@ export function Home({
                         onClick={() => chooseCount(count)}
                         disabled={dataBusy || randomChallenge}
                         aria-pressed={today.count === count}
+                        aria-label={`${count}枚`}
                       >
                         {count}
-                        <span>枚</span>
                       </button>
                     ))}
                   </div>
@@ -543,8 +543,15 @@ export function Home({
           onReadyChange={setPreviewReady}
           onStyleChange={(style) => setArtworkStyle(style, today.date)}
         />
+        <div className="completion-spacing">
+          <SpacingSelector
+            value={today.spacing}
+            onChange={(spacing) => setSpacing(spacing, today.date)}
+            showLabels
+          />
+        </div>
         <p className="artwork-change-note">
-          デザインは、完成後もHomeやカレンダーのメニューから変更できます。
+          デザイン・間隔は、完成後もHomeやカレンダーのメニューから変更できます。
         </p>
         <div className="completion-memo">
           <ArtworkMemoField value={memoDraft} onChange={setMemoDraft} />
