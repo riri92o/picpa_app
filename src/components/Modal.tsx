@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
@@ -8,6 +8,8 @@ export function Modal({
   children,
   title,
   headerAction,
+  footer,
+  presentation = "sheet",
   className = "",
 }: {
   open: boolean;
@@ -15,9 +17,12 @@ export function Modal({
   children: ReactNode;
   title?: string;
   headerAction?: ReactNode;
+  footer?: ReactNode;
+  presentation?: "sheet" | "fullscreen";
   className?: string;
 }) {
   const sheet = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement;
@@ -83,16 +88,19 @@ export function Modal({
         >
           <motion.section
             ref={sheet}
-            className={`modal-sheet ${className}`}
+            className={`modal-sheet ${footer ? "modal-with-footer" : ""} ${presentation === "fullscreen" ? "modal-fullscreen" : ""} ${className}`}
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            initial={{ y: 80, opacity: 0 }}
+            initial={{ y: presentation === "fullscreen" ? 0 : 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ y: presentation === "fullscreen" ? 0 : 80, opacity: 0 }}
+            transition={{
+              duration: reduced ? 0 : 0.28,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           >
-            <div className="modal-handle" />
+            {presentation !== "fullscreen" && <div className="modal-handle" />}
             <div className="modal-heading">
               <h2>{title}</h2>
               <div className="modal-heading-actions">
@@ -106,7 +114,14 @@ export function Modal({
                 </button>
               </div>
             </div>
-            {children}
+            {footer ? (
+              <>
+                <div className="modal-body">{children}</div>
+                <div className="modal-footer">{footer}</div>
+              </>
+            ) : (
+              children
+            )}
           </motion.section>
         </motion.div>
       )}

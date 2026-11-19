@@ -5,9 +5,13 @@ import {
   ArrowRight,
   Camera,
   Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Ellipsis,
   ImagePlus,
   Images,
+  LockKeyhole,
   Minus,
   Palette,
   Plus,
@@ -118,7 +122,8 @@ export function Home({
     return () => window.clearTimeout(timer);
   }, [expanded, ritual.reduced]);
   const color = colorById(today.colorId);
-  const placement = today.photos.find((p) => p.id === editing);
+  const editingIndex = today.photos.findIndex((p) => p.id === editing);
+  const placement = today.photos[editingIndex];
   const openSource = (id?: string) => {
     setReplaceId(id);
     setEditing(null);
@@ -390,6 +395,7 @@ export function Home({
         open={!!placement}
         onClose={() => setEditing(null)}
         title="写真を編集"
+        className="photo-editor-sheet"
       >
         {placement && (
           <>
@@ -409,6 +415,30 @@ export function Home({
             <p className="modal-footnote centered">
               1本指で移動・2本指で拡大縮小
             </p>
+            <div
+              className="editor-photo-navigation"
+              role="group"
+              aria-label="編集する写真"
+            >
+              <button
+                type="button"
+                disabled={dataBusy || editingIndex <= 0}
+                onClick={() => setEditing(today.photos[editingIndex - 1].id)}
+              >
+                <ChevronLeft size={17} aria-hidden="true" /> 前の写真
+              </button>
+              <span role="status" aria-live="polite" aria-atomic="true">
+                <span className="sr-only">写真 </span>
+                {editingIndex + 1} / {today.photos.length}
+              </span>
+              <button
+                type="button"
+                disabled={dataBusy || editingIndex >= today.photos.length - 1}
+                onClick={() => setEditing(today.photos[editingIndex + 1].id)}
+              >
+                次の写真 <ChevronRight size={17} aria-hidden="true" />
+              </button>
+            </div>
             <div className="editor-gesture-tools">
               <div
                 className="editor-zoom-buttons"
@@ -462,6 +492,7 @@ export function Home({
               </button>
             </div>
             <PhotoFilterSelector
+              key={placement.id}
               src={images[placement.id]?.thumb}
               placement={placement}
               disabled={dataBusy}
@@ -535,6 +566,29 @@ export function Home({
         onClose={() => setConfirm(false)}
         title="デザインと仕上がり"
         className="completion-with-memo"
+        footer={
+          <>
+            <p className="completion-lock-note">
+              <LockKeyhole size={14} aria-hidden="true" />
+              <span>完成後は写真・並び順・フィルターを変更できません。</span>
+            </p>
+            <div className="dialog-actions">
+              <button
+                className="secondary-button"
+                onClick={() => setConfirm(false)}
+              >
+                戻る
+              </button>
+              <button
+                className="primary-button"
+                onClick={handleFinish}
+                disabled={!previewReady || memoTooLong}
+              >
+                完成する <ArrowRight size={18} aria-hidden="true" />
+              </button>
+            </div>
+          </>
+        }
       >
         <CompletionPreview
           day={today}
@@ -551,30 +605,28 @@ export function Home({
           />
         </div>
         <p className="artwork-change-note">
-          デザイン・間隔は、完成後もHomeやカレンダーのメニューから変更できます。
+          デザイン・間隔は、完成後も変更できます。
         </p>
-        <div className="completion-memo">
-          <ArtworkMemoField value={memoDraft} onChange={setMemoDraft} />
-        </div>
-        <p className="modal-description">
-          本当に完成でいいですか？
-          完成後は写真・並び順・フィルターを変更できません。
-        </p>
-        <div className="dialog-actions">
-          <button
-            className="secondary-button"
-            onClick={() => setConfirm(false)}
-          >
-            戻る
-          </button>
-          <button
-            className="primary-button"
-            onClick={handleFinish}
-            disabled={!previewReady || memoTooLong}
-          >
-            完成する <Check size={18} />
-          </button>
-        </div>
+        <details className="completion-memo">
+          <summary>
+            <span>ひとこと（任意）</span>
+            <span
+              className={`completion-memo-state ${memoTooLong ? "over-limit" : ""}`}
+            >
+              {memoTooLong
+                ? `${memoLength(memoDraft)} / ${MEMO_MAX_LENGTH}`
+                : memoDraft.trim()
+                  ? "入力済み"
+                  : ""}
+            </span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </summary>
+          <ArtworkMemoField
+            value={memoDraft}
+            onChange={setMemoDraft}
+            hideLabel
+          />
+        </details>
       </Modal>
       {overlayRoot &&
         createPortal(

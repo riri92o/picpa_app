@@ -30,6 +30,7 @@ export function CompletionPreview({
         />
       </div>
       <ArtworkStyleSelector
+        carousel
         value={day.artworkStyle}
         previews={render.previews}
         onChange={onStyleChange}

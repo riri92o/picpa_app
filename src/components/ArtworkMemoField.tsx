@@ -6,18 +6,22 @@ export function ArtworkMemoField({
   onChange,
   disabled = false,
   autoFocus = false,
+  hideLabel = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   autoFocus?: boolean;
+  hideLabel?: boolean;
 }) {
   const id = useId();
   const length = memoLength(value);
   const tooLong = length > MEMO_MAX_LENGTH;
   return (
     <div className="memo-field">
-      <label htmlFor={id}>ひとこと（任意）</label>
+      <label htmlFor={id} className={hideLabel ? "sr-only" : undefined}>
+        ひとこと（任意）
+      </label>
       <textarea
         id={id}
         value={value}

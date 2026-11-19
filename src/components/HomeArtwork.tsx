@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import type { DayRecord } from "../domain/types";
 import type { ArtworkStyle, CollageSpacing } from "../domain/types";
-import { Download, Share2 } from "lucide-react";
+import { Download, Maximize2, Share2 } from "lucide-react";
+import { dateFromKey } from "../domain/date";
 import { useCollageExport } from "../ui/useCollageExport";
 import { useArtworkActions } from "../ui/useArtworkActions";
 import { CollageImageView } from "./CollageImageView";
@@ -34,10 +36,29 @@ export function HomeArtwork({
 }) {
   const render = useCollageExport(day, logo, getImageBlob);
   const actions = useArtworkActions(day, render.image);
+  const [viewing, setViewing] = useState(false);
+  useEffect(() => setViewing(false), [day.date]);
   return (
     <>
       <div className="collage-stage home-artwork">
         <CollageImageView render={render} alt="今日の完成コラージュ" />
+        {render.image && (
+          <button
+            type="button"
+            className="home-artwork-open"
+            aria-label="作品を大きく鑑賞"
+            disabled={disabled}
+            onClick={(event) => {
+              // Safari does not focus buttons on pointer clicks by default.
+              event.currentTarget.focus({ preventScroll: true });
+              setViewing(true);
+            }}
+          >
+            <span aria-hidden="true">
+              <Maximize2 size={16} />
+            </span>
+          </button>
+        )}
       </div>
       {day.memo?.trim() && (
         <p className="home-artwork-memo" aria-label="作品のひとこと">
@@ -67,6 +88,26 @@ export function HomeArtwork({
         </p>
       )}
       <Modal
+        open={viewing}
+        onClose={() => setViewing(false)}
+        title={new Intl.DateTimeFormat("ja-JP", {
+          month: "long",
+          day: "numeric",
+        }).format(dateFromKey(day.date))}
+        presentation="fullscreen"
+        className="home-artwork-viewer"
+      >
+        <div className="home-viewer-content">
+          <div className="home-viewer-image">
+            <CollageImageView
+              render={render}
+              alt="大きく表示した今日の完成コラージュ"
+            />
+          </div>
+          {day.memo?.trim() && <p className="home-viewer-memo">{day.memo}</p>}
+        </div>
+      </Modal>
+      <Modal
         open={optionsOpen}
         onClose={onOptionsClose}
         title="作品のデザインと詳細"
@@ -75,6 +116,7 @@ export function HomeArtwork({
         <section className="home-artwork-option-group">
           <h3>デザイン</h3>
           <ArtworkStyleSelector
+            carousel
             value={day.artworkStyle}
             previews={render.previews}
             onChange={onStyleChange}
