@@ -52,7 +52,11 @@ export function createFluidMix(
   systemInset = false,
   origins?: BubbleOrigin[],
 ) {
-  const scale = Math.min(LIQUID_MOTION.fieldScale, 384 / box.width);
+  const scale = Math.min(
+    LIQUID_MOTION.fieldScale,
+    384 / box.width,
+    192 / box.size,
+  );
   const width = Math.ceil(box.width * scale),
     height = Math.ceil(box.height * scale);
   canvas.width = width;
@@ -69,6 +73,9 @@ export function createFluidMix(
     new Float32Array(width * height),
   ];
   const result = rgb(vividAccent(resultHex));
+  // The new resting film is larger. Keep its orbit and tails inside the viewport
+  // while retaining the full-size core for the final circular-bubble handoff.
+  const motionSize = Math.min(box.size, box.width * 0.56);
   const recipe = recipeForColor(colorId);
   const totalWeight = recipe.reduce((sum, item) => sum + item.weight, 0);
   const mixed = [0, 1, 2].map(
@@ -138,13 +145,13 @@ export function createFluidMix(
         group.angle +
         rotation +
         0.11 * Math.sin(rotation * 1.8 + i) * Math.sin(flow * Math.PI);
-      const orbit = box.size * (0.49 * (1 - convergence) + 0.035);
+      const orbit = motionSize * (0.49 * (1 - convergence) + 0.035);
       const tx = box.x + Math.cos(theta) * orbit;
       const ty =
         box.y +
         Math.sin(theta) * orbit * (0.62 + 0.08 * Math.sin(rotation + i));
       const bend =
-        Math.sin(Math.PI * gatherU) * box.size * (i % 2 ? 0.14 : -0.14);
+        Math.sin(Math.PI * gatherU) * motionSize * (i % 2 ? 0.14 : -0.14);
       head.x =
         elapsed < gather
           ? mix(group.startX, tx, gatherU) - Math.sin(group.angle) * bend
@@ -169,7 +176,7 @@ export function createFluidMix(
       }
       group.nodes.forEach((node, j) => {
         const base = group.radius * [0.86, 0.52, 0.3, 0.13][j];
-        const moving = box.size * [0.18, 0.125, 0.074, 0.031][j];
+        const moving = motionSize * [0.18, 0.125, 0.074, 0.031][j];
         const knead =
           1 +
           0.09 *

@@ -253,6 +253,7 @@ export function Home({
             <>
               <HomeArtwork
                 day={today}
+                images={images}
                 logo={settings.exportLogo}
                 getImageBlob={getImageBlob}
                 optionsOpen={artworkOptionsOpen}

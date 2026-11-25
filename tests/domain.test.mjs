@@ -606,6 +606,44 @@ console.log(
   "Companion source colors/geometry reach the actual canvas and hand back cleanly: OK",
 );
 
+// Half-size viewport cases preserve the new large-film proportions while keeping
+// the real density-field regression small enough for CI. Inspect actual alpha.
+for (const [width, height, size] of [
+  [160, 284, 118.4],
+  [195, 422, 144.3],
+]) {
+  const box = { width, height, size, x: width / 2, y: height * 0.45 };
+  const render = createFluidMix(
+    filmCanvas,
+    box,
+    "#A9D8AE",
+    "pale-green",
+    false,
+    drawBubbleOrigins(box),
+  );
+  let visible = false;
+  for (let elapsed = 200; elapsed < ritualDuration; elapsed += 200) {
+    render(elapsed);
+    for (let y = 0; y < filmCanvas.height; y++) {
+      assert.equal(
+        fluidPixels[y * filmCanvas.width * 4 + 3],
+        0,
+        "Large-film mixing must not be clipped at the left edge",
+      );
+      assert.equal(
+        fluidPixels[(y * filmCanvas.width + filmCanvas.width - 1) * 4 + 3],
+        0,
+        "Large-film mixing must not be clipped at the right edge",
+      );
+    }
+    visible ||= fluidPixels.some((v, i) => i % 4 === 3 && v > 50);
+  }
+  assert.ok(visible, "Keeping the field in bounds must not hide the animation");
+}
+console.log(
+  "Large draw membrane: real moving-film alpha stays inside narrow viewport edges: OK",
+);
+
 const { collageBrandHeader } = load("src/domain/branding.ts");
 const { gridDimensions } = load("src/domain/image.ts");
 const { collageLayout } = load("src/domain/collageLayout.ts");

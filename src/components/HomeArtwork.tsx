@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DayRecord } from "../domain/types";
 import type { ArtworkStyle, CollageSpacing } from "../domain/types";
 import { Download, Maximize2, Share2 } from "lucide-react";
@@ -11,12 +11,17 @@ import { SpacingSelector } from "./SpacingSelector";
 import { ArtworkMemo } from "./ArtworkMemo";
 import { ColorMatchBadge } from "./ColorMatchBadge";
 import { Modal } from "./Modal";
+import type { ImageUrls } from "../state/AppContext";
+import { colorById } from "../constants/palette";
+import { useArtworkPalette } from "../ui/useArtworkPalette";
+import { ArtworkAura, ArtworkColorSignature } from "./ArtworkAura";
 
 /** Home displays the same finished pixels as the archive, preview and download. */
 export function HomeArtwork({
   day,
   logo,
   getImageBlob,
+  images,
   optionsOpen,
   onOptionsClose,
   onStyleChange,
@@ -27,6 +32,7 @@ export function HomeArtwork({
   day: DayRecord;
   logo: boolean;
   getImageBlob: (id: string) => Promise<Blob | undefined>;
+  images: Record<string, ImageUrls>;
   optionsOpen: boolean;
   onOptionsClose: () => void;
   onStyleChange: (style: ArtworkStyle) => void;
@@ -36,11 +42,21 @@ export function HomeArtwork({
 }) {
   const render = useCollageExport(day, logo, getImageBlob);
   const actions = useArtworkActions(day, render.image);
+  const palette = useArtworkPalette(day, images);
+  const daily = colorById(day.colorId).hex;
+  const colors: [string, string, string] = palette ?? [daily, daily, daily];
+  const frame = useRef<HTMLDivElement>(null);
+  const viewerFrame = useRef<HTMLDivElement>(null);
   const [viewing, setViewing] = useState(false);
   useEffect(() => setViewing(false), [day.date]);
   return (
     <>
-      <div className="collage-stage home-artwork">
+      <div
+        ref={frame}
+        className="collage-stage home-artwork"
+        data-palette={palette ? "photo" : "daily"}
+      >
+        <ArtworkAura colors={colors} source={render.image?.url} frame={frame} />
         <CollageImageView render={render} alt="今日の完成コラージュ" />
         {render.image && (
           <button
@@ -60,11 +76,14 @@ export function HomeArtwork({
           </button>
         )}
       </div>
-      {day.memo?.trim() && (
-        <p className="home-artwork-memo" aria-label="作品のひとこと">
-          {day.memo}
-        </p>
-      )}
+      <div className="home-artwork-caption">
+        <ArtworkColorSignature colors={colors} />
+        {day.memo?.trim() && (
+          <p className="home-artwork-memo" aria-label="作品のひとこと">
+            {day.memo}
+          </p>
+        )}
+      </div>
       <div className="home-artwork-actions">
         <button
           className="primary-button home-save-button"
@@ -98,12 +117,20 @@ export function HomeArtwork({
         className="home-artwork-viewer"
       >
         <div className="home-viewer-content">
-          <div className="home-viewer-image">
+          <div ref={viewerFrame} className="home-viewer-image">
+            {viewing && (
+              <ArtworkAura
+                colors={colors}
+                source={render.image?.url}
+                frame={viewerFrame}
+              />
+            )}
             <CollageImageView
               render={render}
               alt="大きく表示した今日の完成コラージュ"
             />
           </div>
+          <ArtworkColorSignature colors={colors} />
           {day.memo?.trim() && <p className="home-viewer-memo">{day.memo}</p>}
         </div>
       </Modal>

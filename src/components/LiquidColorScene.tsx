@@ -10,7 +10,6 @@ import { createPortal } from "react-dom";
 import { motion, useMotionValue, type MotionValue } from "framer-motion";
 import { colorById } from "../constants/palette";
 import {
-  FLOATING_BUBBLES,
   FLUID_SURFACE,
   HOME_MOTION,
   LIQUID_MOTION,
@@ -20,6 +19,8 @@ import { createFluidMix, type FluidBox } from "../ui/fluidMix";
 import { fluidHandoff } from "../ui/fluidSurface";
 import { drawBubbleOrigins, type BubbleOrigin } from "../ui/viewport";
 import type { ColorRitual } from "../ui/useColorRitual";
+import { DrawMembrane } from "./DrawMembrane";
+import { MEMBRANE_PHASES, MEMBRANE_PERIOD } from "../ui/drawMembrane";
 
 function FluidLayer({
   box,
@@ -129,6 +130,8 @@ export function LiquidColorScene({
     };
   }, [screenRef, bubbleRef, host, expanded]);
   const { phase, busy, reduced } = ritual;
+  const droplets = useRef<(SVGGElement | null)[]>([]);
+  const [mixOrigins, setMixOrigins] = useState<BubbleOrigin[] | null>(null);
   const mainOpacity = useMotionValue(1);
   useLayoutEffect(() => {
     if (!busy || reduced || phase === "reveal") mainOpacity.set(1);
@@ -137,6 +140,37 @@ export function LiquidColorScene({
     () => (box ? drawBubbleOrigins(box, systemInset) : []),
     [box, systemInset],
   );
+  const frames = useMemo(
+    () =>
+      box
+        ? MEMBRANE_PHASES.map((p) => drawBubbleOrigins(box, systemInset, p))
+        : [],
+    [box, systemInset],
+  );
+  useLayoutEffect(() => {
+    if (!busy) {
+      setMixOrigins(null);
+      return;
+    }
+    // Freeze the actual resting pose so gathering starts exactly at each bead.
+    setMixOrigins(
+      origins.map((origin, i) => {
+        const node = droplets.current[i];
+        const root = node?.ownerSVGElement?.getScreenCTM();
+        const screen = node?.getScreenCTM();
+        if (!root || !screen) return origin;
+        try {
+          const m = root.inverse().multiply(screen);
+          const r = 47 * Math.hypot(m.a, m.b);
+          return [m.e, m.f, r].every(Number.isFinite) && r > 0
+            ? { ...origin, x: m.e, y: m.f, r }
+            : origin;
+        } catch {
+          return origin;
+        }
+      }),
+    );
+  }, [busy, ritual.startedAt, origins]);
   const result = colorById(ritual.resultId).hex;
   const mainColor =
     ritual.visibleColorId || phase === "settle" ? result : "#bdc1c5";
@@ -152,53 +186,6 @@ export function LiquidColorScene({
             viewBox={`0 0 ${box.width} ${box.height}`}
             aria-hidden="true"
           >
-            {origins.map((origin, i) => {
-              const blob = FLOATING_BUBBLES[i];
-              return (
-                <motion.g
-                  key={i}
-                  initial={false}
-                  animate={{ opacity: busy || !expanded ? 0 : 1 }}
-                  transition={{
-                    duration: reduced ? 0 : FLUID_SURFACE.entrance / 1000,
-                  }}
-                >
-                  <motion.g
-                    initial={false}
-                    animate={{
-                      x: reduced
-                        ? origin.x
-                        : [
-                            origin.x,
-                            origin.x + blob.dx,
-                            origin.x - blob.dx * 0.4,
-                            origin.x,
-                          ],
-                      y: reduced
-                        ? origin.y
-                        : [
-                            origin.y,
-                            origin.y + blob.dy,
-                            origin.y - blob.dy * 0.3,
-                            origin.y,
-                          ],
-                      scale: origin.r / 47,
-                      opacity: origin.color ? 0.94 : 0.55,
-                    }}
-                    transition={{
-                      duration: reduced ? 0 : blob.period,
-                      repeat: reduced ? 0 : Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <SoapBubbleSurface
-                      color={origin.color ?? "#bdc1c5"}
-                      neutral={!origin.color}
-                    />
-                  </motion.g>
-                </motion.g>
-              );
-            })}
             <motion.g
               initial={false}
               animate={{ x: box.x, y: box.y, scale: box.size / 100 }}
@@ -210,7 +197,7 @@ export function LiquidColorScene({
               <motion.g style={{ opacity: mainOpacity }}>
                 <motion.g
                   animate={
-                    reduced
+                    reduced || neutral
                       ? { scale: 1, y: 0 }
                       : { scale: [1, 1.017, 0.993, 1], y: [0, -2, 1, 0] }
                   }
@@ -220,16 +207,63 @@ export function LiquidColorScene({
                     ease: "easeInOut",
                   }}
                 >
-                  <SoapBubbleSurface
-                    color={mainColor}
-                    neutral={neutral}
-                    revealed={!neutral}
-                  />
+                  {expanded && neutral ? (
+                    <DrawMembrane reduced={reduced} pressed={busy} />
+                  ) : (
+                    <SoapBubbleSurface
+                      color={mainColor}
+                      neutral={neutral}
+                      revealed={!neutral}
+                    />
+                  )}
                 </motion.g>
               </motion.g>
             </motion.g>
+            {expanded &&
+              (phase === "idle" || phase === "gather") &&
+              origins.map((origin, i) => {
+                return (
+                  <motion.g
+                    key={i}
+                    initial={false}
+                    animate={{ opacity: busy || !expanded ? 0 : 1 }}
+                    transition={{
+                      duration: reduced ? 0 : FLUID_SURFACE.entrance / 1000,
+                    }}
+                  >
+                    <motion.g
+                      ref={(node) => {
+                        droplets.current[i] = node;
+                      }}
+                      data-droplet={origin.color ? "color" : "neutral"}
+                      initial={false}
+                      animate={{
+                        x: reduced
+                          ? origin.x
+                          : frames.map((frame) => frame[i].x),
+                        y: reduced
+                          ? origin.y
+                          : frames.map((frame) => frame[i].y),
+                        scale: origin.r / 47,
+                        opacity: origin.color ? 0.96 : 0,
+                      }}
+                      transition={{
+                        duration: reduced ? 0 : MEMBRANE_PERIOD,
+                        repeat: reduced ? 0 : Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <SoapBubbleSurface
+                        color={origin.color ?? "#bdc1c5"}
+                        neutral={!origin.color}
+                        revealed={!!origin.color}
+                      />
+                    </motion.g>
+                  </motion.g>
+                );
+              })}
           </svg>
-          {busy && phase !== "reveal" && !reduced && (
+          {busy && phase !== "reveal" && !reduced && mixOrigins && (
             <FluidLayer
               box={box}
               result={result}
@@ -237,7 +271,7 @@ export function LiquidColorScene({
               startedAt={ritual.startedAt}
               systemInset={systemInset}
               mainOpacity={mainOpacity}
-              origins={origins}
+              origins={mixOrigins}
             />
           )}
         </>

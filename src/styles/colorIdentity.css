@@ -1,0 +1,178 @@
+/* A single thin film is the draw target; the question stays an accessible button. */
+.app-shell:has(.home-screen) {
+  --sky-background:
+    radial-gradient(
+      ellipse at 8% 28%,
+      color-mix(in srgb, var(--scene-vivid) 5%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 95% 100%,
+      color-mix(in srgb, var(--scene-vivid) 8%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(172deg, var(--sky-page) 20%, var(--sky-bottom));
+}
+.home-screen {
+  --draw-bubble-size: clamp(210px, min(74vw, 43dvh), 306px);
+}
+.home-screen[data-stage="draw"] .bubble-question {
+  font-size: calc(var(--draw-bubble-size) * 0.28);
+  font-weight: 350;
+}
+.home-screen[data-stage="draw"] .draw-copy {
+  top: calc(50% + var(--draw-bubble-size) * 0.64);
+}
+.home-screen[data-stage="draw"] .color-bubble:focus-visible {
+  outline: 1px solid #c8d5f1;
+  outline-offset: 8px;
+}
+
+/* The photograph is above the entire aura. Only the surrounding air is colored. */
+.home-artwork,
+.home-viewer-image {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+.home-artwork > .exported-collage-image,
+.home-viewer-image > .exported-collage-image {
+  position: relative;
+  z-index: 1;
+}
+.home-artwork-open {
+  z-index: 2;
+}
+.artwork-aura {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+.artwork-aura-fields {
+  position: absolute;
+  inset: 0;
+  animation: artwork-aura-arrive 850ms ease-out both;
+}
+.artwork-aura-field {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.aura-sage {
+  left: -40%;
+  bottom: -26%;
+  width: 110%;
+  height: 80%;
+  transform: rotate(-24deg);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--artwork-color-1) 48%, transparent),
+    transparent 69%
+  );
+}
+.aura-olive {
+  right: -38%;
+  top: -22%;
+  width: 110%;
+  height: 78%;
+  transform: rotate(27deg);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--artwork-color-2) 32%, transparent),
+    transparent 70%
+  );
+}
+.aura-pearl {
+  left: -16%;
+  bottom: -20%;
+  width: 125%;
+  height: 60%;
+  transform: rotate(-17deg);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--artwork-color-3) 23%, transparent),
+    transparent 71%
+  );
+}
+.artwork-aura-contour {
+  position: absolute;
+  inset: -6% -8%;
+  width: 116%;
+  height: 112%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--artwork-color-2);
+  stroke-width: 0.6;
+  stroke-opacity: 0.11;
+}
+.artwork-aura-contour path {
+  vector-effect: non-scaling-stroke;
+}
+.home-artwork-caption {
+  grid-area: memo;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+.artwork-color-signature {
+  display: block;
+  flex: none;
+  width: 110px;
+  height: 11px;
+  margin: 0 auto;
+  fill: none;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  opacity: 0.88;
+}
+.artwork-color-signature path:nth-child(1) {
+  stroke: var(--artwork-color-1);
+}
+.artwork-color-signature path:nth-child(2) {
+  stroke: var(--artwork-color-2);
+}
+.artwork-color-signature path:nth-child(3) {
+  stroke: var(--artwork-color-3);
+}
+.home-viewer-memo {
+  position: relative;
+  z-index: 1;
+}
+.home-artwork-caption > .home-artwork-memo {
+  width: 100%;
+}
+.completed-home .color-section,
+.completed-home .home-artwork-actions,
+.completed-home .color-collection-card {
+  position: relative;
+  z-index: 1;
+}
+.home-artwork-viewer .modal-heading {
+  position: relative;
+  z-index: 1;
+}
+@keyframes artwork-aura-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-height: 480px) {
+  .home-screen[data-stage="draw"] {
+    --draw-bubble-size: min(42vw, 36dvh, 160px);
+  }
+  .home-screen[data-stage="draw"] .draw-copy p {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .artwork-aura-fields {
+    animation: none;
+  }
+}
