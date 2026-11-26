@@ -155,3 +155,26 @@ for (let i = 0; i < bodies.length; i++)
 console.log(
   "Draw droplets: transparent exterior, shared upper-left reflections visible after 256→32px area averaging, and five distinct pigment hues: OK",
 );
+
+const { membraneRibbonPath, membraneMeniscusPath } = load(
+  "src/ui/membraneMaterial.ts",
+);
+const commands = (value) => value.match(/[A-Za-z]/g).join("");
+for (const makePath of [
+  ...[0.52, 2.2].map((width) => (phase) => membraneRibbonPath(phase, width)),
+  ...colors.map((_, index) => (phase) => membraneMeniscusPath(phase, index)),
+]) {
+  const initial = makePath(0);
+  assert.equal(makePath(Math.PI * 2), initial, "No seam at the loop boundary");
+  for (let frame = 0; frame < 32; frame++) {
+    const value = makePath((frame * Math.PI * 2) / 32);
+    assert.equal(commands(value), commands(initial), "All phases can morph");
+    assert.ok(!/NaN|Infinity/.test(value));
+    const coordinates = value.match(/-?\d*\.?\d+/g).map(Number);
+    assert.ok(
+      coordinates.every((coordinate) => Math.abs(coordinate) < 54),
+      "Reflections and joins remain within the mobile membrane's clearance",
+    );
+  }
+}
+console.log("Liquid rim and joins: seamless morphs and mobile bounds: OK");
