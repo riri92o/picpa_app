@@ -32,3 +32,27 @@
   outline: 2px solid #d4ceec;
   outline-offset: 6px;
 }
+.opening-logo-reveal {
+  position: relative;
+  display: block;
+  transform-origin: center;
+}
+.opening-logo-aura {
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 25% 34%, #8fcae9 0%, transparent 58%),
+    radial-gradient(ellipse at 75% 68%, #bd93d5 0%, transparent 60%);
+  filter: blur(22px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .opening-logo-reveal {
+    filter: none !important;
+    transform: none !important;
+  }
+  .opening-logo-aura {
+    display: none;
+  }
+}

@@ -20,6 +20,8 @@ export const OPENING_MOTION = {
   minimumDuration: 2600,
   reducedDuration: 120,
   artworkTimeout: 4500,
+  logoRevealDuration: 1.45,
+  logoClearHold: 180,
   fadeDuration: 0.6,
   ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
 } as const;

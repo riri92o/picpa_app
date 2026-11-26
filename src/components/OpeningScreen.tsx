@@ -12,23 +12,53 @@ export function OpeningScreen({
 }) {
   const reduced = useReducedMotion();
   const [held, setHeld] = useState(false);
-  const [artworkReady, setArtworkReady] = useState(false);
+  const [artwork, setArtwork] = useState<"loading" | "ready" | "unavailable">(
+    "loading",
+  );
+  const [revealComplete, setRevealComplete] = useState(false);
   const started = useRef(performance.now());
   useEffect(() => {
     let active = true;
+    let settled = false;
     const image = new Image();
-    const loaded = () => {
-      if (active) setArtworkReady(true);
+    const finish = (state: "ready" | "unavailable") => {
+      if (!active || settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      setArtwork(state);
     };
-    const timeout = window.setTimeout(loaded, OPENING_MOTION.artworkTimeout);
-    image.onload = loaded;
-    image.onerror = loaded;
+    const timeout = window.setTimeout(
+      () => finish("unavailable"),
+      OPENING_MOTION.artworkTimeout,
+    );
+    image.onload = () => {
+      // Start the reveal when the approved artwork can actually be painted.
+      // A late image still gets its reveal; failures retain the bounded exit.
+      if (typeof image.decode !== "function") {
+        finish("ready");
+        return;
+      }
+      void image.decode().then(
+        () => finish("ready"),
+        () => finish("ready"),
+      );
+    };
+    image.onerror = () => finish("unavailable");
     image.src = BRAND_LOGO.url;
     return () => {
       active = false;
       window.clearTimeout(timeout);
+      image.onload = image.onerror = null;
     };
   }, []);
+  useEffect(() => {
+    if (artwork !== "ready" || reduced) return;
+    const timer = window.setTimeout(
+      () => setRevealComplete(true),
+      OPENING_MOTION.logoRevealDuration * 1000 + OPENING_MOTION.logoClearHold,
+    );
+    return () => window.clearTimeout(timer);
+  }, [artwork, reduced]);
   useEffect(() => {
     const duration = reduced
       ? OPENING_MOTION.reducedDuration
@@ -40,8 +70,14 @@ export function OpeningScreen({
     return () => window.clearTimeout(timer);
   }, [reduced]);
   useEffect(() => {
-    if (held && ready && artworkReady) onComplete();
-  }, [held, ready, artworkReady, onComplete]);
+    if (
+      held &&
+      ready &&
+      (artwork === "unavailable" ||
+        (artwork === "ready" && (reduced || revealComplete)))
+    )
+      onComplete();
+  }, [held, ready, artwork, revealComplete, reduced, onComplete]);
 
   return (
     <motion.div
@@ -61,7 +97,32 @@ export function OpeningScreen({
         onClick={onComplete}
         aria-label="PicPa、オープニングをスキップ"
       >
-        <BrandLogo />
+        <motion.span
+          className="opening-logo-aura"
+          aria-hidden="true"
+          initial={false}
+          animate={{
+            opacity: reduced || artwork !== "ready" ? 0 : [0, 0.28, 0.1],
+            scale: reduced ? 1 : artwork === "ready" ? [0.9, 1.06, 1] : 0.9,
+          }}
+          transition={{ duration: reduced ? 0 : 2.1, ease: "easeInOut" }}
+        />
+        <motion.span
+          className="opening-logo-reveal"
+          initial={false}
+          animate={{
+            opacity: artwork === "ready" ? 1 : 0,
+            filter: reduced || artwork === "ready" ? "blur(0px)" : "blur(18px)",
+            scale: reduced || artwork === "ready" ? 1 : 0.965,
+            y: reduced || artwork === "ready" ? 0 : 7,
+          }}
+          transition={{
+            duration: reduced ? 0.12 : OPENING_MOTION.logoRevealDuration,
+            ease: [0.22, 0.61, 0.36, 1],
+          }}
+        >
+          <BrandLogo />
+        </motion.span>
       </button>
     </motion.div>
   );

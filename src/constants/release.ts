@@ -1,6 +1,16 @@
-export const APP_VERSION = "0.3.16";
+export const APP_VERSION = "0.3.17";
 
 export const RELEASE_NOTES = [
+  {
+    date: "2026-11-26",
+    version: "0.3.17",
+    title: "ロゴが浮かび上がるオープニング",
+    changes: [
+      "起動時のロゴが、ぼんやりした輪郭と淡い光からゆっくり鮮明になるようにしました。",
+      "タップによるスキップと、動きを減らす設定に対応しています。",
+      "写真・作品・記録・設定はそのまま保持します。",
+    ],
+  },
   {
     date: "2026-11-26",
     version: "0.3.16",
