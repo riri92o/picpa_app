@@ -257,6 +257,7 @@ export function LiquidColorScene({
                         color={origin.color ?? "#bdc1c5"}
                         neutral={!origin.color}
                         revealed={!!origin.color}
+                        variant={origin.color ? "droplet" : "bubble"}
                       />
                     </motion.g>
                   </motion.g>
