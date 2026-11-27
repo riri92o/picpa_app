@@ -99,6 +99,13 @@
   border: 0;
   background: none;
 }
+.settings-external-link {
+  text-decoration: none;
+}
+.settings-external-link[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
 .settings-group-card > * + * {
   border-top: 1px solid #ffffff12;
 }

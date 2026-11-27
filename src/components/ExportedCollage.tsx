@@ -5,6 +5,8 @@ import { useCollageExport } from "../ui/useCollageExport";
 import { CollageImageView } from "./CollageImageView";
 import { ArtworkStyleSelector } from "./ArtworkStyleSelector";
 import { resolveArtworkStyle } from "../domain/artworkLayout";
+import { validColorMatch } from "../domain/colorMatch";
+import { ColorMatchBadge } from "./ColorMatchBadge";
 
 /** Displays the selected final artwork, using its original PNG/JPEG for save and share. */
 export function ExportedCollage({
@@ -14,6 +16,8 @@ export function ExportedCollage({
   children,
   onStyleChange,
   viewOnly = false,
+  showActions = !viewOnly,
+  showColorMatch = false,
 }: {
   day: DayRecord;
   logo: boolean;
@@ -21,6 +25,8 @@ export function ExportedCollage({
   children?: ReactNode;
   onStyleChange: (style: ArtworkStyle) => void;
   viewOnly?: boolean;
+  showActions?: boolean;
+  showColorMatch?: boolean;
 }) {
   const render = useCollageExport(day, logo, getImageBlob, !viewOnly);
   const { image } = render;
@@ -79,7 +85,22 @@ export function ExportedCollage({
         />
       )}
       {children}
-      {!viewOnly && (
+      {showColorMatch &&
+        (image || validColorMatch(day) ? (
+          <ColorMatchBadge day={day} compact showComment />
+        ) : (
+          <div
+            className="color-match compact"
+            role="status"
+            aria-label="色マッチ度は画像の準備後に表示します"
+          >
+            <span className="color-match-copy">色マッチ度</span>
+            <span className="score-loading" aria-hidden="true">
+              —
+            </span>
+          </div>
+        ))}
+      {showActions && (
         <div className="detail-actions">
           <button
             className="secondary-button"
@@ -97,8 +118,10 @@ export function ExportedCollage({
           </button>
         </div>
       )}
-      {!viewOnly && notice && (
-        <p className="modal-footnote centered">{notice}</p>
+      {showActions && notice && (
+        <p className="modal-footnote centered" role="status">
+          {notice}
+        </p>
       )}
     </div>
   );

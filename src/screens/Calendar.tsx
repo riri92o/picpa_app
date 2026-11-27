@@ -1,6 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react";
-import { ColorMatchBadge } from "../components/ColorMatchBadge";
 import { ArtworkMemo } from "../components/ArtworkMemo";
 import { SpacingSelector } from "../components/SpacingSelector";
 import { CollageGrid } from "../components/CollageGrid";
@@ -145,13 +144,17 @@ export function Calendar() {
       <Modal
         open={!!selected}
         onClose={() => setSelected(null)}
-        className={viewingArtwork ? "artwork-viewer-sheet" : undefined}
+        className={
+          viewingArtwork
+            ? "artwork-viewer-sheet calendar-artwork-viewer"
+            : undefined
+        }
         headerAction={
           selectedDay?.completedAt ? (
             <button
               className="icon-button small"
-              aria-label={editing ? "作品を見る" : "デザイン・保存"}
-              title={editing ? "作品を見る" : "デザイン・保存"}
+              aria-label={editing ? "作品を見る" : "デザインとひとことを編集"}
+              title={editing ? "作品を見る" : "デザインとひとことを編集"}
               onClick={() => setEditing((value) => !value)}
             >
               {editing ? <ArrowLeft size={18} /> : <Ellipsis size={20} />}
@@ -202,6 +205,8 @@ export function Calendar() {
                 logo={settings.exportLogo}
                 getImageBlob={getImageBlob}
                 viewOnly={viewingArtwork}
+                showActions={viewingArtwork}
+                showColorMatch={viewingArtwork}
                 onStyleChange={(style) =>
                   setArtworkStyle(style, selectedDay.date)
                 }
@@ -214,7 +219,6 @@ export function Calendar() {
                   ) : null
                 ) : (
                   <>
-                    <ColorMatchBadge day={selectedDay} showComment />
                     <ArtworkMemo
                       key={selectedDay.date}
                       value={selectedDay.memo}

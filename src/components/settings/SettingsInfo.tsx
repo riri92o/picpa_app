@@ -15,7 +15,12 @@ import {
 } from "../../constants/photoQuality";
 import { dateFromKey } from "../../domain/date";
 import { useApp } from "../../state/AppContext";
-import { SettingsNotice, SettingsRow } from "./SettingsShared";
+import {
+  SettingsExternalLink,
+  SettingsNotice,
+  SettingsRow,
+} from "./SettingsShared";
+import { PUBLIC_PAGES } from "../../constants/publicPages";
 import { viewportReport } from "../../ui/viewportReport";
 
 const FAQ = [
@@ -37,7 +42,7 @@ const FAQ = [
   ],
   [
     "画像はどこから保存・共有できますか？",
-    "完成画面か、カレンダーで作品を開いた右上の「…」から操作できます。端末の共有機能が使えない場合は、画像ファイルをダウンロードします。",
+    "完成後のホームや、カレンダーで作品を開いた画面から保存・共有できます。端末の共有機能が使えない場合は、画像ファイルをダウンロードします。",
   ],
   [
     "写真や記録はどこに保存されますか？",
@@ -186,6 +191,12 @@ export function AboutPanel({ onUpdates }: { onUpdates: () => void }) {
           title="更新内容"
           description="追加した機能と改善点"
           onClick={onUpdates}
+        />
+        <SettingsExternalLink
+          Icon={ShieldCheck}
+          title="プライバシーポリシー"
+          description="写真・記録と情報の取り扱い"
+          href={PUBLIC_PAGES.privacy}
         />
       </div>
       <section className="settings-detail-card info-content">

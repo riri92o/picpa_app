@@ -54,6 +54,16 @@
   overflow-wrap: anywhere;
   text-align: center;
 }
+.calendar-artwork-viewer .exported-collage-image,
+.calendar-artwork-viewer .exported-collage-image img {
+  max-height: 50dvh;
+}
+.calendar-artwork-viewer .color-match {
+  margin: 12px 0 0;
+}
+.calendar-artwork-viewer .detail-actions {
+  margin-top: 12px;
+}
 .completion-with-memo .completion-preview {
   height: min(28dvh, 240px);
 }

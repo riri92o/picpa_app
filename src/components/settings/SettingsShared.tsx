@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, ExternalLink, type LucideIcon } from "lucide-react";
 import { localDateKey } from "../../domain/date";
 
 export function formatBytes(bytes: number): string {
@@ -64,6 +64,46 @@ export function SettingsRow({
       {value && <span className="settings-row-value">{value}</span>}
       <ChevronRight size={17} className="settings-chevron" aria-hidden="true" />
     </button>
+  );
+}
+
+export function SettingsExternalLink({
+  Icon,
+  title,
+  description,
+  href,
+  disabled = false,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  description?: string;
+  href: string;
+  disabled?: boolean;
+}) {
+  return (
+    <a
+      className="settings-link-row settings-external-link"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : undefined}
+      onClick={(event) => {
+        if (disabled) event.preventDefault();
+      }}
+    >
+      <span className="setting-icon" aria-hidden="true">
+        <Icon size={19} />
+      </span>
+      <span className="settings-row-copy">
+        <span className="settings-row-title">{title}</span>
+        {description && (
+          <span className="settings-row-detail">{description}</span>
+        )}
+        <span className="sr-only">別の画面で開きます</span>
+      </span>
+      <ExternalLink size={16} className="settings-chevron" aria-hidden="true" />
+    </a>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   Image,
   Info,
   LockKeyhole,
+  Mail,
   Share2,
   Shuffle,
   Trash2,
@@ -23,6 +24,7 @@ import {
 import {
   formatBytes,
   SettingsGroup,
+  SettingsExternalLink,
   SettingsNotice,
   SettingsRow,
 } from "../components/settings/SettingsShared";
@@ -31,6 +33,7 @@ import {
   resolvePhotoQuality,
 } from "../constants/photoQuality";
 import { APP_VERSION } from "../constants/release";
+import { PUBLIC_PAGES } from "../constants/publicPages";
 import { isChallengeLocked, isRandomChallenge } from "../domain/challenge";
 import { useApp } from "../state/AppContext";
 
@@ -189,6 +192,13 @@ export function Settings() {
                 title="使い方・よくある質問"
                 disabled={busy}
                 onClick={() => go("help")}
+              />
+              <SettingsExternalLink
+                Icon={Mail}
+                title="お問い合わせ"
+                description="不具合・ご意見のご相談"
+                href={PUBLIC_PAGES.support}
+                disabled={busy}
               />
             </SettingsGroup>
             <SettingsGroup title="アプリ情報">
